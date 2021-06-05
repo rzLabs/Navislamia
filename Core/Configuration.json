@@ -1,4 +1,7 @@
 {
+  "Logs": {
+    "minimum-level": 1
+  },
   "Network": {
     "io.auth.ip": "127.0.0.1",
     "io.auth.port": 4502,
@@ -9,7 +12,7 @@
     "io.port": 4514
   },
   "Database": {
-    "world.trusted_connection":  true,
+    "world.trusted_connection": true,
     "world.ip": "(local)",
     "world.port": 1433,
     "world.name": "Arcadia",
@@ -21,7 +24,7 @@
     "user.user": "",
     "user.password": "",
     "query.timeout": 30,
-    "query.max":  128
+    "query.max": 128
   },
   "Scripts": {
     "Directory": ".\\Scripts"
@@ -31,11 +34,12 @@
     "map_width": 700000,
     "map_height": 1000000,
     "max_layer": 256,
-    "skip_loading_nfa": false
+    "skip_loading_nfa": false,
+    "no_collision_check": false
   },
   "Game": {
     "exp_rate": 1.0,
     "gold_drop_rate": 1.0,
-    "chaos_drop_rate":  1.0
+    "chaos_drop_rate": 1.0
   }
 }

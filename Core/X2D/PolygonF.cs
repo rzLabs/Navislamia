@@ -122,10 +122,8 @@ namespace Navislamia.X2D
         public bool IsIn(RectF t)
         {
             for (int i = 0; i < list.Count; ++i)
-            {
                 if (!t.IsInclude(list[i]))
                     return false;
-            }
 
             return true;
         }
@@ -133,10 +131,8 @@ namespace Navislamia.X2D
         public bool IsLooseIn(RectF t)
         {
             for (int i = 0; i < list.Count; ++i)
-            {
                 if (!t.IsLooseInclude(list[i]))
                     return false;
-            }
 
             return true;
         }

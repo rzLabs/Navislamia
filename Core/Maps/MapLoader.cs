@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -13,13 +10,16 @@ using Navislamia.LUA;
 using Navislamia.Maps.Structures;
 using Navislamia.X2D;
 
+using Serilog;
+
 namespace Navislamia.Maps
 {
     public static class MapLoader
     {
-        static EventManager eventMgr = EventManager.Instance;
         static ConfigurationManager configMgr = ConfigurationManager.Instance;
         static LuaManager luaMgr = LuaManager.Instance;
+
+        static ILogger logger = Log.ForContext(typeof(MapLoader));
 
         public static void SetDefaultLocation(int x, int y, float mapLength, int locationID)
         {
@@ -41,36 +41,40 @@ namespace Navislamia.Maps
 
         public static bool Initialize(string directory)
         {
-            bool result = false;
+            List<Task> tasks = new List<Task>();
+            Task worker = null;
+
             bool skipNFA = configMgr["skip_loading_nfa", "Maps"];
 
-            TerrainSeamlessWorldInfo seamlessWorldInfo = new TerrainSeamlessWorldInfo();
-            result = seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
+            tasks.Add(Task.Run(() => {
+                seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
+                logger.Debug("TerrainSeamlessWorld.cfg loaded!");
+            }));
 
-            if (result) { } // TODO: send to logging service
-                //eventMgr.OnMessage(new MessageArgs("- TerrainSeamlessWorldInfo.cfg loaded!"));
-            else
+            tasks.Add(Task.Run(() => {
+                propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
+                logger.Debug("TerrainPropInfo.cfg loaded!");
+            }));
+
+            worker = Task.WhenAll(tasks);
+            worker.Wait();
+
+            if (!worker.IsCompletedSuccessfully)
             {
-                // TODO: should also be reported to the logging service?
-                eventMgr.OnException(new ExceptionArgs(new Exception("TerrainSeamlessWorldInfo.cfg read error!")));
+                foreach (Task t in tasks)
+                    if (t.IsFaulted)
+                        Log.Error(t.Exception, "The MapLoader worker encountered an exception!");
+
                 return false;
             }
-
-            TerrainPropInfo propInfo = new TerrainPropInfo();
-            result = propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-
-            if (result) { } // TODO: send to logging service
-                //eventMgr.OnMessage(new MessageArgs("- TerrainPropInfo.cfg loaded!"));
             else
             {
-                // TODO: should also be reported to the logging service?
-                eventMgr.OnException(new ExceptionArgs(new Exception("TerrainPropInfo.cfg read error!")));
-                return false;
+                tasks.Clear();
+                worker = null;
             }
 
             tileSize = seamlessWorldInfo.TileLength;
-
-            KSize mapCount = seamlessWorldInfo.MapCount;
+            mapCount = seamlessWorldInfo.MapCount;
 
             float mapLength = seamlessWorldInfo.TileLength * seamlessWorldInfo.SegmentCountPerMap * seamlessWorldInfo.TileCountPerSegment;
             float attrLen = seamlessWorldInfo.TileLength / (float)attrCountPerTile;
@@ -79,6 +83,8 @@ namespace Navislamia.Maps
             {
                 for (int x = 0; x < mapCount.CX; ++x)
                 {
+                    Log.Debug("Loading map assets for: m{0}_{1}...", x.ToString("D3"), y.ToString("D3"));
+
                     string locationFileName = seamlessWorldInfo.GetLocationFileName(x, y);
 
                     if (string.IsNullOrEmpty(locationFileName))
@@ -87,20 +93,18 @@ namespace Navislamia.Maps
                     if (seamlessWorldInfo.GetWorldID(x, y) != -1)
                         SetDefaultLocation(x, y, mapLength, seamlessWorldInfo.GetWorldID(x, y));
 
-                    // TODO: send to logging service
-                    //eventMgr.OnMessage(new MessageArgs($"- Loading region areas {locationFileName}"));
-
-                    LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);              
+                    tasks.Add(Task.Run(() =>{
+                        LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
+                    }));           
 
                     string scriptFileName = seamlessWorldInfo.GetScriptFileName(x, y);
 
                     if (string.IsNullOrEmpty(scriptFileName))
                         continue;
 
-                    // TODO: send to logging service
-                    //eventMgr.OnMessage(new MessageArgs($"- Loading spawn areas: {scriptFileName}"));
-
-                    LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
+                    tasks.Add(Task.Run(() => {
+                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
+                    }));
 
                     if (!skipNFA)
                     {
@@ -109,25 +113,39 @@ namespace Navislamia.Maps
                         if (string.IsNullOrEmpty(attributeFileName))
                             continue;
 
-                        // TODO: send to logging service
-                        //eventMgr.OnMessage(new MessageArgs($"- Loading collision areas: {attributeFileName}"));
-
-                        LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
+                        tasks.Add(Task.Run(() => {
+                            LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
+                        }));
                     }
 
-                    // TODO: this shouldn't be enabled until db loading has completed!
+                    // TODO: Uncomment this once db loading has been implemented
                     /*string eventAreaFileName = seamlessWorldInfo.GetEventAreaFileName(x, y);
 
                     if (string.IsNullOrEmpty(eventAreaFileName))
                         continue;
 
-                    LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);*/
+                    tasks.Add(Task.Run(() => { 
+                        LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
+                        logger.Debug("- Loaded event areas");
+                    }))*/
+
+                    worker = Task.WhenAll(tasks);
+                    worker.Wait();
+
+                    if (!worker.IsCompletedSuccessfully)
+                    {
+                        foreach (Task t in tasks)
+                            if (t.IsFaulted)
+                                Log.Error(t.Exception, "The MapLoader worker encountered an exception!");
+
+                        return false;
+                    }
                 }
             }
 
-            eventMgr.OnMessage(new MessageArgs("- Map loading complete!"));      
+            logger.Information("Map loading complete!");
 
-            return false;
+            return true;
         }
 
         public static void LoadAttributeFile(string fileName, int x, int y, float attrLen, float mapLength)
@@ -170,6 +188,8 @@ namespace Navislamia.Maps
                         GameContent.RegisterAutoCheckBlockInfo(block_info);
                 }
             }
+
+            Log.Debug("\t- {0} collision polygons loaded", polygonCnt);
         }
 
         public static void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
@@ -296,6 +316,8 @@ namespace Navislamia.Maps
                     GameContent.RegisterMapLocationInfo(location_info);
                 }
             }
+
+            Log.Debug("\t- {0} location polygons loaded!", localSize);
         }
 
         public static void LoadScriptFile(string fileName, int x, int y, float attrLen, float mapLength, TerrainPropInfo propInfo)
@@ -317,25 +339,31 @@ namespace Navislamia.Maps
                 PropScriptOffset = stream.ReadInt()
             };
 
-            if (header.Sign != NFSFILE_SIGN)
-                eventMgr.OnException(new ExceptionArgs(new Exception("Invalid script (nfs) header!")));
+            if (header.Sign != NFSFILE_SIGN) { 
+                Log.Fatal("\t- Invalid script header!");
+                return;
+            }
 
-            if (header.Version != NFSCurrentVer)
-                eventMgr.OnException(new ExceptionArgs(new Exception("Invalid script (nfs) version!")));
+            if (header.Version != NFSCurrentVer) { 
+                Log.Fatal("\t- Invalid script version!");
+                return;
+            }
 
             stream.Seek(header.EventLocationOffset, SeekOrigin.Begin);
-            LoadRegionInfo(stream, x, y, mapLength);
+            loadRegion(stream, x, y, mapLength);
 
             stream.Seek(header.EventScriptOffset, SeekOrigin.Begin);
-            LoadRegionScriptInfo(stream, scriptEvents);
+            loadRegionScriptInfo(stream, scriptEvents);
 
             stream.Seek(header.PropScriptOffset, SeekOrigin.Begin);
-            LoadPropScriptInfo(propInfo, stream, x, y, mapLength);
+            loadPropScriptInfo(propInfo, stream, x, y, mapLength);
 
             currentRegionIdx = regionList.Count;
+
+            logger.Debug("\t- {0} spawn areas loaded!", currentRegionIdx);
         }
 
-        public static void LoadRegionInfo(KStream stream, int x, int y, float mapLength)
+        static void loadRegion(KStream stream, int x, int y, float mapLength)
         {
             int locationCount = 0;
             float sx = x * mapLength;
@@ -362,7 +390,7 @@ namespace Navislamia.Maps
             }
         }
 
-        public static void LoadRegionScriptInfo(KStream stream, List<ScriptRegionInfo> v)
+        static void loadRegionScriptInfo(KStream stream, List<ScriptRegionInfo> v)
         {
             int scriptCount = 0;
 
@@ -374,7 +402,7 @@ namespace Navislamia.Maps
 
                 tag.RegionIndex = stream.ReadInt();
 
-                LoadFunctionInfo(stream, tag.InfoList);
+                loadFunctionInfo(stream, tag.InfoList);
 
                 for (int j = 0; j < tag.InfoList.Count; ++j)
                 {
@@ -409,7 +437,7 @@ namespace Navislamia.Maps
             }
         }
 
-        public static void LoadFunctionInfo(KStream stream, List<ScriptTag> v)
+        static void loadFunctionInfo(KStream stream, List<ScriptTag> v)
         {
             int functionCount = 0;
             ScriptTag info;
@@ -431,7 +459,7 @@ namespace Navislamia.Maps
             }
         }
 
-        public static void LoadPropScriptInfo(TerrainPropInfo terrainPropInfo, KStream stream, int x, int y, float mapLength)
+        static void loadPropScriptInfo(TerrainPropInfo terrainPropInfo, KStream stream, int x, int y, float mapLength)
         {
             int scriptCount = stream.ReadInt();
 
@@ -459,7 +487,7 @@ namespace Navislamia.Maps
                     tag.Prop_Type = (int)PropContactScriptInfo.PropType.Prop;
 
                 List<ScriptTag> tagList = new List<ScriptTag>();
-                LoadFunctionInfo(stream, tagList);
+                loadFunctionInfo(stream, tagList);
 
                 List<PropContactScriptInfo._FunctionList> functionList = new List<PropContactScriptInfo._FunctionList>();
 
@@ -481,46 +509,17 @@ namespace Navislamia.Maps
             }
         }
         
-
         public static int CurrentLocationID = 0;
         const int attrCountPerTile = 8;
         static float tileSize = 1;
+        static KSize mapCount = new KSize(0, 0);
         static int currentRegionIdx = 0;
+
+        static TerrainSeamlessWorldInfo seamlessWorldInfo = new TerrainSeamlessWorldInfo();
+        static TerrainPropInfo propInfo = new TerrainPropInfo();
 
         static List<ScriptRegion> regionList = new List<ScriptRegion>();
         static List<ScriptRegionInfo> scriptEvents = new List<ScriptRegionInfo>();
     }
 
-    public struct ScriptRegion
-    {
-        public ScriptRegion(int left, int top, int right, int bottom, string name)
-        {
-            Left = left;
-            Top = top;
-            Right = right;
-            Bottom = bottom;
-            Name = name;
-        }
-
-        public float Left, Top, Right, Bottom;
-        public string Name;
-    }
-
-    public struct ScriptTag
-    {
-        public int Trigger;
-        public string Function;
-    }
-
-    public struct ScriptRegionInfo
-    {
-        public ScriptRegionInfo(int regionIndex)
-        {
-            RegionIndex = regionIndex;
-            InfoList = new List<ScriptTag>();
-        }
-
-        public int RegionIndex;
-        public List<ScriptTag> InfoList;
-    }
 }
