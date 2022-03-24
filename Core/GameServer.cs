@@ -6,6 +6,7 @@ using Navislamia.Configuration;
 using Navislamia.LUA;
 using Navislamia.Events;
 using Navislamia.Maps;
+using Navislamia.Network;
 
 using Serilog;
 using Serilog.Core;
@@ -22,6 +23,8 @@ namespace Navislamia.Core
         public LuaManager LuaMgr;
 
         public ILogger Logger;
+
+        GameNetwork network;
 
         LoggingLevelSwitch logLevel = new LoggingLevelSwitch();
 
@@ -49,26 +52,26 @@ namespace Navislamia.Core
 
             if (loadConfig()) {
                 setLogLevel();
-                
+
                 //TODO: if initDatabase
 
                 if (loadAssets()) {
                     //TODO: if startWorld
-                    //TODO: if startNetwork
-
-                    Logger.Information("Server started!");
-                    return;
+                    if (startNetwork()) {
+                        Logger.Information("Server started!");
+                        return;
+                    }
                 }
             }
 
-            Logger.Fatal("Server failed to start!");     
+            Logger.Fatal("Server failed to start!");
         }
 
         public void Stop() => throw new NotImplementedException();
 
         bool loadConfig()
         {
-            if (!ConfigMgr.Initialize()) { 
+            if (!ConfigMgr.Initialize()) {
                 Logger.Fatal("ConfigurationManager failed to initialize!");
                 return false;
             }
@@ -104,6 +107,17 @@ namespace Navislamia.Core
 
         void initWorld() => throw new NotImplementedException();
 
-        bool startNetwork() => throw new NotImplementedException();
+        bool startNetwork()
+        {
+            network = new GameNetwork();
+
+            if (!network.Start())
+            {
+                Logger.Fatal("Failed to start network!");
+                return false;
+            }
+
+            return true;
+        }
     }
 }

@@ -136,6 +136,16 @@ namespace Navislamia.Configuration
             }
         }
 
+        public T Get<T>(string key, string parent)
+        {
+            Setting s = null;
+
+            if ((s = Settings.Find(s => s.Name == key && s.Parent == parent)) != null)
+                return (T)s.Value;
+
+            return default(T);
+        }
+
         public dynamic GetSetting(int index) => Settings?[index];
 
         public dynamic GetSetting(string key) => Settings.Find(o => o.Name == key);

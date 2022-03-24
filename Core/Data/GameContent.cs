@@ -82,7 +82,7 @@ namespace Navislamia.Data
         public static bool RegisterPropContactScriptInfo(int propID, int prop_Type, ushort model_info, float x, float y, List<PropContactScriptInfo._FunctionList> functionList)
         {
             if (PropScriptInfo.ContainsKey(propID)) {
-                Log.Error("Duplicate prop index: {propID}");
+                Log.Warning($"Duplicate prop index: {propID}");
             }
 
             PropContactScriptInfo tag = new PropContactScriptInfo()

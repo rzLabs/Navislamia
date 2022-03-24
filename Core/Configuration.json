@@ -9,7 +9,10 @@
     "io.upload.ip": "127.0.0.1",
     "io.upload.port": 4616,
     "io.ip": "127.0.0.1",
-    "io.port": 4514
+    "io.port": 4514,
+    "io.backlog": 100,
+    "io.buffer_size": 32768,
+    "cipher.key": "}h79q~B%al;k'y $E"
   },
   "Database": {
     "world.trusted_connection": true,
