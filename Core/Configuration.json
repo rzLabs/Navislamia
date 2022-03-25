@@ -1,6 +1,7 @@
 {
   "Logs": {
-    "minimum-level": 1
+    "minimum-level": 0,
+    "packet.dump_max_length": 512
   },
   "Network": {
     "io.auth.ip": "127.0.0.1",
@@ -37,6 +38,7 @@
     "map_width": 700000,
     "map_height": 1000000,
     "max_layer": 256,
+    "skip_loading":  false,
     "skip_loading_nfa": false,
     "no_collision_check": false
   },

@@ -28,7 +28,7 @@ namespace Navislamia.Network
 
         List<GameClient> connections = new List<GameClient>();
 
-        Socket auth = null;
+        AuthClient auth = null;
 
         XRC4Cipher recvCipher = new XRC4Cipher();
         XRC4Cipher sendCipher = new XRC4Cipher();
@@ -49,6 +49,8 @@ namespace Navislamia.Network
                 Log.Fatal("Failed to connect to the Auth server!");
                 return false;
             }
+
+            sendGSInfoToAuth();
 
             if (!startClientListener())
             {
@@ -80,26 +82,38 @@ namespace Navislamia.Network
 
             IPEndPoint authEP = new IPEndPoint(addr, port);
 
-            auth = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            int buffLen = configMgr.Get<int>("io.buffer_size", "Network");
+
+            Log.Verbose("IOCP Buffer Length {buffLen} loaded from config!", buffLen);
+
+            auth = new AuthClient(authSock, buffLen);
             auth.Connect(authEP);
 
-            TS_GA_LOGIN pMsg = new TS_GA_LOGIN();
-            pMsg.server_idx = 0;
-            pMsg.server_ip = "127.0.0.1";
-            pMsg.server_port = 4502;
-            pMsg.server_name = "Navislamia Dev";
-            pMsg.server_screenshot_url = "";
-            pMsg.is_adult_server = false;
-
-            var stream = new MemoryStream();
-
-            pMsg.serialize(stream, new packet_version_t(73), Encoding.ASCII);
-
-            auth.Send(stream.ToArray());
-
-            // TODO: implement TS_GA_LOGIN packet send
-
             Log.Debug("Connected to Auth server successfully!");
+
+            return true;
+        }
+
+        bool sendGSInfoToAuth()
+        {
+            try
+            {
+                TS_GA_LOGIN pMsg = new TS_GA_LOGIN();
+                pMsg.server_idx = 0;
+                pMsg.server_ip = "127.0.0.1";
+                pMsg.server_port = 4502;
+                pMsg.server_name = "Navislamia Dev";
+                pMsg.server_screenshot_url = "";
+                pMsg.is_adult_server = false;
+
+                auth.Send(pMsg);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
 
             return true;
         }

@@ -32,7 +32,7 @@ namespace Navislamia.LUA
 
             if (!Directory.Exists(directory))
             {
-                Log.Fatal("LuaManager failed to initialize because the provided directory: {directory} does not exist!");
+                Log.Fatal("LuaManager failed to initialize because the provided directory: {directory} does not exist!", directory);
                 return false;
             }
 

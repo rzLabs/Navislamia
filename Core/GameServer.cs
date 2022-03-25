@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-
+using System.Diagnostics;
 using Navislamia.Data;
 using Navislamia.Configuration;
 using Navislamia.LUA;
 using Navislamia.Events;
 using Navislamia.Maps;
 using Navislamia.Network;
+using Navislamia.Utilities;
 
 using Serilog;
 using Serilog.Core;
@@ -22,11 +23,11 @@ namespace Navislamia.Core
         public ConfigurationManager ConfigMgr;
         public LuaManager LuaMgr;
 
-        public ILogger Logger;
-
         GameNetwork network;
 
         LoggingLevelSwitch logLevel = new LoggingLevelSwitch();
+
+        Stopwatch watch = new Stopwatch();
 
         public GameServer(string configDirectory, string configName, string luaDirectory, string mapDirectory)
         {
@@ -37,47 +38,47 @@ namespace Navislamia.Core
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(logLevel)
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}", theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
                 .WriteTo.File(".\\Logs\\log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
-
-            Logger = Log.ForContext<GameServer>();
 
             LuaMgr = new LuaManager();
         }
 
         public void Start()
         {
-            Logger.Information("Starting server...");
+            Log.Information("Starting server...");
 
-            if (loadConfig()) {
-                setLogLevel();
+            watch.Restart();
 
-                //TODO: if initDatabase
+            if (!ConfigMgr.Initialize()) {
+                Log.Fatal("ConfigurationManager failed to initialize!");
+                return;
+            }
 
-                if (loadAssets()) {
-                    //TODO: if startWorld
-                    if (startNetwork()) {
-                        Logger.Information("Server started!");
-                        return;
-                    }
+            watch.Stop();
+
+            setLogLevel();
+
+            Log.Verbose("\t- {count} settings loaded from {name} in {time}", ConfigMgr.Count, "Configuration.json", StringExt.MilisecondsToString(watch.ElapsedMilliseconds));
+
+            //TODO: if initDatabase
+
+            if (loadAssets())
+            {
+                //TODO: if startWorld
+                if (startNetwork())
+                {
+                    Log.Information("Server started!");
+                    return;
                 }
             }
 
-            Logger.Fatal("Server failed to start!");
+            // We should never make it here!
+            Log.Fatal("Server failed to start!");
         }
 
         public void Stop() => throw new NotImplementedException();
-
-        bool loadConfig()
-        {
-            if (!ConfigMgr.Initialize()) {
-                Logger.Fatal("ConfigurationManager failed to initialize!");
-                return false;
-            }
-
-            return true;
-        }
 
         void setLogLevel() =>
             logLevel.MinimumLevel = (LogEventLevel)ConfigMgr["minimum-level", "Logs"];
@@ -86,21 +87,40 @@ namespace Navislamia.Core
 
         bool loadAssets()
         {
+            watch.Restart();
+
             if (!LuaMgr.Initialize(ConfigMgr.GetDirectory("Directory", "Scripts"))) {
-                Logger.Fatal("LuaManager failed to initialize!");
+                Log.Fatal("LuaManager failed to initialize!");
                 return false;
             }
 
-            Logger.Information("{0} LUA Scripts loaded!", LuaMgr.ScriptCount);
+            watch.Stop();
+
+            Log.Information("{0} LUA Scripts loaded in {time}", LuaMgr.ScriptCount, StringExt.MilisecondsToString(watch.ElapsedMilliseconds));
 
             // TODO: Db loading should occur here!
 
-            Logger.Information("Loading maps...");
+            if (ConfigMgr.Get<bool>("skip_loading", "Maps"))
+            {
+                Log.Information("Map loading disabled!");
+
+                goto returntrue;
+            }
+
+            Log.Information("Loading maps...");
+
+            watch.Restart();
 
             if (!MapLoader.Initialize(ConfigMgr.GetDirectory("Directory", "Maps"))) {
-                Logger.Fatal("MapLoader failed to initialize!");
+                Log.Fatal("MapLoader failed to initialize!");
                 return false;
             }
+
+            watch.Stop();
+
+            Log.Information("Map loading completed in {time}", StringExt.MilisecondsToString(watch.ElapsedMilliseconds));
+
+            returntrue:
 
             return true;
         }
@@ -113,7 +133,7 @@ namespace Navislamia.Core
 
             if (!network.Start())
             {
-                Logger.Fatal("Failed to start network!");
+                Log.Fatal("Failed to start network!");
                 return false;
             }
 

@@ -143,8 +143,6 @@ namespace Navislamia.Maps
                 }
             }
 
-            logger.Information("Map loading complete!");
-
             return true;
         }
 
