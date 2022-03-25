@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net.Security;
 using System.IO;
 using System.Threading.Tasks;
 
 using Navislamia.Configuration;
+using Navislamia.Utilities;
 
 using Serilog;
 
@@ -68,6 +70,7 @@ namespace DevConsole
             actions.Add("start", netStart); //TODO: Not implemented yet (maybe ever)
             actions.Add("stop", netStop);
             actions.Add("get", getVar);
+            actions.Add("memstat", memoryStatus);
             actions.Add("list", listVar);
             actions.Add("shutdown", shutdown);
             #endregion
@@ -78,6 +81,11 @@ namespace DevConsole
             #endregion
 
             Log.Information("Command Utility started!\n\t- {count} commands registered", actions.Count);
+        }
+
+        private void memoryStatus(Command command)
+        {
+            Log.Information("Current Ram Usage: {size}", StringExt.SizeToString(Process.GetCurrentProcess().PrivateMemorySize64));
         }
 
         //TODO: Somehow catch whitespace in arguments block
@@ -153,7 +161,7 @@ namespace DevConsole
 
         private void about(Command command)
         {
-            string aboutStr = "\n\nNavislamia v0.0.1\nDevelopers:\n\t- iSmokeDrow\n\t- Aodai\n\t- Glandu2\n\t- Sandro";
+            string aboutStr = "\n\nNavislamia v0.0.1\n\nC# CaptainHerlock Emulator\n\nDevelopers:\n\t- iSmokeDrow\n\t- Aodai\n\t- Glandu2\n\t- Sandro\n";
 
             Log.Information(aboutStr);
         }

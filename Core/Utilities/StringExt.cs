@@ -57,7 +57,10 @@ namespace Navislamia.Utilities
         /// <returns>String containing relevant information to the exception</returns>
         public static string LuaExceptionToString(string decoatedMessage)
         {
-            string[] exChunks = decoatedMessage.Split(new char[] { ':' }, 3);
+            int index = decoatedMessage.IndexOf(":") + 1;
+            string subStr = decoatedMessage.Substring(index, decoatedMessage.Length - index);
+
+            string[] exChunks = subStr.Split(new string[] { ":" }, 3, StringSplitOptions.RemoveEmptyEntries);
             string[] lineVals = exChunks[1].Split(new char[] { ',' }, 2);
             string exception = exChunks[2];
 

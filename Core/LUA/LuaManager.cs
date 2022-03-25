@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
 
 using MoonSharp.Interpreter;
+
+using Navislamia.Utilities;
 
 using Navislamia.LUA.Functions;
 
@@ -42,11 +45,9 @@ namespace Navislamia.LUA
 
             Log.Debug("Loading scripts from: {0}", ScriptsDirectory);
 
-            Task t = loadScripts();
+            loadScripts();
 
-            t.Wait();
-
-            return !t.IsFaulted;
+            return true;
         }
 
         public void RunString(string script)
@@ -97,30 +98,42 @@ namespace Navislamia.LUA
             }
                 
             scriptPaths = Directory.GetFiles(ScriptsDirectory);
+            List<Task> scriptTasks = new List<Task>();
 
-             await Task.Run(() => {
-                 for (int i = 0; i < scriptPaths.Length; i++)
-                 {
-                     try {
-                        luaVM.DoFile(scriptPaths[i]); 
-                     }
-                     catch (ScriptRuntimeException rtEx) {
-                         Log.Error("A runtime exception occured processing: {0}\n- Message: {1}\n- Stack-Trace: {2}", scriptPaths[i], rtEx.Message, rtEx.StackTrace);
-                         return;
-                     }
-                     catch (SyntaxErrorException sEx) {
-                         Log.Error("A syntax exception occured processing: {0}\n- Message: {1}\n- Stack-Trace: {2}", scriptPaths[i], sEx.Message, sEx.StackTrace);
-                         return;
-                     }
-                     catch (Exception ex)
-                     {
-                         Log.Error("An exception occured processing: {0}\n- Message: {1}\n- Stack-Trace: {2}", scriptPaths[i], ex.Message, ex.StackTrace);
-                         return;
-                     }
 
-                     ScriptCount++;
-                 }
-             });
+            for (int i = 0; i < scriptPaths.Length; i++)
+            {
+                string path = scriptPaths[i];
+
+                scriptTasks.Add(Task.Run(() =>
+                {
+                    try
+                    {
+                        luaVM.DoFile(path);
+                    }
+                    catch (InterpreterException ex) { throw new Exception($"{Path.GetFileName(path)} could not be loaded!\nMessage: {StringExt.LuaExceptionToString(ex.DecoratedMessage)}"); }
+                    catch { }
+
+                }));
+
+
+                ScriptCount++;
+            }
+
+                Task t = Task.WhenAll(scriptTasks).ContinueWith(_ => { Log.Information("{0} LUA Scripts loaded!", ScriptCount); });
+            try
+            {
+                t.Wait();
+            }
+            catch { }
+
+            foreach (Task task in scriptTasks)
+            {
+                if (task.IsFaulted)
+                {
+                    Log.Warning(task.Exception.InnerException.Message);
+                }
+            }
         }
     }
 }

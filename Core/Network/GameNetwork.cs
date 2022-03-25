@@ -101,12 +101,12 @@ namespace Navislamia.Network
             try
             {
                 TS_GA_LOGIN pMsg = new TS_GA_LOGIN();
-                pMsg.server_idx = 0;
-                pMsg.server_ip = "127.0.0.1";
-                pMsg.server_port = 4502;
-                pMsg.server_name = "Navislamia Dev";
-                pMsg.server_screenshot_url = "";
-                pMsg.is_adult_server = false;
+                pMsg.server_idx = configMgr.Get<ushort>("index", "Server");
+                pMsg.server_ip = configMgr.Get<string>("io.ip", "Network");
+                pMsg.server_port = configMgr.Get<short>("io.port", "Network");
+                pMsg.server_name = configMgr.Get<string>("name", "Server");
+                pMsg.server_screenshot_url = configMgr.Get<string>("screenshort.url", "Server");
+                pMsg.is_adult_server = configMgr.Get<bool>("adult", "Server");
 
                 auth.Send(pMsg);
             }

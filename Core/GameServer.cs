@@ -96,8 +96,6 @@ namespace Navislamia.Core
 
             watch.Stop();
 
-            Log.Information("{0} LUA Scripts loaded in {time}", LuaMgr.ScriptCount, StringExt.MilisecondsToString(watch.ElapsedMilliseconds));
-
             // TODO: Db loading should occur here!
 
             if (ConfigMgr.Get<bool>("skip_loading", "Maps"))

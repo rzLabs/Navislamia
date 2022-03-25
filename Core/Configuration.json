@@ -1,4 +1,10 @@
 {
+  "Server": {
+    "name": "Navislamia Emu",
+    "index": 0,
+    "screenshort.url": "",
+    "adult": false
+  },
   "Logs": {
     "minimum-level": 0,
     "packet.dump_max_length": 512
@@ -38,7 +44,7 @@
     "map_width": 700000,
     "map_height": 1000000,
     "max_layer": 256,
-    "skip_loading":  false,
+    "skip_loading": false,
     "skip_loading_nfa": false,
     "no_collision_check": false
   },
