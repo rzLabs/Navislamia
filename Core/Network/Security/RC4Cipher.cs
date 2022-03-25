@@ -28,87 +28,51 @@ namespace Navislamia.Network.Security
             if (keyLen == 0)
                 keyLen = key.Length;
 
-            int i, j;
+            state.X = state.Y = 0;
+            int j = 0;
+            byte[] bKey = new byte[256];
+            bKey = Encoding.ASCII.GetBytes(key);
 
-            for (i = 0; i < 256; i++)
+            for (int i = 0; i < 256; i++)
                 state.S[i] = (byte)i;
 
-            byte[] bkey = new byte[256];
-
-            j = 0;
-
-            for (i = 0; i < 256; i++)
+            for (int i = 0; i < 256; i++)
             {
-                bkey[i] = (byte)key[j++];
+                j = (state.S[j % keyLen] + bKey[j] + j) & 0xff;
+                swapByte(state.S[i], state.S[j]);
 
                 if (j >= keyLen)
                     j = 0;
             }
-
-            j = 0;
-
-            for (i = 0; i < 256; i++)
-            {
-                j += state.S[j] + bkey[j];
-                j &= 0xff;
-
-                swapByte(state.S[i], state.S[j]);
-            }
-
-            state.X = state.Y = 0;
+            
             skipFor(state, 1013);
-
             return true;
         }
 
         static void codeBlock(State state, byte[] source, byte[] destination, int len)
         {
-            int x = state.X, y = state.Y;
-            int sIdx = 0;
-            int dIdx = 0;
-
-            while (len-- > 0)
+            int i, j;
+            i = j = 0;
+            for(int n = 0; n < len; n++)
             {
-                ++x;
-                x &= 0xff;
+                i = (i + 1) & 0xFF;
+                j = (j + state.S[i]) & 0xFF;
+                swapByte(state.S[i], state.S[j]);
 
-                int sx = state.S[x];
+                int rnd = state.S[(state.S[i] + state.S[j]) % 256];
 
-                y += sx;
-                y &= 0xff;
-
-                int sy = state.S[y];
-
-                state.S[x] = (byte)sy;
-                state.S[y] = (byte)sx;
-
-                destination[dIdx++] = (byte)(source[sIdx++] ^ state.S[sx + sy & 0xff]);
+                destination[n] = (byte)(rnd ^ source[n]);
             }
-
-            state.X = x;
-            state.Y = y;
         }
 
         static void skipFor(State state, int len)
         {
-            int x = state.X, y = state.Y;
-
-            while (len-- > 0)
+            for(int i = 0; i < len; i++)
             {
-                ++x;
-                x &= 0xff;
-
-                int sx = state.S[x];
-
-                y += sx;
-                y &= 0xff;
-
-                state.S[x] = state.S[y];
-                state.S[y] = (byte)sx;
+                state.X = (state.X + 1) & 0xFF;
+                state.Y = (state.S[state.X + state.Y]) & 0xFF;
+                swapByte(state.S[state.X], state.S[state.Y]);
             }
-
-            state.X = x;
-            state.Y = y;
         }
 
         static void swapByte(byte a, byte b)
