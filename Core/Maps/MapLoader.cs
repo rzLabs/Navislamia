@@ -5,7 +5,6 @@ using System.IO;
 using Navislamia.Configuration;
 using Navislamia.Data;
 using static Navislamia.Data.ScriptDefine;
-using Navislamia.Events;
 using Navislamia.LUA;
 using Navislamia.Maps.Structures;
 using Navislamia.X2D;

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using Navislamia.Data;
 using Navislamia.Configuration;
 using Navislamia.LUA;
-using Navislamia.Events;
 using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Utilities;
@@ -18,8 +17,6 @@ namespace Navislamia.Core
 {
     public class GameServer
     {
-        public EventManager EventMgr = new EventManager();
-
         public ConfigurationManager ConfigMgr;
         public LuaManager LuaMgr;
 

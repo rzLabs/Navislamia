@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Navislamia.Configuration;
-using Navislamia.Events;
 using Navislamia.Maps.Structures;
 using Navislamia.X2D;
 
@@ -16,7 +15,6 @@ namespace Navislamia.Data
     public class GameContent
     {
         static ConfigurationManager configMgr = ConfigurationManager.Instance;
-        static EventManager eventMgr = EventManager.Instance;
 
         static int mapWidth = 700000;
         static int mapHeight = 1000000;
