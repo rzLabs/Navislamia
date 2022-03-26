@@ -18,6 +18,7 @@ namespace Navislamia.Network
     public class Client
     {
         ConfigurationManager configMgr = ConfigurationManager.Instance;
+        public packet_version_t MsgVersion = new packet_version_t(0x07030);
 
         public Client(Socket socket, int length)
         {

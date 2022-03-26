@@ -12,11 +12,11 @@ namespace Navislamia.Utilities
 {
     public static class PacketUtility
     {
-        public static void DumpToConsole(byte[] data)
+        public static void DumpToConsole(byte[] data, int count = 0)
         {
-            int count = ConfigurationManager.Instance.Get<int>("packet.dump_max_length", "Logs");
+            int cnt = (count > 0) ? count : ConfigurationManager.Instance.Get<int>("packet.dump_max_length", "Logs");
 
-            string dataStr = StringExt.ByteArrayToString(data, count);
+            string dataStr = StringExt.ByteArrayToString(data, cnt);
 
             Log.Debug("\nPacket Dump:\n\n{dump}", dataStr);
         }

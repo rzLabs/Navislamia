@@ -7,6 +7,7 @@
   },
   "Logs": {
     "minimum-level": 0,
+    "packet.dump_to_console": true,
     "packet.dump_max_length": 512
   },
   "Network": {

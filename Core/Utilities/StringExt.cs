@@ -74,9 +74,6 @@ namespace Navislamia.Utilities
         /// <returns>Formatted string representing the provided byte array</returns>
         public static string ByteArrayToString(byte[] buffer, int count = 512)
         {
-            if (count < 256)
-                count = 256;
-
             string outStr = null;
             string curRowStr = null;
             int curCol = 0;

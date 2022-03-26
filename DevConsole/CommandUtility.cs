@@ -177,7 +177,7 @@ namespace DevConsole
             {
                 string v = confMgr?[arg].ToString();
 
-                Log.Information($"{arg} : {v}");
+                Log.Information("{arg} : {v}", arg, v);
             }
         }
 

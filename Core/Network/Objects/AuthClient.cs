@@ -9,6 +9,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
+using Navislamia.Configuration;
 using Navislamia.Utilities;
 
 using RappelzPackets;
@@ -19,6 +20,8 @@ namespace Navislamia.Network
 {
     public class AuthClient : Client
     {
+        ConfigurationManager configMgr = ConfigurationManager.Instance;
+
         public AuthClient(Socket socket, int length) : base(socket, length) { }
 
         public override void Send(ISerializableStruct msg, bool beginReceive = true)
@@ -61,14 +64,29 @@ namespace Navislamia.Network
 
             Client auth = (Client)ar.AsyncState;
 
-            Log.Debug("{count} bytes received from the Auth server!", auth.Socket.EndReceive(ar));
+            int readCnt = auth.Socket.EndReceive(ar);
+
+            if (readCnt <= 0)
+            {
+                Log.Error("Failed to read data from the Auth server!");
+                return;
+            }
+
+            Log.Debug("{count} bytes received from the Auth server!", readCnt);
 
             try
             {
                 var msg = new TS_AG_LOGIN_RESULT();
-                msg.deserialize(Stream, new packet_version_t(0x070300), Encoding.ASCII);
+                msg.FromArray(auth.Data, MsgVersion, Encoding.Default);
 
-                PacketUtility.DumpToConsole(Data);
+                if (msg.getReceivedId() != TS_AG_LOGIN_RESULT.packetID)
+                {
+                    Log.Error("Expected message id: {id} received id: {recvid}", TS_AG_LOGIN_RESULT.packetID, msg.getReceivedId());
+                    return;
+                }
+
+                if (configMgr.Get<bool>("packet.dump_to_console", "Logs"))
+                    PacketUtility.DumpToConsole(Data);
 
                 if (msg.result == 0) // 0 == success in most cpp scenario
                     Log.Information("Successfully registered with the Auth Server!");
@@ -80,6 +98,8 @@ namespace Navislamia.Network
                 Log.Error("An exception occured while attempting to receive data from the auth server!\n\nMessaage: {exMessage}\nStack-Trace: {exStackTrace}", ex.Message, ex.StackTrace);
                 return;
             }
+
+            Receive();
         }
     }
 }
