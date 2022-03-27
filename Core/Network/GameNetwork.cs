@@ -30,16 +30,16 @@ namespace Navislamia.Network
 
         AuthClient auth = null;
 
-        //XRC4Cipher recvCipher = new XRC4Cipher();
-        //XRC4Cipher sendCipher = new XRC4Cipher();
+        XRC4Cipher recvCipher = new XRC4Cipher();
+        XRC4Cipher sendCipher = new XRC4Cipher();
 
         public GameNetwork()
         {
             string cipherKey = configMgr["cipher.key", "Network"];
 
             bufferLen = configMgr.Get<int>("io.buffer_size", "Network");
-            //recvCipher.SetKey(cipherKey);
-            //sendCipher.SetKey(cipherKey);
+            recvCipher.SetKey(cipherKey);
+            sendCipher.SetKey(cipherKey);
         }
 
         public bool Start()

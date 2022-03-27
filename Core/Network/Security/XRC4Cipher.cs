@@ -16,7 +16,7 @@ namespace Navislamia.Network.Security
             Clear();
         }
 
-        public void SetKey(string key) => Impl.Init(key, 0);
+        public void SetKey(string key) => Impl.Init(key, key.Length);
 
         public void Clear() => Impl.Init("Neat & Simple", 0);
 
