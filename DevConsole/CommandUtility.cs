@@ -6,8 +6,8 @@ using System.Net.Security;
 using System.IO;
 using System.Threading.Tasks;
 
-using Navislamia.Configuration;
-using Navislamia.Utilities;
+using Configuration;
+using Utilities;
 
 using Serilog;
 
@@ -48,18 +48,17 @@ namespace DevConsole
 
     public class CommandUtility
     {
-        ConfigurationManager confMgr = ConfigurationManager.Instance;
+        IConfigurationService configSVC;
 
         delegate void CommandAction(Command command);
 
         Dictionary<string, CommandAction> actions = new Dictionary<string, CommandAction>();
 
-        public CommandUtility() => init();
-
-        public CommandUtility(string commandText)
+        public CommandUtility(IConfigurationService configurationService)
         {
+            configSVC = configurationService;
+
             init();
-            Parse(commandText);
         }
 
         void init()
@@ -73,6 +72,7 @@ namespace DevConsole
             actions.Add("memstat", memoryStatus);
             actions.Add("list", listVar);
             actions.Add("shutdown", shutdown);
+            actions.Add("create_config", createConfig);
             #endregion
 
             #region Client
@@ -81,6 +81,11 @@ namespace DevConsole
             #endregion
 
             Log.Information("Command Utility started!\n\t- {count} commands registered", actions.Count);
+        }
+
+        private void createConfig(Command command)
+        {
+            Program.ConfigurationService.CreateDefault();
         }
 
         private void memoryStatus(Command command)
@@ -175,16 +180,18 @@ namespace DevConsole
 
             foreach (string arg in command.Arguments)
             {
-                string v = confMgr?[arg].ToString();
+                string v = configSVC.Get<string>(arg);
 
-                Log.Information("{arg} : {v}", arg, v);
+                // Log.Information("{arg} : {v}", arg, v);
             }
         }
 
         private void listVar(Command command)
         {
-            foreach (var config in confMgr.Settings)
-                Log.Information("{Name} : {Value}", config.Name, config.Value.ToString());
+            foreach (var config in (ConfigurationModule)configSVC)
+            {
+                // TODO:
+            }
         }
         private void netStart(Command command)
         {
@@ -217,10 +224,8 @@ namespace DevConsole
 
         private void shutdown(Command command)
         {
-            int defaultTime = (int)confMgr?["shutdown.timer"];
+            int defaultTime = configSVC.Get<int>("shutdown.timer", "Server", 60);
             int shutdownTime = (command.HasArguments) ? ArgToInt(command) : defaultTime;
-
-            DevConsole.Program.Shutdown(shutdownTime * 1000);
         }
 
         #endregion
@@ -327,8 +332,8 @@ namespace DevConsole
         int ArgToInt(Command command, int index = 0)
         {
             int id = -1;
-            if (!int.TryParse(command.Arguments[index], out id))
-                Log.Error("Failed to parse argument at index: {index}", index);
+            if (!int.TryParse(command.Arguments[index], out id)) { } // TODO: 
+                //Log.Error("Failed to parse argument at index: {index}", index);
 
             return id;
         }

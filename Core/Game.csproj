@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Game</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+    <AssemblyName>Modules.Game</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maps\Maps.csproj" />
+    <ProjectReference Include="..\Network\Network.csproj" />
+    <ProjectReference Include="..\Notification\Notification.csproj" />
+    <ProjectReference Include="..\Objects\Objects.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="packet_cppcli">
+      <HintPath>packet_cppcli.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

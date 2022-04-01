@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Modules.Network</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Notification\Notification.csproj" />
+    <ProjectReference Include="..\Objects\Objects.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="packet_cppcli">
+      <HintPath>..\Core\Libs\packet_cppcli.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
