@@ -2,14 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 
-using Game;
-
-
 using Autofac;
 
 using Game;
 using Scripting;
 using Configuration;
+using Maps;
 using Network;
 using Notification;
 
@@ -24,6 +22,7 @@ namespace DevConsole
         public static IConfigurationService ConfigurationService;
         public static INotificationService NotificationService;
         public static INetworkService NetworkService;
+        public static IMapService MapService;
         public static IScriptingService ScriptingService;
         public static IGameService GameService;
 
@@ -38,6 +37,7 @@ namespace DevConsole
                 builder.RegisterModule<NotificationModule>();
                 builder.RegisterModule<NetworkModule>();
                 builder.RegisterModule<ScriptModule>();
+                builder.RegisterModule<MapModule>();
                 builder.RegisterModule<GameModule>();
 
                 depsContainer = builder.Build();
@@ -59,6 +59,16 @@ namespace DevConsole
                 ScriptingService.Init();
 
                 NotificationService.WriteConsoleLog("Successfully started and subscribed to the script service!", null, LogEventLevel.Debug);
+
+                if (!ConfigurationService.Get<bool>("skip_loading", "Maps", false))
+                {
+                    NotificationService.WriteConsoleLog("Starting map service...", null, LogEventLevel.Debug);
+
+                    MapService = depsContainer.Resolve<IMapService>();
+                    MapService.Initialize($"{Directory.GetCurrentDirectory()}\\Maps", ConfigurationService, ScriptingService, NotificationService);
+
+                    NotificationService.WriteConsoleLog("Successfully started and subscribed to the map service!", null, LogEventLevel.Debug);
+                }
 
                 NotificationService.WriteConsoleLog("Starting network service...", null, LogEventLevel.Debug);
 

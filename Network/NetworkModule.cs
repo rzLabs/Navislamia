@@ -59,7 +59,7 @@ namespace Network
                 return 1;
             }
 
-            //sendGSInfoToAuth();
+            sendGSInfoToAuth();
 
             if (!startClientListener())
             {
