@@ -8,7 +8,7 @@ using Configuration;
 using static Maps.Structures.ScriptDefine;
 using Scripting;
 using Maps.Structures;
-using Objects.X2D;
+using Maps.X2D;
 using Notification;
 using Objects;
 

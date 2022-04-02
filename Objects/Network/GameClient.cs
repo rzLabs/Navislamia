@@ -1,15 +1,12 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-//using System.Net.Sockets;
+using System.Net.Sockets;
 
-//using Navislamia.Configuration;
-//using Navislamia.Network.Security;
-
-//using Serilog;
+using Serilog;
 
 namespace Objects.Network
 {
@@ -17,9 +14,9 @@ namespace Objects.Network
     {
         //        TcpListener listener;
 
-        //        public GameClient(Socket socket, int length) : base(socket, length)
-        //        {
-        //        }
+        public GameClient(Socket socket, int length) : base(socket, length)
+        {
+        }
 
     }
 }

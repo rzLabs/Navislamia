@@ -29,9 +29,9 @@ namespace Scripting
 
         public ScriptModule() { }
 
-        public ScriptModule(IConfigurationService configService, INotificationService notificationService)
+        public ScriptModule(IConfigurationService configurationService, INotificationService notificationService)
         {
-            configSVC = configService;
+            configSVC = configurationService;
             notificationSVC = notificationService;
         }
 

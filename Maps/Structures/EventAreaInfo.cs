@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Objects.X2D;
+using Maps.X2D;
 
 namespace Maps.Structures
 {

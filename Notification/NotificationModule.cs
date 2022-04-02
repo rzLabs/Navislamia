@@ -23,12 +23,8 @@ namespace Notification
         ILogger filelog;
         ILogger consolelog;
 
-        public NotificationModule() { }
-
-        public NotificationModule(IConfigurationService configurationService)
+        public NotificationModule()
         {
-            configSVC = configurationService;
-
             filelog = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.File(".\\Logs\\log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")

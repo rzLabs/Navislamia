@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Configuration;
+using Notification;
 
 //using Serilog;
 
@@ -12,9 +13,7 @@ namespace Utilities
 {
     public class PacketUtility
     {
-        IConfigurationService configSVC;
-
-        public PacketUtility(IConfigurationService configurationService) => configSVC = configurationService;
+        INotificationService notificationSVC;
 
         public void DumpToConsole(byte[] data, int count = 0)
         {

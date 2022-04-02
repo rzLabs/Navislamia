@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Objects;
 
-namespace Objects.X2D
+namespace Maps.X2D
 {
     public static class X2DUtil
     {

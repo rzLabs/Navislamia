@@ -56,7 +56,22 @@ namespace Configuration
             Configurations.AddChild("cipher.key", "}h79q~B%al;k'y $E");
 
 
-            // TODO: sql
+            // database
+
+            Configurations.AddParent("Database");
+
+            Configurations.AddChild("world.ip", "127.0.0.1");
+            Configurations.AddChild("world.port", 1433);
+            Configurations.AddChild("world.trusted_connection", true);
+            Configurations.AddChild("world.name", "Arcadia");
+            Configurations.AddChild("world.user", "sa");
+            Configurations.AddChild("world.user.pass", "");
+            Configurations.AddChild("player.ip", "127.0.0.1");
+            Configurations.AddChild("player.port", 1433);
+            Configurations.AddChild("player.trusted_connection", true);
+            Configurations.AddChild("player.name", "Telecaster");
+            Configurations.AddChild("player.user", "sa");
+            Configurations.AddChild("player.user.pass", "");
 
             // scripts
 

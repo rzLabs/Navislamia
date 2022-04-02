@@ -7,23 +7,25 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Game", "Core\Game.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DevConsole", "DevConsole\DevConsole.csproj", "{DFA0D7C2-09E5-4479-A36B-3344B39CE1C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Configuration", "Configuration\Configuration.csproj", "{200B7054-AD61-44E3-AC3D-02EE58AAE86F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Configuration", "Configuration\Configuration.csproj", "{200B7054-AD61-44E3-AC3D-02EE58AAE86F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "Utilities\Utilities.csproj", "{B5A58ABD-5B0A-4FAE-BBC7-94C19ED19956}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utilities", "Utilities\Utilities.csproj", "{B5A58ABD-5B0A-4FAE-BBC7-94C19ED19956}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scripting", "Scripting\Scripting.csproj", "{0A051A29-7FBB-42CB-8E6C-972B869F5730}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scripting", "Scripting\Scripting.csproj", "{0A051A29-7FBB-42CB-8E6C-972B869F5730}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Command", "Command\Command.csproj", "{AA0F74A5-32EE-403D-AF11-A8E88DC365CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Command", "Command\Command.csproj", "{AA0F74A5-32EE-403D-AF11-A8E88DC365CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maps", "Maps\Maps.csproj", "{AF291114-A9AE-4D9D-8113-9FD568A8A58F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maps", "Maps\Maps.csproj", "{AF291114-A9AE-4D9D-8113-9FD568A8A58F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{12ADA476-BCDF-468C-9F64-F7DA2E0FA040}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{12ADA476-BCDF-468C-9F64-F7DA2E0FA040}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification", "Notification\Notification.csproj", "{3CD28BF0-5F3D-4B66-8EB8-AFDC572A83CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification", "Notification\Notification.csproj", "{3CD28BF0-5F3D-4B66-8EB8-AFDC572A83CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Objects", "Objects\Objects.csproj", "{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Objects", "Objects\Objects.csproj", "{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Network", "Network\Network.csproj", "{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Network", "Network\Network.csproj", "{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -121,6 +123,14 @@ Global
 		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|x64.ActiveCfg = Release|Any CPU
 		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|x64.Build.0 = Release|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Debug|x64.Build.0 = Debug|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|x64.ActiveCfg = Release|Any CPU
+		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

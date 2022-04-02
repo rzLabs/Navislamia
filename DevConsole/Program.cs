@@ -21,9 +21,6 @@ namespace DevConsole
         static IContainer depsContainer;
         public static IConfigurationService ConfigurationService;
         public static INotificationService NotificationService;
-        public static INetworkService NetworkService;
-        public static IMapService MapService;
-        public static IScriptingService ScriptingService;
         public static IGameService GameService;
 
         static void Main(string[] args)
@@ -35,49 +32,23 @@ namespace DevConsole
                 var builder = new ContainerBuilder();
                 builder.RegisterModule<ConfigurationModule>();
                 builder.RegisterModule<NotificationModule>();
-                builder.RegisterModule<NetworkModule>();
-                builder.RegisterModule<ScriptModule>();
-                builder.RegisterModule<MapModule>();
                 builder.RegisterModule<GameModule>();
 
                 depsContainer = builder.Build();
+
+                NotificationService = depsContainer.Resolve<INotificationService>();
+
+                NotificationService.WriteConsoleLog("Successfully started and subscribed to the notification service!", null, LogEventLevel.Debug);
+                NotificationService.WriteConsole("Starting configuration service...");
 
                 ConfigurationService = depsContainer.Resolve<IConfigurationService>();
                 ConfigurationService.Load();
 
                 configureSerilog();
 
-                NotificationService = depsContainer.Resolve<INotificationService>(new NamedParameter("configurationService", ConfigurationService));
-
-                NotificationService.WriteConsoleLog("Navislamia starting...");
-                NotificationService.WriteConsole("Starting configuration service...");
                 NotificationService.WriteConsoleLog("{0} settings loaded from Configuration.json", new object[] { ConfigurationService.TotalCount }, LogEventLevel.Debug);
 
-                NotificationService.WriteConsoleLog("Starting script service...", null, LogEventLevel.Debug);
-
-                ScriptingService = depsContainer.Resolve<IScriptingService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("notificationService", NotificationService));
-                ScriptingService.Init();
-
-                NotificationService.WriteConsoleLog("Successfully started and subscribed to the script service!", null, LogEventLevel.Debug);
-
-                if (!ConfigurationService.Get<bool>("skip_loading", "Maps", false))
-                {
-                    NotificationService.WriteConsoleLog("Starting map service...", null, LogEventLevel.Debug);
-
-                    MapService = depsContainer.Resolve<IMapService>();
-                    MapService.Initialize($"{Directory.GetCurrentDirectory()}\\Maps", ConfigurationService, ScriptingService, NotificationService);
-
-                    NotificationService.WriteConsoleLog("Successfully started and subscribed to the map service!", null, LogEventLevel.Debug);
-                }
-
-                NotificationService.WriteConsoleLog("Starting network service...", null, LogEventLevel.Debug);
-
-                NetworkService = depsContainer.Resolve<INetworkService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("notficationService", NotificationService));
-                NetworkService.Start();
-
-                NotificationService.WriteConsoleLog("Successfully started and subscribed to the network service!", null, LogEventLevel.Debug);
-
-                GameService = depsContainer.Resolve<IGameService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("scriptService", ScriptingService), new NamedParameter("networkService", NetworkService), new NamedParameter("notificationService", NotificationService));
+                GameService = depsContainer.Resolve<IGameService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("notificationService", NotificationService));
                 GameService.Start("", 4502, 100);
 
                 NotificationService.WriteConsoleLog("Successfully started and subscribed to the game service!", null, LogEventLevel.Information);

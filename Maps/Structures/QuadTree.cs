@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 
-using Maps.Structures;
+using Maps.X2D;
+using static Maps.X2D.X2DUtil;
 
-using Objects.X2D;
-using static Objects.X2D.X2DUtil;
-
-namespace Maps
+namespace Maps.Structures
 {
     public class QuadTree
     {

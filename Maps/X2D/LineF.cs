@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using static Objects.X2D.X2DUtil;
+using static Maps.X2D.X2DUtil;
 
-namespace Objects.X2D
+namespace Maps.X2D
 {
     public class LineF
     {

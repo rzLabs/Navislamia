@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Objects.X2D
+namespace Maps.X2D
 {
     public struct Point
     {
