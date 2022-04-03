@@ -49,8 +49,6 @@ namespace Scripting
 
             registerFunctions();
 
-            notificationSVC.WriteConsoleLog("Loading scripts from: {0}", new object[] { ScriptsDirectory }, LogEventLevel.Information);
-
             loadScripts();
 
             return 0;
@@ -149,7 +147,8 @@ namespace Scripting
                 ScriptCount++;
             }
 
-            Task t = Task.WhenAll(scriptTasks).ContinueWith(_ => { notificationSVC.WriteConsoleLog("\t- {0} LUA Scripts loaded!", new object[] { ScriptCount }, LogEventLevel.Information); });
+            Task t = Task.WhenAll(scriptTasks);
+
             try
             {
                 t.Wait();

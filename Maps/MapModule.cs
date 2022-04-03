@@ -92,14 +92,14 @@ namespace Maps
             }
 
             tileSize = seamlessWorldInfo.TileLength;
-            mapCount = seamlessWorldInfo.MapCount;
+            MapCount = seamlessWorldInfo.MapCount;
 
             float mapLength = seamlessWorldInfo.TileLength * seamlessWorldInfo.SegmentCountPerMap * seamlessWorldInfo.TileCountPerSegment;
             float attrLen = seamlessWorldInfo.TileLength / (float)attrCountPerTile;
 
-            for (int y = 0; y < mapCount.CY; ++y)
+            for (int y = 0; y < MapCount.CY; ++y)
             {
-                for (int x = 0; x < mapCount.CX; ++x)
+                for (int x = 0; x < MapCount.CX; ++x)
                 {
                     notificationSVC.WriteConsoleLog("Loading map assets for: m{0}_{1}...", new object[] { x.ToString("D3"), y.ToString("D3") }, LogEventLevel.Debug);
 
@@ -577,7 +577,7 @@ namespace Maps
         public static int CurrentLocationID = 0;
         const int attrCountPerTile = 8;
         static float tileSize = 1;
-        static KSize mapCount = new KSize(0, 0);
+        public KSize MapCount { get; set; } = new KSize(0, 0);
         static int currentRegionIdx = 0;
 
         static TerrainSeamlessWorldInfo seamlessWorldInfo = new TerrainSeamlessWorldInfo();

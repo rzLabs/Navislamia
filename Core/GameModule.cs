@@ -50,24 +50,22 @@ namespace Game
 
         public int Start(string ip, int port, int backlog)
         {
-            notificationSVC.WriteConsoleLog("Starting game service...");
-
-            notificationSVC.WriteConsoleLog("Starting script service...", null, LogEventLevel.Debug); 
-
             scriptSVC.Init();
 
-            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the script service!", null, LogEventLevel.Debug);
+            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the script service!\n\t-{0} scripts loaded!", new object[] { scriptSVC.ScriptCount }, LogEventLevel.Debug);
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
-                notificationSVC.WriteConsoleLog("Starting map service...", null, LogEventLevel.Debug);
-
                 mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps", configSVC, scriptSVC, notificationSVC);
 
-                notificationSVC.WriteConsoleLog("Successfully started and subscribed to the map service!", null, LogEventLevel.Debug);
+                notificationSVC.WriteConsoleLog("Successfully started and subscribed to the map service!\n\t- {0} maps loaded!", new object[] { mapSVC.MapCount.CX }, LogEventLevel.Debug);
             }
+            else
+                notificationSVC.WriteConsoleLog("Map loading disabled!");
 
-            notificationSVC.WriteConsoleLog("Starting network service...", null, LogEventLevel.Debug);
+            dbSVC.Init();
+
+            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the database service!", null, LogEventLevel.Debug);
 
             networkSVC.Start();
 

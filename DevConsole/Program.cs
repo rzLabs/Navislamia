@@ -39,7 +39,6 @@ namespace DevConsole
                 NotificationService = depsContainer.Resolve<INotificationService>();
 
                 NotificationService.WriteConsoleLog("Successfully started and subscribed to the notification service!", null, LogEventLevel.Debug);
-                NotificationService.WriteConsole("Starting configuration service...");
 
                 ConfigurationService = depsContainer.Resolve<IConfigurationService>();
                 ConfigurationService.Load();
