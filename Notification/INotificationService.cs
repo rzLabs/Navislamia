@@ -6,16 +6,17 @@ using System.Text;
 using Serilog;
 using Serilog.Events;
 
+using Spectre.Console;
+
 namespace Notification
 {
     public interface INotificationService
     {
-        public void WriteConsoleLog(string message, object[] args = null, LogEventLevel level = LogEventLevel.Verbose);
+        public void WriteString(string message, LogEventLevel level = LogEventLevel.Verbose);
 
-        public void WriteConsole(string message, object[] args = null, LogEventLevel level = LogEventLevel.Verbose);
+        public void WriteMarkup(string message, LogEventLevel level = LogEventLevel.Verbose);
 
-        public void WriteColorConsole(string message, object[] args, Color[] colors);
+        public void WriteException(Exception exception, LogEventLevel level = LogEventLevel.Error);
 
-        public void WriteLog(string message, object[] args = null, LogEventLevel level = LogEventLevel.Verbose);
     }
 }

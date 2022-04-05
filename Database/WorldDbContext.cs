@@ -38,6 +38,7 @@ namespace Database
                 sb.Append("Trusted_Connection=true;");
             else
                 sb.AppendFormat("User ID={0};Password={1}", user, pass);
+
             _connString = sb.ToString();
         }
 

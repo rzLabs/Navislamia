@@ -23,6 +23,7 @@ namespace Database
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
+        WorldDbContext worldDbContext;
 
         public DatabaseModule() { }
 
@@ -32,12 +33,15 @@ namespace Database
             notificationSVC = notificationService;
         }
 
-        public void Init()
+        public void Init() // TODO: arcadia table loading logic should occur here
         {
-            DbStringResource dbStr = new DbStringResource(configSVC, this, notificationSVC);
-            dbStr.Load();
+            worldDbContext = new WorldDbContext(configSVC);
 
-            notificationSVC.WriteConsoleLog("{0} strings loaded!", new object[] { dbStr.Count }, LogEventLevel.Information);
+            var stringRepo = new StringResourceRespository(notificationSVC, worldDbContext);
+
+            var strings = stringRepo.GetStrings();
+
+            notificationSVC.WriteMarkup($"[italic green]{strings.Count()}[/] strings loaded!",  LogEventLevel.Debug);
         }
 
         protected override void Load(ContainerBuilder builder)

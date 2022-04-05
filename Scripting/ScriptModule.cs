@@ -16,6 +16,8 @@ using Notification;
 using MoonSharp.Interpreter;
 using Serilog.Events;
 
+using Spectre.Console;
+
 namespace Scripting
 {
     public class ScriptModule : Autofac.Module, IScriptingService
@@ -41,7 +43,7 @@ namespace Scripting
 
             if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
             {
-                notificationSVC.WriteConsoleLog("LuaManager failed to initialize because the provided directory was null or does not exist!", null, LogEventLevel.Error);
+                notificationSVC.WriteMarkup("[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]", LogEventLevel.Error);
                 return 1;
             }
 
@@ -112,7 +114,7 @@ namespace Scripting
 
             if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
             {
-                notificationSVC.WriteConsoleLog("ScriptModule failed to load because the scripts directory is null or does not exist!", null, LogEventLevel.Error);
+                notificationSVC.WriteMarkup("[bold red]ScriptModule failed to load because the scripts directory is null or does not exist![/]", LogEventLevel.Error);
                 return;
             }
 
@@ -139,7 +141,7 @@ namespace Scripting
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 
-                        throw new Exception(exMsg);
+                        notificationSVC.WriteMarkup($"[bold red]{exMsg}[/]");
                     }
                 }));
 
@@ -157,7 +159,7 @@ namespace Scripting
 
             foreach (var task in scriptTasks)
                 if (task.IsFaulted)
-                    notificationSVC.WriteConsoleLog(task.Exception.Message, null, LogEventLevel.Warning);
+                    notificationSVC.WriteException(task.Exception);
         }
     }
 }

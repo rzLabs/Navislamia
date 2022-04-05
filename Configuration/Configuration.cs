@@ -7,43 +7,31 @@ using System.Text;
 
 namespace Configuration
 {
-    public struct ConfigurationChild
-    {
-        public string Name;
-        public object Value;
-
-        public ConfigurationChild(string key, object value)
-        {
-            Name = key;
-            Value = value;
-        }
-    }
-
-    public class ConfigurationParent
+    public class Configuration
     {
         public string Category;
-        public List<ConfigurationChild> Configurations;
+        public Dictionary<string, object> Collection;
 
-        public ConfigurationParent(string key) 
+        public Configuration(string key) 
         {
             Category = key;
-            Configurations = new List<ConfigurationChild>();
+            Collection = new Dictionary<string, object>();
         }
     }
 
-    public sealed class ConfigurationCollection : IList<ConfigurationParent>, IEnumerable<ConfigurationChild> // Children container
+    public sealed class ConfigurationCollection : IList<Configuration>, IEnumerable<Configuration> // Children container
     {
         public string CurrentParent = null;
 
-        List<ConfigurationParent> configurations = new List<ConfigurationParent>();
+        List<Configuration> configurations = new List<Configuration>();
 
-        public ConfigurationParent this[int index] 
+        public Configuration this[int index] 
         {
             get => configurations[index]; 
             set => configurations[index] = value; 
         }
         
-        public ConfigurationParent this[string category]
+        public Configuration this[string category]
         {
             get
             {
@@ -62,18 +50,18 @@ namespace Configuration
                 int i = 0;
 
                 foreach (var parent in configurations)
-                    foreach (var child in parent.Configurations)
+                    foreach (var child in parent.Collection)
                         i++;
 
                 return i;
             }
         }
 
-        public bool IsReadOnly => ((ICollection<ConfigurationParent>)configurations).IsReadOnly;
+        public bool IsReadOnly => ((ICollection<Configuration>)configurations).IsReadOnly;
 
-        public void Add(ConfigurationParent item)
+        public void Add(Configuration item)
         {
-            ((ICollection<ConfigurationParent>)configurations).Add(item);
+            ((ICollection<Configuration>)configurations).Add(item);
         }
 
         public void AddParent(string key)
@@ -83,7 +71,7 @@ namespace Configuration
 
             CurrentParent = key;
 
-            configurations.Add(new ConfigurationParent(key));
+            configurations.Add(new Configuration(key));
         }
 
         public void AddChild(string key, object value)
@@ -96,46 +84,46 @@ namespace Configuration
             if ((index = configurations.FindIndex(c => c.Category == CurrentParent)) == -1)
                 return;
 
-            configurations[index].Configurations.Add(new ConfigurationChild(key, value));
+            configurations[index].Collection.Add(key, value);
         }
 
         public void Clear() => configurations.Clear();
 
-        public bool Contains(ConfigurationParent item)
+        public bool Contains(Configuration item)
         {
-            return ((ICollection<ConfigurationParent>)configurations).Contains(item);
+            return ((ICollection<Configuration>)configurations).Contains(item);
         }
 
-        public void CopyTo(ConfigurationParent[] array, int arrayIndex)
+        public void CopyTo(Configuration[] array, int arrayIndex)
         {
-            ((ICollection<ConfigurationParent>)configurations).CopyTo(array, arrayIndex);
+            ((ICollection<Configuration>)configurations).CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<ConfigurationParent> GetEnumerator()
+        public IEnumerator<Configuration> GetEnumerator()
         {
-            return ((IEnumerable<ConfigurationParent>)configurations).GetEnumerator();
+            return ((IEnumerable<Configuration>)configurations).GetEnumerator();
         }
 
-        public int IndexOf(ConfigurationParent item)
+        public int IndexOf(Configuration item)
         {
-            return ((IList<ConfigurationParent>)configurations).IndexOf(item);
+            return ((IList<Configuration>)configurations).IndexOf(item);
         }
 
-        public ConfigurationParent Find(Predicate<ConfigurationParent> match) => configurations.Find(match);
+        public Configuration Find(Predicate<Configuration> match) => configurations.Find(match);
 
-        public void Insert(int index, ConfigurationParent item)
+        public void Insert(int index, Configuration item)
         {
-            ((IList<ConfigurationParent>)configurations).Insert(index, item);
+            ((IList<Configuration>)configurations).Insert(index, item);
         }
 
-        public bool Remove(ConfigurationParent item)
+        public bool Remove(Configuration item)
         {
-            return ((ICollection<ConfigurationParent>)configurations).Remove(item);
+            return ((ICollection<Configuration>)configurations).Remove(item);
         }
 
         public void RemoveAt(int index)
         {
-            ((IList<ConfigurationParent>)configurations).RemoveAt(index);
+            ((IList<Configuration>)configurations).RemoveAt(index);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -143,7 +131,7 @@ namespace Configuration
             return ((IEnumerable)configurations).GetEnumerator();
         }
 
-        IEnumerator<ConfigurationChild> IEnumerable<ConfigurationChild>.GetEnumerator()
+        IEnumerator<Configuration> IEnumerable<Configuration>.GetEnumerator()
         {
             throw new NotImplementedException();
         }

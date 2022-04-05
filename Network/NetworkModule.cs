@@ -55,7 +55,7 @@ namespace Network
             // TODO:
             if (!connectToAuth())
             {
-                notificationSVC.WriteConsoleLog("Failed to connect to the Auth server!", null, LogEventLevel.Error);
+                notificationSVC.WriteMarkup("[bold red]Failed to connect to the Auth server![/]", LogEventLevel.Error);
                 return 1;
             }
 
@@ -63,7 +63,7 @@ namespace Network
 
             if (!startClientListener())
             {
-                notificationSVC.WriteConsoleLog("Failed to start client listener!", null, LogEventLevel.Error);
+                notificationSVC.WriteMarkup("[bold red]Failed to start client listener![/]", LogEventLevel.Error);
                 return 1;
             }
 
@@ -89,7 +89,7 @@ namespace Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                notificationSVC.WriteConsoleLog("Invalid network auth.io configuration! Review your Configuration.json!");
+                notificationSVC.WriteMarkup("[bold red]Invalid network auth.io configuration! Review your Configuration.json![/]");
                 return false;
             }
 
@@ -97,7 +97,7 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteConsoleLog("Failed to parse auth.io.ip: {addrStr}");
+                notificationSVC.WriteMarkup($"[bold red]Failed to parse auth.io.ip: {addrStr}[/]");
                 return false;
             }
 
@@ -107,13 +107,13 @@ namespace Network
 
             int buffLen = configSVC.Get<int>("io.buffer_size", "Network", 32768);
 
-            notificationSVC.WriteConsoleLog("IOCP Buffer Length {buffLen} loaded from config!", new object[] { buffLen }, LogEventLevel.Verbose);
+            notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {buffLen} loaded from config![/]", LogEventLevel.Verbose);
 
             // TODO:
             //auth = new AuthClient(authSock, buffLen);
             //auth.Connect(authEP);
 
-            notificationSVC.WriteConsoleLog("Connected to Auth server successfully!");
+            notificationSVC.WriteString("Connected to Auth server successfully!");
 
             return true;
         }
@@ -149,7 +149,7 @@ namespace Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0 || backlog == 0)
             {
-                notificationSVC.WriteConsoleLog("Invalid network io configuration! Review your Configuration.json!");
+                notificationSVC.WriteMarkup("Invalid network io configuration! Review your Configuration.json!");
                 return false;
             }
 
@@ -157,7 +157,7 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteConsoleLog("Failed to parse io.ip: {addrStr}");
+                notificationSVC.WriteMarkup($"[bold red]Failed to parse io.ip: {addrStr}[/]");
                 return false;
             }
 
@@ -165,11 +165,11 @@ namespace Network
 
             listener.Start(backlog);
 
-            notificationSVC.WriteConsoleLog("Game network started!", null, LogEventLevel.Information);
+            notificationSVC.WriteString("Game network started!", LogEventLevel.Information);
 
             listener.BeginAcceptSocket(AttemptAcceptScoket, listener);
 
-            notificationSVC.WriteConsoleLog("- Listening at: {0} : {1} with backlog of: {2}", new object[] { addrStr, port, backlog }, LogEventLevel.Information);
+            notificationSVC.WriteMarkup($"[yellow]- Listening at: {addrStr} : {port} with backlog of: {backlog}[/]", LogEventLevel.Information);
 
             return true;
         }

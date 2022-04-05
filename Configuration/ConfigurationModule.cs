@@ -22,11 +22,13 @@ namespace Configuration
 
         public void CreateDefault(string path = null)
         {
-            Configurations.Clear();
+            Configurations.Clear(); // just incase ;)
+
+            // server
 
             Configurations.AddParent("Server");
 
-            // Server
+
             Configurations.AddChild("name", "Navislamia");
             Configurations.AddChild("index", "0");
             Configurations.AddChild("screenshort.url", "about:new");
@@ -40,10 +42,10 @@ namespace Configuration
             Configurations.AddChild("minimum-level", 0);
             Configurations.AddChild("packet.debug", true); // TODO: this should be false in production
 
+            // network
 
             Configurations.AddParent("Network");
 
-            // network
             Configurations.AddChild("io.auth.ip", "127.0.0.1");
             Configurations.AddChild("io.auth.port", 4502);
             Configurations.AddChild("auth.server_idx", 1);
@@ -99,18 +101,14 @@ namespace Configuration
 
         public T Get<T>(string key, string parent, object defaultValue = null)
         {
-            var config = Configurations.Find(c => c.Category == parent);
+            var category = Configurations.Find(c => c.Category == parent);
 
-            if (config == null)
+            if (category is null)
                 return default(T);
 
-            var valIdx = config.Configurations.FindIndex(c => c.Name == key);
+            var val = category.Collection?[key] ?? default(T);
 
-            if (valIdx == -1)
-                return default(T);
-
-            return (T)Convert.ChangeType(config.Configurations[valIdx].Value, typeof(T));
-
+            return (T)Convert.ChangeType(val, typeof(T));
         }
 
         public dynamic Get(string key, string parent, object defaultValue = null)

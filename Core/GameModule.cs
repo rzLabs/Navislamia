@@ -52,24 +52,24 @@ namespace Game
         {
             scriptSVC.Init();
 
-            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the script service!\n\t-{0} scripts loaded!", new object[] { scriptSVC.ScriptCount }, LogEventLevel.Debug);
+            notificationSVC.WriteMarkup($"Successfully started and subscribed to the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
                 mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps", configSVC, scriptSVC, notificationSVC);
 
-                notificationSVC.WriteConsoleLog("Successfully started and subscribed to the map service!\n\t- {0} maps loaded!", new object[] { mapSVC.MapCount.CX }, LogEventLevel.Debug);
+                notificationSVC.WriteMarkup("Successfully started and subscribed to the map service![green]\n\t- {mapSVC.MapCount.CX} maps loaded![/]", LogEventLevel.Debug);
             }
             else
-                notificationSVC.WriteConsoleLog("Map loading disabled!");
+                notificationSVC.WriteMarkup("[slowblink bold orange3]Map loading disabled![/]");
 
             dbSVC.Init();
 
-            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the database service!", null, LogEventLevel.Debug);
+            notificationSVC.WriteString("Successfully started and subscribed to the database service!", LogEventLevel.Debug);
 
             networkSVC.Start();
 
-            notificationSVC.WriteConsoleLog("Successfully started and subscribed to the network service!", null, LogEventLevel.Debug);
+            notificationSVC.WriteString("Successfully started and subscribed to the network service!", LogEventLevel.Debug);
 
             return 0;
         }

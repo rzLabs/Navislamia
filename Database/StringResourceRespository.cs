@@ -36,7 +36,7 @@ namespace Database
                 while(reader.Read())
                 {
                     StringResource strResource = new StringResource();
-                    strResource.Code = reader.GetInt32(0);
+                    strResource.Code = Convert.ToInt32(reader["code"]);
                     strResource.Name = reader["name"].ToString();
                     strResource.Value = reader["value"].ToString();
                     Strings.Add(strResource);
@@ -44,7 +44,7 @@ namespace Database
             }
             catch (Exception ex)
             {
-                _notificationSVC.WriteConsoleLog("Exception occurred: {ex}", new object[] { ex } , LogEventLevel.Error);
+                _notificationSVC.WriteException(ex);
             }
             finally
             {

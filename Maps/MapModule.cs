@@ -65,13 +65,13 @@ namespace Maps
             tasks.Add(Task.Run(() =>
             {
                 seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
-                notificationSVC.WriteConsoleLog("TerrainSeamlessWorld.cfg loaded!", null, LogEventLevel.Information);
+                notificationSVC.WriteMarkup("[green]TerrainSeamlessWorld.cfg loaded![/]", LogEventLevel.Information);
             }));
 
             tasks.Add(Task.Run(() =>
             {
                 propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-                notificationSVC.WriteConsoleLog("TerrainPropInfo.cfg loaded!", null, LogEventLevel.Information);
+                notificationSVC.WriteMarkup("[green]TerrainPropInfo.cfg loaded![/]", LogEventLevel.Information);
             }));
 
             worker = Task.WhenAll(tasks);
@@ -81,7 +81,7 @@ namespace Maps
             {
                 foreach (Task t in tasks)
                     if (t.IsFaulted)
-                        notificationSVC.WriteConsoleLog("The MapLoader worker encountered an exception!\nMessage: {0}\nStack-Trace: {1}", new object[] { t.Exception.Message, t.Exception.StackTrace }, LogEventLevel.Error);
+                        notificationSVC.WriteException(t.Exception);
 
                 return false;
             }
@@ -101,7 +101,7 @@ namespace Maps
             {
                 for (int x = 0; x < MapCount.CX; ++x)
                 {
-                    notificationSVC.WriteConsoleLog("Loading map assets for: m{0}_{1}...", new object[] { x.ToString("D3"), y.ToString("D3") }, LogEventLevel.Debug);
+                    notificationSVC.WriteMarkup($"Loading map assets for: m{x.ToString("D3")}_{y.ToString("D3")}...", LogEventLevel.Debug);
 
                     string locationFileName = seamlessWorldInfo.GetLocationFileName(x, y);
 
@@ -157,7 +157,7 @@ namespace Maps
                     {
                         foreach (Task t in tasks)
                             if (t.IsFaulted)
-                                notificationSVC.WriteConsoleLog("The MapLoader worker encountered an exception!\nMessage: {0}\nStack-Trace: {1}", new object[] { t.Exception.Message, t.Exception.StackTrace }, LogEventLevel.Error);
+                                notificationSVC.WriteException(t.Exception);
 
                         return false;
                     }
@@ -208,7 +208,7 @@ namespace Maps
                 }
             }
 
-            notificationSVC.WriteConsoleLog("\t- {0} collision polygons loaded", new object[] { polygonCnt }, LogEventLevel.Debug);
+            notificationSVC.WriteMarkup($"[green]\t- {polygonCnt} collision polygons loaded[/]",  LogEventLevel.Debug);
         }
 
         public void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
@@ -344,7 +344,7 @@ namespace Maps
                 }
             }
 
-            notificationSVC.WriteConsoleLog("\t- {0} location polygons loaded!", new object[] { localSize }, LogEventLevel.Debug);
+            notificationSVC.WriteMarkup("[green]\t- {0} location polygons loaded![/]", LogEventLevel.Debug);
         }
 
         private void registerMapLocationInfo(MapLocationInfo location_info) => QtLocationInfo.Add(location_info);
@@ -370,13 +370,13 @@ namespace Maps
 
             if (header.Sign != NFSFILE_SIGN)
             {
-                notificationSVC.WriteConsoleLog("\t- Invalid script header!", null, LogEventLevel.Fatal);
+                notificationSVC.WriteMarkup("[bold red]\t- Invalid script header![/]", LogEventLevel.Fatal);
                 return;
             }
 
             if (header.Version != NFSCurrentVer)
             {
-                notificationSVC.WriteConsoleLog("\t- Invalid script version!", null, LogEventLevel.Fatal);
+                notificationSVC.WriteMarkup("[red\\t- Invalid script version![/]", LogEventLevel.Fatal);
                 return;
             }
 
@@ -391,7 +391,7 @@ namespace Maps
 
             currentRegionIdx = regionList.Count;
 
-            notificationSVC.WriteConsoleLog("\t- {0} spawn areas loaded!", new object[] { currentRegionIdx }, LogEventLevel.Debug);
+            notificationSVC.WriteMarkup($"[bold red]\t- {currentRegionIdx} spawn areas loaded![/]", LogEventLevel.Debug);
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -556,7 +556,7 @@ namespace Maps
         {
             if (PropScriptInfo.ContainsKey(propID))
             {
-                notificationSVC.WriteConsoleLog("Duplicate prop index: {0}", new object[] { propID }, LogEventLevel.Warning);
+                notificationSVC.WriteMarkup($"[bold orange3]Duplicate prop index: {propID}[/]", LogEventLevel.Warning);
             }
 
             PropContactScriptInfo tag = new PropContactScriptInfo()
