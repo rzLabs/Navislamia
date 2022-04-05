@@ -8,6 +8,14 @@ namespace Network.Packets
 {
     public static class Checksum
     {
+        /// <summary>
+        /// Calculate the checksum of the packet
+        /// Ported from Glandu2 CLI Packet Serializer
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="id"></param>
+        /// <seealso cref="https://github.com/glandu2/rzu_packet_dotnet/blob/4e179816ae03de067d299342a90250e284c15ac3/lib/Packet/CliSerializer.h#L21"/>
+        /// <returns></returns>
         public static byte Calculate(uint size, uint id)
         {
             byte value = 0;

@@ -13,7 +13,7 @@ namespace Network.Packets
             byte[] buffer = new byte[2 + length + 1];
 
             Buffer.BlockCopy(BitConverter.GetBytes(id), 0, buffer, 0, 2);
-            Buffer.BlockCopy(BitConverter.GetBytes(length), 2, buffer, 2, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(length), 0, buffer, 2, 4);
             Buffer.BlockCopy(new byte[] { checksum }, 0, buffer, 6, 1);
 
             return buffer;

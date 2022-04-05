@@ -123,16 +123,14 @@ namespace Network
         {
             try
             {
-                //TS_GA_LOGIN pMsg = new TS_GA_LOGIN();
-                //pMsg.server_idx = configSVC.Get<ushort>("index", "Server", 0);
-                //pMsg.server_ip = configSVC.Get<string>("io.ip", "Network", "127.0.0.1");
-                //pMsg.server_port = configSVC.Get<short>("io.port", "Network", 4515);
-                //pMsg.server_name = configSVC.Get<string>("name", "Server", "Navislamia");
-                //pMsg.server_screenshot_url = configSVC.Get<string>("screenshort.url", "Server", "about:blank");
-                //pMsg.is_adult_server = configSVC.Get<bool>("adult", "Server", false);
+                var idx = configSVC.Get<ushort>("index", "Server", 0);
+                var ip = configSVC.Get<string>("io.ip", "Network", "127.0.0.1");
+                var port = configSVC.Get<short>("io.port", "Network", 4515);
+                var name = configSVC.Get<string>("name", "Server", "Navislamia");
+                var screenshot_url = configSVC.Get<string>("screenshort.url", "Server", "about:blank");
+                var adult_server = configSVC.Get<bool>("adult", "Server", false);
 
-                // T
-                //auth.Send(pMsg);
+                var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
             }
             catch (Exception ex)

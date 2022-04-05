@@ -6,62 +6,40 @@ using System.Threading.Tasks;
 
 namespace Network.Packets
 {
+    /// <summary>
+    /// Packet class inspired and partially ported from Glandu2 Packet CLI Serializer
+    /// <seealso cref="https://github.com/glandu2/rzu_packet_dotnet/blob/4e179816ae03de067d299342a90250e284c15ac3/packets/AuthGame/TS_GA_LOGIN.h#L5"/>
+    /// </summary>
     public class TS_GA_LOGIN : Packet, ISerializablePacket
     {
         const int id = 20011;
-        
+
+        public ushort ServerIndex;
         public string ServerIP;
         public short ServerPort;
         public string ServerName;
         public string ServerScreenshotURL;
         public bool IsAdultServer;
 
-        short ipLength = 0;
-        short nameLength = 0;
-        short screenshotLength = 0;
+        public TS_GA_LOGIN(byte[] buffer) : base(id, buffer) => throw new NotImplementedException(); // We will never receive this packet. No reason to implement this constructor
 
-        public TS_GA_LOGIN(byte[] buffer) : base(id, buffer)
+        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id, 2 + (ip.Length + 1) + 2 + (name.Length + 1) + (screenshotUrl.Length + 1) + 1) // TODO: this is not sustainable!
         {
-            int offset = 0;
-
-            Span<byte> data = Data;
-
-            ipLength = BitConverter.ToInt16(data.Slice(0, 2));
-            nameLength = BitConverter.ToInt16(data.Slice(2, 2));
-            screenshotLength = BitConverter.ToInt16(data.Slice(4, 2));
-
-            offset = 6;
-
-            ServerIP = Encoding.Default.GetString(data.Slice(offset, ipLength));
-            offset += ipLength;
-
-            ServerPort = BitConverter.ToInt16(data.Slice(offset, 2));
-            offset += 2;
-
-            ServerName = Encoding.Default.GetString(data.Slice(offset, nameLength));
-            offset += nameLength;
-
-            ServerScreenshotURL = Encoding.Default.GetString(data.Slice(offset, screenshotLength));
-            offset += screenshotLength;
-
-            IsAdultServer = BitConverter.ToBoolean(data.Slice(offset, 1));
-        }
-
-        public TS_GA_LOGIN(string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id, ip.Length + 2 + name.Length + screenshotUrl.Length + 1)
-        {
+            ServerIndex = index;
             ServerIP = ip;
-            ipLength = (short)ip.Length;
             ServerPort = port;
             ServerName = name;
-            nameLength = (short)name.Length;
             ServerScreenshotURL = screenshotUrl;
-            screenshotLength = (short)screenshotUrl.Length;
             IsAdultServer = isAdult;
+
+            Serialize(); // just go ahead and serialize the data. One less call later
         }
 
         public void Serialize()
         {
             int offset = 0;
+
+            base.Checksum = Network.Packets.Checksum.Calculate((uint)Length, id);
 
             byte[] headerBuffer = Header.Generate(id, Length, Checksum);
             Data = new byte[headerBuffer.Length + Length];
@@ -70,16 +48,11 @@ namespace Network.Packets
 
             offset = headerBuffer.Length;
 
-            byte[] buffer = Encoding.Default.GetBytes($"{ServerIP}\0");
-            Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
-
-            offset += buffer.Length;
-
-            Buffer.BlockCopy(BitConverter.GetBytes(ServerPort), 0, Data, offset, 2);
+            Buffer.BlockCopy(BitConverter.GetBytes(ServerIndex), 0, Data, offset, 2);
 
             offset += 2;
 
-            buffer = Encoding.Default.GetBytes($"{ServerName}\0");
+            byte[] buffer = Encoding.Default.GetBytes($"{ServerName}\0");
             Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
 
             offset += buffer.Length;
@@ -90,6 +63,15 @@ namespace Network.Packets
             offset += buffer.Length;
 
             Buffer.BlockCopy(BitConverter.GetBytes(IsAdultServer), 0, Data, offset, 1);
+
+            offset++;
+
+            buffer = Encoding.Default.GetBytes($"{ServerIP}\0");
+            Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
+
+            offset += buffer.Length;
+
+            Buffer.BlockCopy(BitConverter.GetBytes(ServerPort), 0, Data, offset, 2);
         }
 
         public void Deserialize(byte[] data)
