@@ -35,11 +35,11 @@ namespace Database
 
         public void Init() // TODO: arcadia table loading logic should occur here
         {
+            //TODO: this is a test! implement more permenant calling of the repo classes
             worldDbContext = new WorldDbContext(configSVC);
 
             var stringRepo = new StringResourceRespository(notificationSVC, worldDbContext);
-
-            var strings = stringRepo.GetStrings();
+            var strings = stringRepo.GetStrings();       
 
             notificationSVC.WriteMarkup($"[italic green]{strings.Count()}[/] strings loaded!",  LogEventLevel.Debug);
         }

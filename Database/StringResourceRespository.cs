@@ -15,7 +15,6 @@ namespace Database
 
         public List<StringResource> Strings { get; }
 
-
         public StringResourceRespository(INotificationService notificationService, WorldDbContext context)
         {
             _notificationSVC = notificationService;

@@ -38,6 +38,11 @@ namespace Notification
             Log.Write(level, message);
         }
 
+        public void WriteSuccess(string message, LogEventLevel level = LogEventLevel.Verbose)
+        {
+            throw new NotImplementedException();
+        }
+
         public void WriteException(Exception exception, LogEventLevel level = LogEventLevel.Error)
         {
             AnsiConsole.WriteException(exception);

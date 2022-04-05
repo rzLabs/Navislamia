@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Modules.Maps</AssemblyName>
+    <RootNamespace>Navislamia.Maps</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

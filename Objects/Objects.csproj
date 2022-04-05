@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Objects</AssemblyName>
+    <RootNamespace>Navislamia.Objects</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

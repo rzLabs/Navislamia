@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Modules.Command</AssemblyName>
+    <RootNamespace>Navislamia.Command</RootNamespace>
   </PropertyGroup>
 
 </Project>

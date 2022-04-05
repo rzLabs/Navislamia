@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Modules.Utilities</AssemblyName>
+    <RootNamespace>Navislamia.Utilities</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
