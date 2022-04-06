@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Navislamia.Network.Objects;
+using Navislamia.Network.Packets;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,24 +14,30 @@ namespace Network.Packets
     /// </summary>
     public class TS_GA_LOGIN : Packet, ISerializablePacket
     {
-        const int id = 20011;
+        const int id = 20001;
 
-        public ushort ServerIndex;
-        public string ServerIP;
-        public short ServerPort;
-        public string ServerName;
-        public string ServerScreenshotURL;
-        public bool IsAdultServer;
+        public ushort ServerIndex { get; set; }
+
+        public CString ServerIP { get; set; } = new CString(16);
+
+        public int ServerPort { get; set; }
+
+        public CString ServerName { get; set; } = new CString(21);
+
+        public CString ServerScreenshotURL { get; set; } = new CString(256);
+
+        public bool IsAdultServer { get; set; }
 
         public TS_GA_LOGIN(byte[] buffer) : base(id, buffer) => throw new NotImplementedException(); // We will never receive this packet. No reason to implement this constructor
 
-        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id, 2 + (ip.Length + 1) + 2 + (name.Length + 1) + (screenshotUrl.Length + 1) + 1) // TODO: this is not sustainable!
+        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) // TODO: this is not sustainable!
         {
+
             ServerIndex = index;
-            ServerIP = ip;
+            ServerIP.String = $"{ip}";
             ServerPort = port;
-            ServerName = name;
-            ServerScreenshotURL = screenshotUrl;
+            ServerName.String = $"{name}";
+            ServerScreenshotURL.String = $"{screenshotUrl}";
             IsAdultServer = isAdult;
 
             Serialize(); // just go ahead and serialize the data. One less call later
@@ -39,10 +47,10 @@ namespace Network.Packets
         {
             int offset = 0;
 
-            base.Checksum = Network.Packets.Checksum.Calculate((uint)Length, id);
+            Length = PacketUtility.GetLength(this);
 
-            byte[] headerBuffer = Header.Generate(id, Length, Checksum);
-            Data = new byte[headerBuffer.Length + Length];
+            byte[] headerBuffer = Header.Generate(this);
+            Data = new byte[512/*Length + headerBuffer.Length*/];
 
             Buffer.BlockCopy(headerBuffer, 0, Data, 0, headerBuffer.Length);
 
@@ -52,12 +60,12 @@ namespace Network.Packets
 
             offset += 2;
 
-            byte[] buffer = Encoding.Default.GetBytes($"{ServerName}\0");
+            byte[] buffer = ServerName.Data;
             Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
 
             offset += buffer.Length;
 
-            buffer = Encoding.Default.GetBytes($"{ServerScreenshotURL}\0");
+            buffer = ServerScreenshotURL.Data;
             Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
 
             offset += buffer.Length;
@@ -66,7 +74,7 @@ namespace Network.Packets
 
             offset++;
 
-            buffer = Encoding.Default.GetBytes($"{ServerIP}\0");
+            buffer = ServerIP.Data;
             Buffer.BlockCopy(buffer, 0, Data, offset, buffer.Length);
 
             offset += buffer.Length;

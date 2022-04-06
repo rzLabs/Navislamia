@@ -18,6 +18,7 @@ using Network.Security;
 //using RappelzPackets;
 using Autofac;
 using Network.Packets;
+using Navislamia.Network.Packets;
 
 namespace Network
 {
@@ -132,6 +133,7 @@ namespace Network
 
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
+                notificationSVC.WriteString(PacketUtility.DumpToString(msg));
             }
             catch (Exception ex)
             {

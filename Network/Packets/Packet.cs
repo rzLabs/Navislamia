@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace Network.Packets
     {
         public uint Version { get; set; } = 0x070300;
 
-        public int Length { get; set; }
+        public uint Length { get; set; }
 
         public ushort ID { get; set; } = 0x0000;
 
@@ -21,15 +22,15 @@ namespace Network.Packets
         public Packet(ushort id, byte[] buffer)
         {
             ID = id;
-            Length = buffer.Length;
+            Length = Convert.ToUInt32(buffer.Length);
             Data = buffer;
         }
 
-        public Packet(ushort id, int length)
+        public Packet(ushort id)
         {
             ID = id;
-            Length = length;
-            Data = new byte[Length];
+            Length = 0;
+            Data = new byte[0];
         }
     }
 }

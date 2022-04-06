@@ -100,6 +100,33 @@ namespace Utilities
             return outStr;
         }
 
+        public static string ByteArrayToString(byte[] buffer)
+        {
+            int length = buffer.Length;
+
+            string outStr = null;
+            string curRowStr = null;
+            int curCol = 0;
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                string byteStr = $"0x{buffer[i].ToString("x2")}";
+                curRowStr += $"{byteStr},";
+                curCol++;
+
+                if (curCol == length)
+                {
+                    outStr += $"{curRowStr}\n";
+                    curRowStr = null;
+                    curCol = 0;
+                }
+            }
+
+            outStr = outStr.Remove(outStr.Length - 2, 1);
+
+            return outStr;
+        }
+
         public static string GetStringContent(string line, string header)
         {
             if (line.StartsWith(header))
