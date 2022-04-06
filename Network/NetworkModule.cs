@@ -10,7 +10,6 @@ using System.Net.Sockets;
 
 using Configuration;
 using Notification;
-using Objects.Network;
 using Serilog.Events;
 
 using Network.Security;
@@ -19,6 +18,7 @@ using Network.Security;
 using Autofac;
 using Network.Packets;
 using Navislamia.Network.Packets;
+using Navislamia.Network.Objects;
 
 namespace Network
 {
@@ -33,7 +33,7 @@ namespace Network
 
         List<GameClient> connections = new List<GameClient>();
 
-        AuthClient auth = null;
+        IClient auth = null;
 
         XRC4Cipher recvCipher = new XRC4Cipher();
         XRC4Cipher sendCipher = new XRC4Cipher();
@@ -112,8 +112,8 @@ namespace Network
             notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {buffLen} loaded from config![/]", LogEventLevel.Verbose);
 
             // TODO:
-            //auth = new AuthClient(authSock, buffLen);
-            //auth.Connect(authEP);
+            auth = new AuthClient(authSock, buffLen);
+            auth.Connect(authEP);
 
             notificationSVC.WriteString("Connected to Auth server successfully!");
 
@@ -132,6 +132,8 @@ namespace Network
                 var adult_server = configSVC.Get<bool>("adult", "Server", false);
 
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
+
+                ((AuthClient)auth).Send(msg, true);
 
                 notificationSVC.WriteString(PacketUtility.DumpToString(msg));
             }

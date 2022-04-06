@@ -82,7 +82,7 @@ namespace Network.Packets
             Buffer.BlockCopy(BitConverter.GetBytes(ServerPort), 0, Data, offset, 2);
         }
 
-        public void Deserialize(byte[] data)
+        public void Deserialize()
         {
             throw new NotImplementedException();
         }

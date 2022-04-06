@@ -8,8 +8,10 @@ namespace Network.Packets
 {
     public interface ISerializablePacket
     {
+        public byte[] Data { get; set; }
+
         public void Serialize();
 
-        public void Deserialize(byte[] data);
+        public void Deserialize();
     }
 }
