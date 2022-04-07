@@ -84,8 +84,7 @@ namespace Network
 
             try
             {
-                auth = new AuthClient(authSock, BufferLength, notificationSVC, this);
-                status = auth.Connect(authEP);
+                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this);
             }
             catch (Exception ex)
             {

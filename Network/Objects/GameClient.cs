@@ -1,4 +1,5 @@
-﻿using Network;
+﻿using Configuration;
+using Network;
 using Notification;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,6 @@ namespace Navislamia.Network.Objects
 {
     public class GameClient : Client
     {
-        public GameClient(Socket socket, int length, INotificationService notificationService, INetworkService networkService) : base(socket, length, notificationService, networkService) { }
+        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) { }
     }
 }
