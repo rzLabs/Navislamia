@@ -18,7 +18,7 @@ While some `emulator` projects have been started and orphaned, there still has y
 
 ### Light weight, Purpose Driven
 
-No one likes code repetition right? Well, except for the developers at `Gala-Labs` Navislamia takes a different approach. Sequestering its code out into well organized and purpose driven `Modules` that use the `Module Subscription Model` *(as I have dubbed it)*
+No one likes code repetition right? Navislamia takes a different approach. Sequestering its code out into well organized and purpose driven `Modules` that use the `Module Subscription Model` *(as I have dubbed it)*
 
 ### Module Subscription Model
 
