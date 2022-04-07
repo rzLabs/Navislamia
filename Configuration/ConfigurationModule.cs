@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Autofac;
 
 using Newtonsoft.Json;
 
 namespace Configuration
 {
-    public class ConfigurationModule : Autofac.Module, IConfigurationService, IEnumerable<ConfigurationCollection>
+    public class ConfigurationModule : IConfigurationService, IEnumerable<ConfigurationCollection>
     {
         readonly string configName = "Configuration.json";
 
@@ -121,18 +120,6 @@ namespace Configuration
             throw new NotImplementedException();
 
             // TODO: register log through subscribed log module
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Configuration.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IConfigurationService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<IConfigurationService>();
         }
 
         public bool Load(string path = null)

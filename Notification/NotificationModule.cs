@@ -11,7 +11,7 @@ using Spectre.Console;
 
 namespace Notification
 {
-    public class NotificationModule : Autofac.Module, INotificationService
+    public class NotificationModule : INotificationService
     {
         public NotificationModule()
         {
@@ -42,18 +42,6 @@ namespace Notification
         {
             AnsiConsole.WriteException(exception);
             Log.Write(level, exception, "An exception has occured!");
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Notification.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(INotificationService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<INotificationService>();
         }
     }
 }

@@ -33,8 +33,8 @@ namespace DevConsole
             try
             {
                 var builder = new ContainerBuilder();
-                builder.RegisterModule<ConfigurationModule>();
-                builder.RegisterModule<NotificationModule>();
+                builder.Register<IConfigurationService>(c=> new ConfigurationModule());
+                builder.Register<INotificationService>(c=>new NotificationModule());
                 builder.Register<IGameService>(c => new GameModule(new List<object>() { ConfigurationService, NotificationService }));
 
                 depsContainer = builder.Build();
