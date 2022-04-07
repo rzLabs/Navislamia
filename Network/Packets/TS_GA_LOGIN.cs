@@ -1,12 +1,11 @@
 ﻿using Navislamia.Network.Objects;
-using Navislamia.Network.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Network.Packets
+namespace Navislamia.Network.Packets
 {
     /// <summary>
     /// Packet class inspired and partially ported from Glandu2 Packet CLI Serializer
@@ -47,9 +46,9 @@ namespace Network.Packets
         {
             int offset = 0;
 
-            Length = PacketUtility.GetLength(this);
+            Length = this.GetLength();
 
-            byte[] headerBuffer = Header.Generate(this);
+            byte[] headerBuffer = this.CreateHeader();
             Data = new byte[512/*Length + headerBuffer.Length*/];
 
             Buffer.BlockCopy(headerBuffer, 0, Data, 0, headerBuffer.Length);

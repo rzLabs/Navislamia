@@ -8,9 +8,10 @@ using System.IO;
 
 using System.Net;
 using System.Net.Sockets;
-using Network.Packets;
 using Notification;
 using Network;
+using Navislamia.Network.Packets;
+using Configuration;
 
 namespace Navislamia.Network.Objects
 {
@@ -22,15 +23,17 @@ namespace Navislamia.Network.Objects
 
     public class Client : IClient
     {
+        public IConfigurationService ConfigurationService;
         public INotificationService NotificationService;
         public INetworkService NetworkService;
 
         public uint MsgVersion = 0x070300;
 
-        public Client(Socket socket, int length, INotificationService notificationService, INetworkService networkService)
+        public Client(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService)
         {
             Socket = socket;
             BufferLen = length;
+            ConfigurationService = configurationService;
             NotificationService = notificationService;
             NetworkService = networkService;
         }
@@ -74,7 +77,7 @@ namespace Navislamia.Network.Objects
             return 0;
         }
 
-        public virtual void Send(ISerializablePacket msg, bool beginReceive = true) { }
+        public virtual void Send(Packet msg, bool beginReceive = true) { }
 
         public virtual void Receive() { }
     }

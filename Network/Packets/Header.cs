@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 using System.Reflection;
 
-namespace Network.Packets
+namespace Navislamia.Network.Packets
 {
     public static class Header
     {
-        public static byte[] Generate(Packet packet)
+        public static byte[] CreateHeader(this Packet packet)
         {
             byte[] buffer = new byte[7];
 

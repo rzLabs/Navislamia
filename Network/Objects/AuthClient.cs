@@ -11,31 +11,35 @@ using System.Net.Sockets;
 
 //using Navislamia.Configuration;
 using Utilities;
-using Network.Packets;
 
 //using Serilog;
 
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
+using static Navislamia.Network.Packets.PacketExtension;
 
 using Notification;
 using Network;
+using Configuration;
 
 namespace Navislamia.Network.Objects
 {
     public class AuthClient : Client
     {
-        public AuthClient(Socket socket, int length, INotificationService notificationService, INetworkService networkService) : base(socket, length, notificationService, networkService) { }
+        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) { }
 
-        public override void Send(ISerializablePacket msg, bool beginReceive = true)
+        public override void Send(Packet msg, bool beginReceive = true)
         {
             if (!Socket.Connected)
                 return;
 
             Socket.Send(msg.Data);
 
-            NotificationService.WriteMarkup($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
-            NotificationService.WriteString(Packets.PacketUtility.DumpToString(msg as Packet));
+            if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
+            {
+                NotificationService.WriteMarkup($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
+                NotificationService.WriteString((msg).DumpToString());
+            }
 
             Data = new byte[512];
 
@@ -76,7 +80,9 @@ namespace Navislamia.Network.Objects
 
                     TS_AG_LOGIN_RESULT msg = new TS_AG_LOGIN_RESULT(data);
 
-                    NotificationService.WriteString(Packets.PacketUtility.DumpToString(msg));
+                    
+
+                    NotificationService.WriteString(msg.DumpToString());
 
                     if (checksum != msg.Checksum)
                     {

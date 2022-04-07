@@ -1,5 +1,4 @@
-﻿using Autofac;
-using Configuration;
+﻿using Configuration;
 using Notification;
 using System;
 using System.Data;
@@ -11,7 +10,7 @@ using System.Text;
 
 namespace Database
 {
-    public class WorldDbContext : Autofac.Module
+    public class WorldDbContext
     {
         private IConfigurationService _configSVC;
         private string _connString;
@@ -40,18 +39,6 @@ namespace Database
                 sb.AppendFormat("User ID={0};Password={1}", user, pass);
 
             _connString = sb.ToString();
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var serviceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Database.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IDatabaseService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var serviceType in serviceTypes)
-                builder.RegisterType(serviceType).As<IDatabaseService>();
         }
     }
 }

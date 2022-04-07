@@ -14,9 +14,6 @@ using Serilog.Events;
 
 using Network.Security;
 
-//using RappelzPackets;
-using Autofac;
-using Network.Packets;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Objects;
 
@@ -40,13 +37,10 @@ namespace Network
 
         public NetworkModule() { }
 
-        public NetworkModule(List<object> dependencies)
+        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
         {
-            if (dependencies.Count < 2)
-                return;
-
-            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
-            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
+            configSVC = configurationService;
+            notificationSVC = notificationService;
         }
 
         public int ConnectToAuth()

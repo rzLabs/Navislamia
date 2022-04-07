@@ -1,5 +1,4 @@
 ﻿using Navislamia.Network.Objects;
-using Network.Packets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets
 {
-    public static class PacketUtility
+    public static class PacketExtension
     {
-        public static string DumpToString(Packet packet)
+        public static string DumpToString(this Packet packet)
         {
             string output = $"\nPrinting contents of: {packet.GetType().Name} ({packet.ID})\n\nChecksum: 0x{packet.Checksum.ToString("X2")}\n\n";
 
@@ -50,7 +49,7 @@ namespace Navislamia.Network.Packets
             return output;
         }
 
-        public static uint GetLength(Packet packet)
+        public static uint GetLength(this Packet packet)
         {
             uint length = 7;
 

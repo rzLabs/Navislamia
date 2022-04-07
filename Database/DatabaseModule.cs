@@ -14,7 +14,6 @@ using System.Reflection;
 using Configuration;
 using Notification;
 using Serilog.Events;
-using Autofac;
 using Navislamia.Database.GameContent;
 using Navislamia.Data;
 
@@ -29,14 +28,11 @@ namespace Database
 
         public DatabaseModule() { }
 
-        public DatabaseModule(List<object> dependencies)
+        public DatabaseModule(IConfigurationService configurationService, INotificationService notificationService, IDataService dataService)
         {
-            if (dependencies.Count < 3)
-                return;
-
-            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
-            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
-            dataSVC = dependencies.Find(d => d is IDataService) as IDataService;
+            configSVC = configurationService;
+            notificationSVC = notificationService;
+            dataSVC = dataService;
         }
 
         public void Init() // TODO: arcadia table loading logic should occur here

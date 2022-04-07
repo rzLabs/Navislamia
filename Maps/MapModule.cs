@@ -14,7 +14,6 @@ using Objects;
 
 using Serilog.Events;
 using System;
-using Autofac;
 
 namespace Maps
 {
@@ -33,14 +32,11 @@ namespace Maps
         public static Dictionary<int, PropContactScriptInfo> PropScriptInfo = new Dictionary<int, PropContactScriptInfo>();
         public static Dictionary<int, EventAreaInfo> EventAreaInfo = new Dictionary<int, EventAreaInfo>();
 
-        public MapModule(List<object> dependencies)
+        public MapModule(IConfigurationService configurationService, INotificationService notificationService, IScriptingService scriptService)
         {
-            if (dependencies.Count < 3)
-                return;
-
-            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
-            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
-            scriptSVC = dependencies.Find(d => d is IScriptingService) as IScriptingService;
+            configSVC = configurationService;
+            notificationSVC = notificationService;
+            scriptSVC = scriptService;
         }
 
         public void SetDefaultLocation(int x, int y, float mapLength, int locationID)

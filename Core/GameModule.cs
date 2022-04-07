@@ -14,7 +14,6 @@ using Network;
 using Notification;
 using Scripting;
 
-using Autofac;
 using Serilog.Events;
 using System.Collections.Generic;
 
@@ -22,7 +21,6 @@ namespace Navislamia.Game
 {
     public class GameModule : IGameService
     {
-        IContainer dependencies;
         IConfigurationService configSVC;
         IDatabaseService dbSVC;
         IDataService dataSVC;
@@ -33,16 +31,16 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(List<object> dependencies)
+        public GameModule(IConfigurationService configurationService, INotificationService notificationService)
         {
-            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
-            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
+            configSVC = configurationService;
+            notificationSVC = notificationService;
 
             dataSVC = new DataModule();
-            dbSVC = new DatabaseModule(new List<object>() { configSVC, notificationSVC, dataSVC });
-            scriptSVC = new ScriptModule(new List<object>() { configSVC, notificationSVC });
-            mapSVC = new MapModule(new List<object>() { configSVC, notificationSVC, scriptSVC });
-            networkSVC = new NetworkModule(new List<object>() { configSVC, notificationSVC });
+            dbSVC = new DatabaseModule(configSVC, notificationSVC, dataSVC);
+            scriptSVC = new ScriptModule(configSVC, notificationSVC);
+            mapSVC = new MapModule(configSVC, notificationSVC, scriptSVC);
+            networkSVC = new NetworkModule(configSVC, notificationSVC);
         }
 
         public int Start(string ip, int port, int backlog)

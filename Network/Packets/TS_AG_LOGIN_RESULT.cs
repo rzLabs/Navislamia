@@ -1,12 +1,8 @@
-﻿using Network.Packets;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using _checksum = Network.Packets.Checksum;
-
 
 namespace Navislamia.Network.Packets
 {
@@ -25,9 +21,9 @@ namespace Navislamia.Network.Packets
 
         public void Serialize()
         {
-            Length = PacketUtility.GetLength(this);
+            Length = this.GetLength();
 
-            byte[] headerBuffer = Header.Generate(this);
+            byte[] headerBuffer = this.CreateHeader();
             Data = new byte[512/*Length + headerBuffer.Length*/];
 
             byte[] buffer = BitConverter.GetBytes(Result);

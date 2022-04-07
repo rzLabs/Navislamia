@@ -16,6 +16,8 @@ using Serilog.Events;
 using System.Resources;
 using DevConsole.Properties;
 using System.Collections.Generic;
+using Navislamia.Data;
+using Database;
 
 namespace DevConsole
 {
@@ -35,7 +37,7 @@ namespace DevConsole
                 var builder = new ContainerBuilder();
                 builder.Register<IConfigurationService>(c=> new ConfigurationModule());
                 builder.Register<INotificationService>(c=>new NotificationModule());
-                builder.Register<IGameService>(c => new GameModule(new List<object>() { ConfigurationService, NotificationService }));
+                builder.Register<IGameService>(c => new GameModule(ConfigurationService, NotificationService));
 
                 depsContainer = builder.Build();
 

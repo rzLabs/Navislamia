@@ -5,8 +5,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Network.Packets
+
+namespace Navislamia.Network.Packets
 {
+    using static Navislamia.Network.Packets.PacketExtension;
+    using static Navislamia.Network.Packets.Header;
+
     public class Packet
     {
         public uint Version { get; set; } = 0x070300;

@@ -1,5 +1,4 @@
-﻿using Autofac;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,15 +29,6 @@ namespace Scripting
         INotificationService notificationSVC;
 
         public ScriptModule() { }
-
-        public ScriptModule(List<object> dependencies)
-        {
-            if (dependencies.Count < 2)
-                return;
-
-            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
-            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
-        }
 
         public ScriptModule(IConfigurationService configurationService, INotificationService notificationService)
         {

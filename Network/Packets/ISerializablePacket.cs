@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Network.Packets
+namespace Navislamia.Network.Packets
 {
     public interface ISerializablePacket
     {
