@@ -50,7 +50,7 @@ namespace Navislamia.Network.Objects
 
                 Span<byte> data = Data;
 
-                return BitConverter.ToUInt16(data.Slice(4, 6));
+                return BitConverter.ToUInt16(data.Slice(4, 2));
             }
         }
 

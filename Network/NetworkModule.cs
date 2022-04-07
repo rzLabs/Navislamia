@@ -126,8 +126,6 @@ namespace Network
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
                 ((AuthClient)auth).Send(msg, true);
-
-                notificationSVC.WriteString(PacketUtility.DumpToString(msg));
             }
             catch (Exception ex)
             {
@@ -167,7 +165,7 @@ namespace Network
 
             listener.BeginAcceptSocket(AttemptAcceptScoket, listener);
 
-            notificationSVC.WriteMarkup($"[yellow]- Listening at: {addrStr} : {port} with backlog of: {backlog}[/]", LogEventLevel.Information);
+            notificationSVC.WriteMarkup($"[yellow]- Listening at: {addrStr} : {port} with backlog of: {backlog}[/]\n", LogEventLevel.Information);
 
             return true;
         }

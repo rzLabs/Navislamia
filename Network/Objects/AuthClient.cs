@@ -15,7 +15,9 @@ using Network.Packets;
 
 //using Serilog;
 
+using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
+
 using Notification;
 using Network;
 
@@ -32,6 +34,9 @@ namespace Navislamia.Network.Objects
 
             Socket.Send(msg.Data);
 
+            NotificationService.WriteMarkup($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
+            NotificationService.WriteString(Packets.PacketUtility.DumpToString(msg as Packet));
+
             Data = new byte[512];
 
             Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
@@ -45,7 +50,7 @@ namespace Navislamia.Network.Objects
             Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
         }
 
-        private void ReceiveCallback(IAsyncResult ar) // TODO: should be verifying the checksum
+        private void ReceiveCallback(IAsyncResult ar)
         {
             NotificationService.WriteMarkup("[orange3]Receiving data from the auth server...[/]");
 
@@ -63,7 +68,7 @@ namespace Navislamia.Network.Objects
 
             try
             {
-                if (auth.MessageID == 20002)
+                if (auth.MessageID == (uint)AuthPackets.TS_AG_LOGIN_RESULT)
                 {
                     Span<byte> data = auth.Data;
 
