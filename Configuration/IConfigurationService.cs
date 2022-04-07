@@ -18,6 +18,8 @@ namespace Configuration
 
         T Get<T>(string key, string parent = null, object defaultValue = null);
 
+        object Get(string key, string parent = null, object defaultValue = null);
+
         void Set(string key, string parent = null, object value = null);
     }
 }

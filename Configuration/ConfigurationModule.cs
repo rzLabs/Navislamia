@@ -112,9 +112,14 @@ namespace Configuration
             return (T)Convert.ChangeType(val, typeof(T));
         }
 
-        public dynamic Get(string key, string parent, object defaultValue = null)
+        public object Get(string key, string parent, object defaultValue = null)
         {
-            throw new NotImplementedException();
+            var category = Configurations.Find(c => c.Category == parent);
+
+            if (category is null)
+                return default;
+
+            return category.Collection?[key] ?? default;
         }
 
         public void Set(string key, string parent = null, object value = null)

@@ -6,4 +6,13 @@
     <RootNamespace>Navislamia.Command</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.44.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Notification\Notification.csproj" />
+  </ItemGroup>
+
 </Project>

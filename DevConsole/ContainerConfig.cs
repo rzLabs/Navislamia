@@ -2,6 +2,8 @@
 using Configuration;
 using Database;
 using Maps;
+using Navislamia.Command;
+using Navislamia.Command.Commands;
 using Navislamia.Data;
 using Navislamia.Game;
 using Network;
@@ -24,6 +26,11 @@ namespace DevConsole
             builder.RegisterType<Application>().As<IApplication>();
             builder.RegisterType<ConfigurationModule>().As<IConfigurationService>();
             builder.RegisterType<NotificationModule>().As<INotificationService>();
+
+            builder.RegisterType<CommandModule>().As<ICommandService>();
+            builder.RegisterType<WaitCommand>();
+            builder.RegisterType<GetCommand>();
+
             builder.RegisterType<DataModule>().As<IDataService>();
             builder.RegisterType<DatabaseModule>().As<IDatabaseService>();
             builder.RegisterType<ScriptModule>().As<IScriptingService>();
