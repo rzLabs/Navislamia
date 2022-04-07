@@ -1,5 +1,7 @@
 # Navislamia
 ---
+[![Build Status](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml/badge.svg?branch=Development)](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml)
+[![OpenRZ Discord](https://badgen.net/discord/members/UQz9uydsFY)](https://discord.gg/UQz9uydsFY)
 
 ## Foreward
 
@@ -42,12 +44,6 @@ A project of this scope requires varying talent to progress to completion. That 
     - Unity, Graphics Design and Animations
     - Community Management
 
-If you feel like you or someone you know would like to contribute to this project, please click the discord link below and introduce yourself in the lobby.
-
-### [Discord](https://discord.gg/73mGPjr)
-
-## Build Status
-
-[![Build Solution](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml/badge.svg?branch=Development)](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml)  
+If you feel like you or someone you know would like to contribute to this project, please click the discord link above and introduce yourself in the lobby.
 
 
