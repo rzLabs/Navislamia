@@ -22,6 +22,12 @@ namespace Navislamia.Data
             return default(T);
         }
 
-        public void Set<T>(string key, object obj) => storage.Add(key, obj);
+        public void Set<T>(string key, object obj)
+        {
+            if (storage.ContainsKey(key))
+                return;
+
+            storage[key] = obj;
+        }
     }
 }
