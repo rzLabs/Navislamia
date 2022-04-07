@@ -22,7 +22,7 @@ using Navislamia.Network.Objects;
 
 namespace Network
 {
-    public class NetworkModule : Autofac.Module, INetworkService
+    public class NetworkModule : INetworkService
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
@@ -40,16 +40,13 @@ namespace Network
 
         public NetworkModule() { }
 
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
+        public NetworkModule(List<object> dependencies)
         {
-            configSVC = configurationService;
-            notificationSVC = notificationService;
+            if (dependencies.Count < 2)
+                return;
 
-            string cipherKey = configSVC.Get<string>("cipher.key", "Network", "}h79q~B%al;k'y $E");
-
-            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
-            recvCipher.SetKey(cipherKey);
-            sendCipher.SetKey(cipherKey);
+            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
+            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
         }
 
         public int ConnectToAuth()
@@ -60,18 +57,6 @@ namespace Network
             sendGSInfoToAuth();
 
             return 0;
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Network.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(INetworkService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<INetworkService>();
         }
 
         int connectToAuth()

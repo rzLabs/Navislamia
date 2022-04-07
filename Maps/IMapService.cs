@@ -11,7 +11,7 @@ namespace Maps
 {
     public interface IMapService
     {
-        public bool Initialize(string directory, IConfigurationService configurationService, IScriptingService scriptService, INotificationService notificationService);
+        public bool Initialize(string directory);
 
         public KSize MapCount { get; set; }
     }

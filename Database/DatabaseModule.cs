@@ -20,7 +20,7 @@ using Navislamia.Data;
 
 namespace Database
 {
-    public class DatabaseModule : Autofac.Module, IDatabaseService
+    public class DatabaseModule :  IDatabaseService
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
@@ -29,11 +29,14 @@ namespace Database
 
         public DatabaseModule() { }
 
-        public DatabaseModule(IConfigurationService configurationService, INotificationService notificationService, IDataService dataService)
+        public DatabaseModule(List<object> dependencies)
         {
-            configSVC = configurationService;
-            notificationSVC = notificationService;
-            dataSVC = dataService;
+            if (dependencies.Count < 3)
+                return;
+
+            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
+            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
+            dataSVC = dependencies.Find(d => d is IDataService) as IDataService;
         }
 
         public void Init() // TODO: arcadia table loading logic should occur here
@@ -46,18 +49,6 @@ namespace Database
             int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count;
 
             notificationSVC.WriteMarkup($"[italic green]{stringCnt}[/] strings loaded!",  LogEventLevel.Debug);
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var serviceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Database.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IDatabaseService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var serviceType in serviceTypes)
-                builder.RegisterType(serviceType).As<IDatabaseService>();
         }
     }
 }

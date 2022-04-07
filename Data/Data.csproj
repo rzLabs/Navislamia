@@ -6,8 +6,4 @@
     <RootNamespace>Navislamia.Data</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Autofac" Version="6.3.0" />
-  </ItemGroup>
-
 </Project>

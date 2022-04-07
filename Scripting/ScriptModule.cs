@@ -20,7 +20,7 @@ using Spectre.Console;
 
 namespace Scripting
 {
-    public class ScriptModule : Autofac.Module, IScriptingService
+    public class ScriptModule : IScriptingService
     {
         public string ScriptsDirectory;
         public int ScriptCount { get; set; }
@@ -30,6 +30,15 @@ namespace Scripting
         INotificationService notificationSVC;
 
         public ScriptModule() { }
+
+        public ScriptModule(List<object> dependencies)
+        {
+            if (dependencies.Count < 2)
+                return;
+
+            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
+            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
+        }
 
         public ScriptModule(IConfigurationService configurationService, INotificationService notificationService)
         {
@@ -88,18 +97,6 @@ namespace Scripting
             }
 
             return 1;
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Scripting.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IScriptingService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<IScriptingService>();
         }
 
         void registerFunctions()

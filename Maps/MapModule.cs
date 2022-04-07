@@ -18,10 +18,10 @@ using Autofac;
 
 namespace Maps
 {
-    public class MapModule : Autofac.Module, IMapService
+    public class MapModule : IMapService
     {
         IConfigurationService configSVC;
-        IScriptingService scriptSCV;
+        IScriptingService scriptSVC;
         INotificationService notificationSVC;
 
         static int mapWidth = 700000;
@@ -32,6 +32,16 @@ namespace Maps
         public static QuadTree QtAutoBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
         public static Dictionary<int, PropContactScriptInfo> PropScriptInfo = new Dictionary<int, PropContactScriptInfo>();
         public static Dictionary<int, EventAreaInfo> EventAreaInfo = new Dictionary<int, EventAreaInfo>();
+
+        public MapModule(List<object> dependencies)
+        {
+            if (dependencies.Count < 3)
+                return;
+
+            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
+            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
+            scriptSVC = dependencies.Find(d => d is IScriptingService) as IScriptingService;
+        }
 
         public void SetDefaultLocation(int x, int y, float mapLength, int locationID)
         {
@@ -51,12 +61,8 @@ namespace Maps
             registerMapLocationInfo(location_info);
         }
 
-        public bool Initialize(string directory, IConfigurationService configurationService, IScriptingService scriptService, INotificationService notificationService)
+        public bool Initialize(string directory)
         {
-            configSVC = configurationService;
-            scriptSCV = scriptService;
-            notificationSVC = notificationService;
-
             List<Task> tasks = new List<Task>();
             Task worker = null;
 
@@ -304,7 +310,7 @@ namespace Maps
                 if (charSize > 1)
                 {
                     string script = stream.ReadString(charSize);
-                    scriptSCV.RunString(script);
+                    scriptSVC.RunString(script);
                 }
 
                 if (CurrentLocationID == 0)
@@ -392,18 +398,6 @@ namespace Maps
             currentRegionIdx = regionList.Count;
 
             notificationSVC.WriteMarkup($"[orange3]\t- {currentRegionIdx} spawn areas loaded![/]", LogEventLevel.Debug);
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Maps.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IMapService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<IMapService>();
         }
 
         void loadRegion(KStream stream, int x, int y, float mapLength)

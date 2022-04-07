@@ -16,10 +16,11 @@ using Scripting;
 
 using Autofac;
 using Serilog.Events;
+using System.Collections.Generic;
 
 namespace Navislamia.Game
 {
-    public class GameModule : Autofac.Module, IGameService
+    public class GameModule : IGameService
     {
         IContainer dependencies;
         IConfigurationService configSVC;
@@ -32,35 +33,33 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, INotificationService notificationService)
+        public GameModule(List<object> dependencies)
         {
-            var builder = new ContainerBuilder();
-            builder.RegisterModule<DataModule>();
-            builder.RegisterModule<DatabaseModule>();
-            builder.RegisterModule<NetworkModule>();
-            builder.RegisterModule<ScriptModule>();
-            builder.RegisterModule<MapModule>();
+            configSVC = dependencies.Find(d => d is IConfigurationService) as IConfigurationService;
+            notificationSVC = dependencies.Find(d => d is INotificationService) as INotificationService;
 
-            dependencies = builder.Build();
-
-            configSVC = configurationService;
-            notificationSVC = notificationService;
-            dataSVC = dependencies.Resolve<IDataService>();
-            dbSVC = dependencies.Resolve<IDatabaseService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC), new NamedParameter("dataService", dataSVC));
-            scriptSVC = dependencies.Resolve<IScriptingService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC));
-            mapSVC = dependencies.Resolve<IMapService>();
-            networkSVC = dependencies.Resolve<INetworkService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC));
+            dataSVC = new DataModule();
+            dbSVC = new DatabaseModule(new List<object>() { configSVC, notificationSVC, dataSVC });
+            scriptSVC = new ScriptModule(new List<object>() { configSVC, notificationSVC });
+            mapSVC = new MapModule(new List<object>() { configSVC, notificationSVC, scriptSVC });
+            networkSVC = new NetworkModule(new List<object>() { configSVC, notificationSVC });
         }
 
         public int Start(string ip, int port, int backlog)
         {
-            scriptSVC.Init();
+            if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
+            {
+                scriptSVC.Init();
 
-            notificationSVC.WriteMarkup($"Successfully started and subscribed to the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
+                notificationSVC.WriteMarkup($"Successfully started and subscribed to the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
+            }
+            else
+                notificationSVC.WriteMarkup("[slowblink bold orange3]Script loading disabled![/]");
+
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
-                mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps", configSVC, scriptSVC, notificationSVC);
+                mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
 
                 notificationSVC.WriteMarkup("Successfully started and subscribed to the map service![green]\n\t- {mapSVC.MapCount.CX} maps loaded![/]", LogEventLevel.Debug);
             }
@@ -80,18 +79,6 @@ namespace Navislamia.Game
             notificationSVC.WriteString("Successfully started and subscribed to the network service!", LogEventLevel.Debug);
 
             return 0;
-        }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            var configServiceTypes = Directory.EnumerateFiles(Environment.CurrentDirectory)
-                .Where(filename => filename.Contains("Modules") && filename.EndsWith("Game.dll"))
-                .Select(filepath => Assembly.LoadFrom(filepath))
-                .SelectMany(assembly => assembly.GetTypes()
-                .Where(type => typeof(IGameService).IsAssignableFrom(type) && type.IsClass));
-
-            foreach (var configServiceType in configServiceTypes)
-                builder.RegisterType(configServiceType).As<IGameService>();
         }
     }
 }

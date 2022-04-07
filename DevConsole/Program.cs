@@ -15,6 +15,7 @@ using Serilog;
 using Serilog.Events;
 using System.Resources;
 using DevConsole.Properties;
+using System.Collections.Generic;
 
 namespace DevConsole
 {
@@ -34,7 +35,7 @@ namespace DevConsole
                 var builder = new ContainerBuilder();
                 builder.RegisterModule<ConfigurationModule>();
                 builder.RegisterModule<NotificationModule>();
-                builder.RegisterModule<GameModule>();
+                builder.Register<IGameService>(c => new GameModule(new List<object>() { ConfigurationService, NotificationService }));
 
                 depsContainer = builder.Build();
 
@@ -47,7 +48,7 @@ namespace DevConsole
 
                 NotificationService.WriteMarkup($"[green]{ConfigurationService.TotalCount}[/] settings loaded from [bold yellow]Configuration.json[/]\n", LogEventLevel.Debug);
 
-                GameService = depsContainer.Resolve<IGameService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("notificationService", NotificationService));
+                GameService = depsContainer.Resolve<IGameService>();
                 
                 if (GameService.Start("", 4502, 100) == 1)
                 {
