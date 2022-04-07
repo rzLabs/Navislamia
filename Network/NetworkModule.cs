@@ -80,7 +80,7 @@ namespace Network
 
             notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {BufferLength} loaded from config![/]", LogEventLevel.Verbose);
 
-            int status = 1;
+            int status = 0;
 
             try
             {

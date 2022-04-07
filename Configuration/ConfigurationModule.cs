@@ -11,6 +11,8 @@ namespace Configuration
 {
     public class ConfigurationModule : IConfigurationService, IEnumerable<ConfigurationCollection>
     {
+        public ConfigurationModule() => Load();
+
         readonly string configName = "Configuration.json";
 
         public ConfigurationCollection Configurations = new ConfigurationCollection();

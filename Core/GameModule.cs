@@ -39,6 +39,7 @@ namespace Navislamia.Game
             dbSVC = databaseService;
             dataSVC = dataService;
             scriptSVC = scriptingService;
+            mapSVC = mapService;
             networkSVC = networkService;
         }
 
@@ -48,7 +49,7 @@ namespace Navislamia.Game
             {
                 scriptSVC.Init();
 
-                notificationSVC.WriteMarkup($"Successfully started and subscribed to the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
+                notificationSVC.WriteMarkup($"Successfully started the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
             }
             else
                 notificationSVC.WriteMarkup("[slowblink bold orange3]Script loading disabled![/]");
@@ -58,14 +59,14 @@ namespace Navislamia.Game
             {
                 mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
 
-                notificationSVC.WriteMarkup("Successfully started and subscribed to the map service![green]\n\t- {mapSVC.MapCount.CX} maps loaded![/]", LogEventLevel.Debug);
+                notificationSVC.WriteMarkup("Successfully started the map service![green]\n\t- {mapSVC.MapCount.CX} maps loaded![/]", LogEventLevel.Debug);
             }
             else
                 notificationSVC.WriteMarkup("[slowblink bold orange3]Map loading disabled![/]");
 
             dbSVC.Init();
 
-            notificationSVC.WriteString("Successfully started and subscribed to the database service!", LogEventLevel.Debug);
+            notificationSVC.WriteString("Successfully started the database service!", LogEventLevel.Debug);
 
             if (networkSVC.ConnectToAuth() > 0)
             {
@@ -73,7 +74,7 @@ namespace Navislamia.Game
                 return 1;
             }
 
-            notificationSVC.WriteString("Successfully started and subscribed to the network service!", LogEventLevel.Debug);
+            notificationSVC.WriteString("Successfully started the network service!", LogEventLevel.Debug);
 
             return 0;
         }
