@@ -31,16 +31,15 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, INotificationService notificationService)
+        public GameModule(IConfigurationService configurationService, INotificationService notificationService, IDatabaseService databaseService, IDataService dataService, 
+            IScriptingService scriptingService, IMapService mapService, INetworkService networkService)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
-
-            dataSVC = new DataModule();
-            dbSVC = new DatabaseModule(configSVC, notificationSVC, dataSVC);
-            scriptSVC = new ScriptModule(configSVC, notificationSVC);
-            mapSVC = new MapModule(configSVC, notificationSVC, scriptSVC);
-            networkSVC = new NetworkModule(configSVC, notificationSVC);
+            dbSVC = databaseService;
+            dataSVC = dataService;
+            scriptSVC = scriptingService;
+            networkSVC = networkService;
         }
 
         public int Start(string ip, int port, int backlog)

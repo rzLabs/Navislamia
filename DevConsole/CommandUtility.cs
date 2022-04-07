@@ -85,7 +85,7 @@ namespace DevConsole
 
         private void createConfig(Command command)
         {
-            Program.ConfigurationService.CreateDefault();
+            //Program.ConfigurationService.CreateDefault();
         }
 
         private void memoryStatus(Command command)
