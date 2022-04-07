@@ -8,6 +8,7 @@ using System.Reflection;
 
 using Configuration;
 using Database;
+using Navislamia.Data;
 using Maps;
 using Network;
 using Notification;
@@ -16,13 +17,14 @@ using Scripting;
 using Autofac;
 using Serilog.Events;
 
-namespace Game
+namespace Navislamia.Game
 {
     public class GameModule : Autofac.Module, IGameService
     {
         IContainer dependencies;
         IConfigurationService configSVC;
         IDatabaseService dbSVC;
+        IDataService dataSVC;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
         IMapService mapSVC;
@@ -33,6 +35,7 @@ namespace Game
         public GameModule(IConfigurationService configurationService, INotificationService notificationService)
         {
             var builder = new ContainerBuilder();
+            builder.RegisterModule<DataModule>();
             builder.RegisterModule<DatabaseModule>();
             builder.RegisterModule<NetworkModule>();
             builder.RegisterModule<ScriptModule>();
@@ -42,7 +45,8 @@ namespace Game
 
             configSVC = configurationService;
             notificationSVC = notificationService;
-            dbSVC = dependencies.Resolve<IDatabaseService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC));
+            dataSVC = dependencies.Resolve<IDataService>();
+            dbSVC = dependencies.Resolve<IDatabaseService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC), new NamedParameter("dataService", dataSVC));
             scriptSVC = dependencies.Resolve<IScriptingService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC));
             mapSVC = dependencies.Resolve<IMapService>();
             networkSVC = dependencies.Resolve<INetworkService>(new NamedParameter("configurationService", configSVC), new NamedParameter("notificationService", notificationSVC));
@@ -67,7 +71,11 @@ namespace Game
 
             notificationSVC.WriteString("Successfully started and subscribed to the database service!", LogEventLevel.Debug);
 
-            networkSVC.Start();
+            if (networkSVC.ConnectToAuth() > 0)
+            {
+                notificationSVC.WriteMarkup("[bold red]Network service failed to start![/]");
+                return 1;
+            }
 
             notificationSVC.WriteString("Successfully started and subscribed to the network service!", LogEventLevel.Debug);
 

@@ -4,7 +4,7 @@ using System.IO;
 
 using Autofac;
 
-using Game;
+using Navislamia.Game;
 using Scripting;
 using Configuration;
 using Maps;
@@ -48,7 +48,13 @@ namespace DevConsole
                 NotificationService.WriteMarkup($"[green]{ConfigurationService.TotalCount}[/] settings loaded from [bold yellow]Configuration.json[/]\n", LogEventLevel.Debug);
 
                 GameService = depsContainer.Resolve<IGameService>(new NamedParameter("configurationService", ConfigurationService), new NamedParameter("notificationService", NotificationService));
-                GameService.Start("", 4502, 100);
+                
+                if (GameService.Start("", 4502, 100) == 1)
+                {
+                    NotificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
+
+                    return;
+                }    
 
                 NotificationService.WriteString("Successfully started and subscribed to the game service!", LogEventLevel.Information);
             }

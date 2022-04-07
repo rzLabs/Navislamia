@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Database.GameContent
+namespace Navislamia.Database.GameContent
 {
     public class StringResource
     {

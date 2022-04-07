@@ -2,18 +2,18 @@
                                                                            .'ol..                             
                                                                            .o:                                
                Navislamia                                         ..      ;x:                                 
-                                                                  ,;    .lk;                                  
+                     v0.1                                         ,;    .lk;                                  
                                                             ..',lddxc. .xO,                                   
                                                              .:dxkdl:.;Ok'     ...;,...            ...;'.     
                                                              .:xdkd..lKx.     .:loc'. .'.         ''..''.     
    .....'''''......                                         .lxkOOx:dXk,.''';oxo,.    .:;.........,.          
-   ..'',,;dOo,'....                                    .;ddoxxllodxxOKkoddooodd:'.   .,coc;:c::;;:,,,'.       
-           cx:                    ........,;::;:cc:;,,:cokOK0oclllookKOxxdoodxxddlcclolll:;:ccc:;::okl.       
+   ..'',,;dOo,'....                                    .;ddoxxlthanksKkoddooodd:'.   .,coc;:c::;;:,,,'.       
+           cx:                    ........,;::;:cc:;,,:cokOK0ocllloooTestorsKOxxdlcclolll:;:ccc:;::okl.       
             ,xd.    ...  .';cc::;::;;::oxdddoodkkxddodOkkxkkkxooodolokOkxxxxddddddooollloc::::::::okl.        
-             ,kkc,;:loolooodxkdddxkddodxkkkxdxOkkxdxxkkkkxdxxddccdxxxxkkxxdddddxxdllcclllllccclccldOc         
-     ..';'';;lk00OxxxdxkOkdoooodddookK000KK0K0kxxxk00kkOxdxxxxxxdodxxddxxdoooodxdodoolccllccccllccokkc..      
-    ,locclcclok0000OOkxkkOOxdolddoloOKK00KKO00dooloxkxxkddkxkkkxxxdxkkxkOkddkO00OkOkkocccc:;;:c;,:lxkdl:.     
-   .ldooddooddkO00OOOkdxk0K00O00OkkkkkOO0OOkxkkxxdodxxlcccoolldkkxkkkxdxOOddkO000OOOkoc::;,,;:l:;clxkdc:.     
+             ,kkc,;:loolooodxkdddxkddodxkkkxdxOkkxdAodaixkkkkxdxxddccdxxxxkkxxdddllcclllllccclccldOc         
+     ..';'';;lk00OxxxdxkOkdoooodddookK000KgraphosK0K0kxxxk00kkOdodxxddxxdoooodxdodoolccllccccllccokkc..      
+    ,locclcclok0Mango00OOkxkkOOxdolddoloOKK00KKO00xkxxkddkxkkkxxxdxkkxkOkddkO00OkOkkocccc:;;:c;,:lxkdl:.     
+   .ldooddooddkO00OOOkdxk0K00O00OkkkkkOO0OOkxkkxxdodxxlcccoollxdxOOddkO0Glandu200OOOkoc::;,,;:l:;clxkdc:.     
     .,;;:ldxkOO0000OOOkkOxl:cdkOOOO0KKKKKK0kxo;..................',;;;clodddxO0Okxkkxollool::coodolxkxddl;'.  
           ...';:llddxkOx:.    'cxOKXXKK0kdc,.                          .....'';oOOOOOkd:;:clooddddoooollc:,.  
                     ....        .,cc:;,..                                       ,d0000Oc.    ......           

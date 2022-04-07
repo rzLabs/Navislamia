@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using _checksum = Network.Packets.Checksum;
+
+
 namespace Navislamia.Network.Packets
 {
     public class TS_AG_LOGIN_RESULT : Packet, ISerializablePacket
@@ -34,6 +37,12 @@ namespace Navislamia.Network.Packets
         public void Deserialize()
         {
             Span<byte> _data = Data;
+
+            Length = BitConverter.ToUInt32(_data.Slice(0, 4));
+
+            base.ID = BitConverter.ToUInt16(_data.Slice(4, 2));
+
+            Checksum = _data.Slice(6, 1)[0];
 
             Result = BitConverter.ToUInt16(_data.Slice(7, 2));
         }

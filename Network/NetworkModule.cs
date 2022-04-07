@@ -29,7 +29,7 @@ namespace Network
 
         TcpListener listener = null;
 
-        int bufferLen = 1024;
+        int BufferLength = 1024;
 
         List<GameClient> connections = new List<GameClient>();
 
@@ -47,27 +47,17 @@ namespace Network
 
             string cipherKey = configSVC.Get<string>("cipher.key", "Network", "}h79q~B%al;k'y $E");
 
-            bufferLen = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
             recvCipher.SetKey(cipherKey);
             sendCipher.SetKey(cipherKey);
         }
 
-        public int Start()
+        public int ConnectToAuth()
         {
-            // TODO:
-            if (!connectToAuth())
-            {
-                notificationSVC.WriteMarkup("[bold red]Failed to connect to the Auth server![/]", LogEventLevel.Error);
+            if (connectToAuth() > 0)
                 return 1;
-            }
 
             sendGSInfoToAuth();
-
-            if (!startClientListener())
-            {
-                notificationSVC.WriteMarkup("[bold red]Failed to start client listener![/]", LogEventLevel.Error);
-                return 1;
-            }
 
             return 0;
         }
@@ -84,7 +74,7 @@ namespace Network
                 builder.RegisterType(configServiceType).As<INetworkService>();
         }
 
-        bool connectToAuth()
+        int connectToAuth()
         {
             string addrStr = configSVC.Get<string>("io.auth.ip", "Network", "127.0.0.1");
             short port = configSVC.Get<short>("io.auth.port", "Network", 4502);
@@ -92,7 +82,7 @@ namespace Network
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 notificationSVC.WriteMarkup("[bold red]Invalid network auth.io configuration! Review your Configuration.json![/]");
-                return false;
+                return 1;
             }
 
             IPAddress addr;
@@ -100,24 +90,41 @@ namespace Network
             if (!IPAddress.TryParse(addrStr, out addr))
             {
                 notificationSVC.WriteMarkup($"[bold red]Failed to parse auth.io.ip: {addrStr}[/]");
-                return false;
+                return 1;
             }
 
             IPEndPoint authEP = new IPEndPoint(addr, port);
 
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            int buffLen = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
 
-            notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {buffLen} loaded from config![/]", LogEventLevel.Verbose);
+            notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {BufferLength} loaded from config![/]", LogEventLevel.Verbose);
 
-            // TODO:
-            auth = new AuthClient(authSock, buffLen);
-            auth.Connect(authEP);
+            int status = 1;
+
+            try
+            {
+                auth = new AuthClient(authSock, BufferLength, notificationSVC, this);
+                status = auth.Connect(authEP);
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteException(ex);
+
+                return 1;
+            }
+
+            if (status == 1)
+            {
+                notificationSVC.WriteMarkup("[bold red]Failed to connect to the auth server![/]");
+
+                return 1;
+            }
 
             notificationSVC.WriteString("Connected to Auth server successfully!");
 
-            return true;
+            return 0;
         }
 
         bool sendGSInfoToAuth()
@@ -139,6 +146,8 @@ namespace Network
             }
             catch (Exception ex)
             {
+                notificationSVC.WriteException(ex);
+
                 return false;
             }
 
@@ -207,6 +216,17 @@ namespace Network
             //}
 
             // TODO: set client socket for next read
+        }
+
+        public int StartListener()
+        {
+            if (!startClientListener())
+            {
+                notificationSVC.WriteMarkup("[bold red]Failed to start client listener![/]", LogEventLevel.Error);
+                return 1;
+            }
+
+            return 0;
         }
     }
 }

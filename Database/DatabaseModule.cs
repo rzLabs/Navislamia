@@ -15,7 +15,8 @@ using Configuration;
 using Notification;
 using Serilog.Events;
 using Autofac;
-using Database.GameContent;
+using Navislamia.Database.GameContent;
+using Navislamia.Data;
 
 namespace Database
 {
@@ -23,25 +24,28 @@ namespace Database
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
+        IDataService dataSVC;
         WorldDbContext worldDbContext;
 
         public DatabaseModule() { }
 
-        public DatabaseModule(IConfigurationService configurationService, INotificationService notificationService)
+        public DatabaseModule(IConfigurationService configurationService, INotificationService notificationService, IDataService dataService)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
+            dataSVC = dataService;
         }
 
         public void Init() // TODO: arcadia table loading logic should occur here
         {
-            //TODO: this is a test! implement more permenant calling of the repo classes
             worldDbContext = new WorldDbContext(configSVC);
 
             var stringRepo = new StringResourceRespository(notificationSVC, worldDbContext);
-            var strings = stringRepo.GetStrings();       
+            dataSVC.Set<List<StringResource>>("strings", stringRepo.GetStrings());
 
-            notificationSVC.WriteMarkup($"[italic green]{strings.Count()}[/] strings loaded!",  LogEventLevel.Debug);
+            int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count;
+
+            notificationSVC.WriteMarkup($"[italic green]{stringCnt}[/] strings loaded!",  LogEventLevel.Debug);
         }
 
         protected override void Load(ContainerBuilder builder)

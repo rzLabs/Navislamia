@@ -9,23 +9,30 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Network.Packets;
+using Notification;
+using Network;
 
 namespace Navislamia.Network.Objects
 {
     public interface IClient
     {
-        public void Connect(IPEndPoint ep);
+        public int Connect(IPEndPoint ep);
     }
 
 
     public class Client : IClient
     {
+        public INotificationService NotificationService;
+        public INetworkService NetworkService;
+
         public uint MsgVersion = 0x070300;
 
-        public Client(Socket socket, int length)
+        public Client(Socket socket, int length, INotificationService notificationService, INetworkService networkService)
         {
             Socket = socket;
             BufferLen = length;
+            NotificationService = notificationService;
+            NetworkService = networkService;
         }
 
         public int DataLength => Data?.Length ?? -1;
@@ -51,19 +58,20 @@ namespace Navislamia.Network.Objects
 
         public bool Connected => Socket?.Connected ?? false;
 
-        public void Connect(IPEndPoint ep)
+        public int Connect(IPEndPoint ep)
         {
-            if (Socket.Connected)
-                return;
-
             try
             {
                 Socket.Connect(ep);
             }
             catch (Exception ex)
             {
+                NotificationService.WriteException(ex);
 
+                return 1;
             }
+
+            return 0;
         }
 
         public virtual void Send(ISerializablePacket msg, bool beginReceive = true) { }

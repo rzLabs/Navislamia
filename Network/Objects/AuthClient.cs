@@ -16,13 +16,14 @@ using Network.Packets;
 //using Serilog;
 
 using Navislamia.Network.Packets;
+using Notification;
+using Network;
 
 namespace Navislamia.Network.Objects
 {
-
     public class AuthClient : Client
     {
-        public AuthClient(Socket socket, int length) : base(socket, length) { }
+        public AuthClient(Socket socket, int length, INotificationService notificationService, INetworkService networkService) : base(socket, length, notificationService, networkService) { }
 
         public override void Send(ISerializablePacket msg, bool beginReceive = true)
         {
@@ -46,7 +47,7 @@ namespace Navislamia.Network.Objects
 
         private void ReceiveCallback(IAsyncResult ar) // TODO: should be verifying the checksum
         {
-            //("Receiving data from the auth server...");
+            NotificationService.WriteMarkup("[orange3]Receiving data from the auth server...[/]");
 
             Client auth = (Client)ar.AsyncState;
 
@@ -54,11 +55,11 @@ namespace Navislamia.Network.Objects
 
             if (readCnt <= 0)
             {
-                //Log.Error("Failed to read data from the Auth server!");
+                NotificationService.WriteMarkup("[bold red]Failed to read data from the Auth server![/]");
                 return;
             }
 
-            //Log.Debug("{count} bytes received from the Auth server!", readCnt);
+            NotificationService.WriteMarkup($"[orange3]{readCnt} bytes received from the Auth server![/]");
 
             try
             {
@@ -66,17 +67,25 @@ namespace Navislamia.Network.Objects
                 {
                     Span<byte> data = auth.Data;
 
-                    TS_AG_LOGIN_RESULT msg = new TS_AG_LOGIN_RESULT(data.Slice(7, data.Length - 7));
+                    byte checksum = data.Slice(6, 7).ToArray()[0];
+
+                    TS_AG_LOGIN_RESULT msg = new TS_AG_LOGIN_RESULT(data);
+
+                    NotificationService.WriteString(Packets.PacketUtility.DumpToString(msg));
+
+                    if (checksum != msg.Checksum)
+                    {
+                        NotificationService.WriteMarkup("[bold red]TS_AG_LOGIN_RESULT bears an invalid checksum![/]");
+                        return;
+                    }
 
                     if (msg.Result == 0)
-                    {
-                        // TODO: success
-                    }
+                        NetworkService.StartListener();
                 }
             }
             catch (Exception ex)
             {
-                //Log.Error("An exception occured while attempting to receive data from the auth server!\n\nMessaage: {exMessage}\nStack-Trace: {exStackTrace}", ex.Message, ex.StackTrace);
+                NotificationService.WriteException(ex);
                 return;
             }
 

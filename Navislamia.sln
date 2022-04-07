@@ -25,7 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Objects", "Objects\Objects.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Network", "Network\Network.csproj", "{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database", "Database\Database.csproj", "{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "Data\Data.csproj", "{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +133,14 @@ Global
 		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|x64.ActiveCfg = Release|Any CPU
 		{7C4DFFC0-7AEF-4E44-90F2-D8D8D8741123}.Release|x64.Build.0 = Release|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Debug|x64.Build.0 = Debug|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Release|x64.ActiveCfg = Release|Any CPU
+		{F617DCF6-FB3C-4291-BC25-6DA86DDC0183}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

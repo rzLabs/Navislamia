@@ -6,6 +6,8 @@ namespace Network
 {
     public interface INetworkService
     {
-        public int Start();
+        public int ConnectToAuth();
+
+        public int StartListener();
     }
 }

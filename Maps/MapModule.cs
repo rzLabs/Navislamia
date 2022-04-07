@@ -208,7 +208,7 @@ namespace Maps
                 }
             }
 
-            notificationSVC.WriteMarkup($"[green]\t- {polygonCnt} collision polygons loaded[/]",  LogEventLevel.Debug);
+            notificationSVC.WriteMarkup($"[orange3]\t- {polygonCnt} collision polygons loaded[/]",  LogEventLevel.Debug);
         }
 
         public void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
@@ -344,7 +344,7 @@ namespace Maps
                 }
             }
 
-            notificationSVC.WriteMarkup("[green]\t- {0} location polygons loaded![/]", LogEventLevel.Debug);
+            notificationSVC.WriteMarkup("[orange3]\t- {0} location polygons loaded![/]", LogEventLevel.Debug);
         }
 
         private void registerMapLocationInfo(MapLocationInfo location_info) => QtLocationInfo.Add(location_info);
@@ -391,7 +391,7 @@ namespace Maps
 
             currentRegionIdx = regionList.Count;
 
-            notificationSVC.WriteMarkup($"[bold red]\t- {currentRegionIdx} spawn areas loaded![/]", LogEventLevel.Debug);
+            notificationSVC.WriteMarkup($"[orange3]\t- {currentRegionIdx} spawn areas loaded![/]", LogEventLevel.Debug);
         }
 
         protected override void Load(ContainerBuilder builder)
