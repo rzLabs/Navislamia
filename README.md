@@ -3,6 +3,13 @@
 [![Build Status](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml/badge.svg?branch=Development)](https://github.com/iSmokeDrow/Navislamia/actions/workflows/build.yml)
 [![OpenRZ Discord](https://badgen.net/discord/members/UQz9uydsFY)](https://discord.gg/UQz9uydsFY)
 
+[![Recent Commits](https://img.shields.io/github/commit-activity/m/iSmokeDrow/Navislamia?label=Commits&style=flat-square)]()
+
+[![Open Pull Requests](https://img.shields.io/github/issues-pr-raw/ismokedrow/navislamia?label=Open%20Pull%20Requests&style=flat-square)]()
+
+[![Open Issues](https://img.shields.io/github/issues-raw/ismokedrow/navislamia?color=red&label=Open%20Issues&style=flat-square)]()
+[![Closed Issues](https://img.shields.io/github/issues-closed-raw/ismokedrow/navislamia?color=Green&label=Closed%20Issues&style=flat-square)]()
+
 ## Foreward
 
 Navislamia is written and maintained by a group of volunteers for fun. This project does not now, nor will it ever seek monetary reimbursement or gains. It is not our intent to defame or otherwise denigrate the hard work done by developers of the `Arcadia Framework`. More so it is our intent to pay homage to the game all the volunteers and players involved have sunk countless hours and years of their lives into.
