@@ -9,54 +9,92 @@ using Notification;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
+
 using Navislamia.Command.Commands;
-using System.ComponentModel;
+using Navislamia.Command.Interfaces;
 
 namespace Navislamia.Command
 {
-    public interface ICommandService
-    {
-        public object Input { get; set; }
-
-        public void Wait();
-    }
     public class CommandModule : ICommandService
     {
-        CommandApp<WaitCommand> commandApp;
-        
-        
+        CommandApp commandApp;
 
         IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        object _input;
+        string _input;
 
-        public object Input 
+        public string Input 
         {
             get => _input;
             set => _input = value;
         }
 
 
-        public CommandModule(IContainer container, IConfigurationService configurationService, INotificationService notificaftionService)
+        public CommandModule(IConfigurationService configurationService, INotificationService notificaftionService)
         {
             configSVC = configurationService;
             notificationSVC = notificaftionService;
+        }
+
+        public int Init(ITypeRegistrar registrar)
+        {
+            registrar.Register(typeof(IGetter), typeof(ConfigurationGetter));
 
             // TODO: We need to register our types!
-            commandApp = new CommandApp<WaitCommand>();
+            commandApp = new CommandApp(registrar);
 
             commandApp.Configure(config =>
             {
-                config.AddCommand<WaitCommand>("wait").WithDescription("Wait for user input").WithExample(new string[] { "wait" });
                 config.AddCommand<GetCommand>("get").WithAlias("GetConfig").WithDescription("Print configuration value").WithExample(new string[] { "get", "io.ip" });
+
             });
 
+            return 0;
         }
 
-        public void Wait()
+        public int Wait()
         {
-            commandApp.Run(new[] { "" });
+            string idleMessage = "[orange3]Idle... [/][italic orange3](Press ` to enter a command)\n[/]"; // TODO: need to set this message everytime a new notification write call is completed as-well!
+
+            notificationSVC.WriteMarkup(idleMessage);
+
+            while (true)
+            {
+                while (true)
+                {
+                    if (Console.KeyAvailable)
+                        break;
+                    else
+                        System.Threading.Thread.Sleep(100);
+                }
+
+                ConsoleKeyInfo key = Console.ReadKey(true);
+
+                if (key.Key == ConsoleKey.Oem3)
+                {
+                    string input = AnsiConsole.Ask<string>("~ Command: ");
+
+                    string[] inputBlocks = input.TrimEnd().Split(new char[] { ' ' });
+
+                    if (Execute(inputBlocks) == 1)
+                        break;
+                }
+                else if (key.Key == ConsoleKey.Escape)
+                {
+                    notificationSVC.WriteString("Navislamia shutting down...");
+                    break;
+                }
+
+                AnsiConsole.Write(new Markup(idleMessage));
+            }
+
+            return 0;
+        }
+
+        public int Execute(string[] args)
+        {
+            return commandApp.Run(args);
         }
     }
 }

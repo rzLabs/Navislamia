@@ -1,5 +1,7 @@
-﻿using Autofac;
+﻿using Navislamia.Command;
+using Spectre.Console;
 using System;
+using System.Threading.Tasks;
 
 namespace DevConsole
 {
@@ -8,14 +10,19 @@ namespace DevConsole
         static void Main(string[] args)
         {
             var container = ContainerConfig.Configure();
+            var resolver = container.Build();      
+            var app = resolver.Resolve(typeof(IApplication)) as IApplication;
 
-            using(var scope = container.BeginLifetimeScope())
-            {
-                var app = scope.Resolve<IApplication>();
-                app.Run();
-            }
+            app.Run();
 
-            Console.ReadLine();
+            var cli = resolver.Resolve(typeof(ICommandService)) as ICommandService;
+
+            if (cli.Init(container) > 0)
+                return;
+
+            while (true)
+                if (cli.Wait() == 0)
+                    break;
         }
     }
 }

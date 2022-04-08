@@ -1,7 +1,7 @@
-﻿using Autofac;
-using Configuration;
+﻿using Configuration;
 using Database;
 using Maps;
+using Microsoft.Extensions.DependencyInjection;
 using Navislamia.Command;
 using Navislamia.Command.Commands;
 using Navislamia.Data;
@@ -9,6 +9,7 @@ using Navislamia.Game;
 using Network;
 using Notification;
 using Scripting;
+using Spectre.Console.Cli;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,26 +20,26 @@ namespace DevConsole
 {
     public static class ContainerConfig
     {
-        public static IContainer Configure()
+        public static TypeRegistrar Configure()
         {
-            var builder = new ContainerBuilder();
+            var serviceCollection = new ServiceCollection();
 
-            builder.RegisterType<Application>().As<IApplication>();
-            builder.RegisterType<ConfigurationModule>().As<IConfigurationService>();
-            builder.RegisterType<NotificationModule>().As<INotificationService>();
+            serviceCollection.AddSingleton<IApplication, Application>();
+            serviceCollection.AddSingleton<IConfigurationService, ConfigurationModule>();
+            serviceCollection.AddSingleton<INotificationService, NotificationModule>();
 
-            builder.RegisterType<CommandModule>().As<ICommandService>();
-            builder.RegisterType<WaitCommand>();
-            builder.RegisterType<GetCommand>();
+            serviceCollection.AddSingleton<ICommandService, CommandModule>();
 
-            builder.RegisterType<DataModule>().As<IDataService>();
-            builder.RegisterType<DatabaseModule>().As<IDatabaseService>();
-            builder.RegisterType<ScriptModule>().As<IScriptingService>();
-            builder.RegisterType<MapModule>().As<IMapService>();
-            builder.RegisterType<NetworkModule>().As<INetworkService>();
-            builder.RegisterType<GameModule>().As<IGameService>();
+            serviceCollection.AddSingleton<IDataService, DataModule>();
+            serviceCollection.AddSingleton<IDatabaseService, DatabaseModule>();
+            serviceCollection.AddSingleton<IScriptingService, ScriptModule>();
+            serviceCollection.AddSingleton<IMapService, MapModule>();
+            serviceCollection.AddSingleton<INetworkService, NetworkModule>();
+            serviceCollection.AddSingleton<IGameService, GameModule>();
 
-            return builder.Build();
+            serviceCollection.AddSingleton<ITypeResolver, TypeResolver>();
+
+            return new TypeRegistrar(serviceCollection);
         }
     }
 }

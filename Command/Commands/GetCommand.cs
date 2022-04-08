@@ -5,20 +5,36 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Configuration;
+using Navislamia.Command.Interfaces;
 using Notification;
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Navislamia.Command.Commands
 {
-    public class GetCommand : Command<GetCommand.Settings>
+    public sealed class ConfigurationGetter : IGetter
+    {
+        IConfigurationService configSVC;
+
+        public ConfigurationGetter(IConfigurationService configurationService)
+        {
+            configSVC = configurationService;
+        }
+
+        public dynamic Get(string key, string parent) => configSVC.Get(key, parent);
+    }
+
+    public sealed class GetCommand : Command<GetCommand.Settings>
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
+        IGetter _getter;
 
-        public GetCommand(IConfigurationService configurationService, INotificationService notificationService)
+        public GetCommand(IConfigurationService configurationService, INotificationService notificationService, IGetter getter)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
+            _getter = getter;
         }
 
         public class Settings : CommandSettings
@@ -33,12 +49,12 @@ namespace Navislamia.Command.Commands
 
         public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
         {
-            var config = configSVC.Get(settings.Key, settings.Category);
+            var config = _getter.Get(settings.Key, settings.Category);
 
             if (config is null)
                 return 1;
 
-            notificationSVC.WriteMarkup($"[bold orange3]{settings.Key}[/] : [bold yellow]{config}[/]");
+            notificationSVC.WriteMarkup($"\n[bold orange3]{settings.Key}[/] : [bold yellow]{config}[/]\n");
 
             return 0;
         }

@@ -4,6 +4,7 @@ using Navislamia.Command;
 using Navislamia.Game;
 using Notification;
 using Serilog.Events;
+using Spectre.Console.Cli;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,15 +16,13 @@ namespace DevConsole
 {
     public class Application : IApplication
     {
-        private IContainer container;
         private IConfigurationService configurationService;
         private INotificationService notificationService;
         private IGameService gameService;
         private ICommandService commandService;
 
-        public Application(IContainer container, IConfigurationService configurationService, INotificationService notificationService, IGameService gameService, ICommandService commandService)
+        public Application(IConfigurationService configurationService, INotificationService notificationService, IGameService gameService, ICommandService commandService)
         {
-            this.container = container;
             this.configurationService = configurationService;
             this.notificationService = notificationService;
             this.gameService = gameService;
@@ -46,8 +45,6 @@ namespace DevConsole
             }
 
             notificationService.WriteString("Successfully started and subscribed to the game service!", LogEventLevel.Information);
-
-            commandService.Wait();
         }
     }
 }
