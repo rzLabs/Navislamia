@@ -1,0 +1,69 @@
+[
+  {
+    "Category": "Server",
+    "Collection": {
+      "name": "Navislamia",
+      "index": "0",
+      "screenshort.url": "about:new",
+      "adult": false
+    }
+  },
+  {
+    "Category": "Logs",
+    "Collection": {
+      "minimum-level": 0,
+      "packet.debug": true
+    }
+  },
+  {
+    "Category": "Network",
+    "Collection": {
+      "io.auth.ip": "127.0.0.1",
+      "io.auth.port": 4502,
+      "auth.server_idx": 1,
+      "io.upload.ip": "127.0.0.1",
+      "io.upload.port": 4616,
+      "io.ip": "127.0.0.1",
+      "io.port": 4515,
+      "io.backlog": 100,
+      "io.buffer_size": 32768,
+      "cipher.key": "}h79q~B%al;k'y $E"
+    }
+  },
+  {
+    "Category": "Database",
+    "Collection": {
+      "world.ip": "127.0.0.1",
+      "world.port": 1433,
+      "world.trusted_connection": true,
+      "world.name": "Arcadia",
+      "world.user": "sa",
+      "world.user.pass": "",
+      "player.ip": "127.0.0.1",
+      "player.port": 1433,
+      "player.trusted_connection": true,
+      "player.name": "Telecaster",
+      "player.user": "sa",
+      "player.user.pass": ""
+    }
+  },
+  {
+    "Category": "Scripts",
+    "Collection": {
+      "directory": ".\\Scripts",
+	  "skip_loading": false
+    }
+  },
+  {
+    "Category": "Maps",
+    "Collection": {
+      "directory": ".\\Maps",
+      "width": 700000,
+      "height": 1000000,
+      "max_layer": 256,
+      "skip_loading": true,
+      "skip_loading_nfa": false,
+      "no_collision_check": false
+    }
+  }
+]
