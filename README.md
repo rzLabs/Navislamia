@@ -4,9 +4,7 @@
 [![OpenRZ Discord](https://badgen.net/discord/members/UQz9uydsFY)](https://discord.gg/UQz9uydsFY)
 
 [![Recent Commits](https://img.shields.io/github/commit-activity/m/iSmokeDrow/Navislamia?label=Commits&style=flat-square)]()
-
 [![Open Pull Requests](https://img.shields.io/github/issues-pr-raw/ismokedrow/navislamia?label=Open%20Pull%20Requests&style=flat-square)]()
-
 [![Open Issues](https://img.shields.io/github/issues-raw/ismokedrow/navislamia?color=red&label=Open%20Issues&style=flat-square)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/ismokedrow/navislamia?color=Green&label=Closed%20Issues&style=flat-square)]()
 
