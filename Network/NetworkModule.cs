@@ -78,13 +78,15 @@ namespace Network
 
             BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
 
-            notificationSVC.WriteMarkup($"[orange3]IOCP Buffer Length {BufferLength} loaded from config![/]", LogEventLevel.Verbose);
+            if (configSVC.Get<bool>("debug", "Runtime", false))
+                notificationSVC.WriteDebug($"IOCP Buffer Length {BufferLength} loaded from config!");
 
             int status = 0;
 
             try
             {
                 auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this);
+                auth.Connect(authEP);
             }
             catch (Exception ex)
             {
@@ -118,7 +120,7 @@ namespace Network
 
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
-                ((AuthClient)auth).Send(msg, true);
+                auth.Send(msg);
             }
             catch (Exception ex)
             {
@@ -151,14 +153,10 @@ namespace Network
             }
 
             listener = new TcpListener(addr, port);
-
             listener.Start(backlog);
-
-            notificationSVC.WriteString("Game network started!", LogEventLevel.Information);
-
             listener.BeginAcceptSocket(AttemptAcceptScoket, listener);
 
-            notificationSVC.WriteMarkup($"[yellow]- Listening at: {addrStr} : {port} with backlog of: {backlog}[/]\n", LogEventLevel.Information);
+            notificationSVC.WriteSuccess(new string[] { "Game network started!", $"- Listening at: {addrStr} : {port} with backlog of: {backlog}\n" }, true);
 
             return true;
         }
@@ -177,7 +175,7 @@ namespace Network
             //socket.BeginReceive(client.Data, 0, client.DataLength, 0, new AsyncCallback(AttemptReceive), client);
         }
 
-        private void AttemptReceive(IAsyncResult ar)
+        private void AttemptReceive(IAsyncResult ar) // TODO: reimplement
         {
             GameClient client = (GameClient)ar.AsyncState;
             //Socket socket = client.Socket; // TODO:

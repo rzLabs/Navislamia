@@ -41,7 +41,6 @@ namespace Navislamia.Command
         {
             registrar.Register(typeof(IGetter), typeof(ConfigurationGetter));
 
-            // TODO: We need to register our types!
             commandApp = new CommandApp(registrar);
 
             commandApp.Configure(config =>
@@ -55,7 +54,7 @@ namespace Navislamia.Command
 
         public int Wait()
         {
-            string idleMessage = "[orange3]Idle... [/][italic orange3](Press ` to enter a command)\n[/]"; // TODO: need to set this message everytime a new notification write call is completed as-well!
+            string idleMessage = "[orange3]Idle... [/][italic orange3](Press ` to enter a command)\n[/]";
 
             notificationSVC.WriteMarkup(idleMessage);
 
@@ -79,14 +78,14 @@ namespace Navislamia.Command
 
                     if (Execute(inputBlocks) == 1)
                         break;
+
+                    AnsiConsole.Write(new Markup(idleMessage));
                 }
                 else if (key.Key == ConsoleKey.Escape)
                 {
                     notificationSVC.WriteString("Navislamia shutting down...");
                     break;
                 }
-
-                AnsiConsole.Write(new Markup(idleMessage));
             }
 
             return 0;

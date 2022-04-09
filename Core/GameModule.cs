@@ -16,6 +16,7 @@ using Scripting;
 
 using Serilog.Events;
 using System.Collections.Generic;
+using Spectre.Console;
 
 namespace Navislamia.Game
 {
@@ -45,38 +46,36 @@ namespace Navislamia.Game
 
         public int Start(string ip, int port, int backlog)
         {
+            int result = 0;
+
             if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
             {
                 scriptSVC.Init();
 
-                notificationSVC.WriteMarkup($"Successfully started the script service![green]\n\t-{ scriptSVC.ScriptCount } scripts loaded![/]", LogEventLevel.Debug);
+                notificationSVC.WriteSuccess(new string[] { $"Successfully started the script service!", $"{scriptSVC.ScriptCount} scripts loaded!" }, true);
             }
             else
-                notificationSVC.WriteMarkup("[slowblink bold orange3]Script loading disabled![/]");
+                notificationSVC.WriteWarning("Script loading disabled!");
 
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
                 mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
 
-                notificationSVC.WriteMarkup("Successfully started the map service![green]\n\t- {mapSVC.MapCount.CX} maps loaded![/]", LogEventLevel.Debug);
+                notificationSVC.WriteSuccess(new string[] { $"Successfully started the map service!", $"{mapSVC.MapCount.CX * mapSVC.MapCount.CY} maps loaded!" }, true);
             }
             else
-                notificationSVC.WriteMarkup("[slowblink bold orange3]Map loading disabled![/]");
+                notificationSVC.WriteWarning("Map loading disabled!");
 
             dbSVC.Init();
-
-            notificationSVC.WriteString("Successfully started the database service!", LogEventLevel.Debug);
 
             if (networkSVC.ConnectToAuth() > 0)
             {
                 notificationSVC.WriteMarkup("[bold red]Network service failed to start![/]");
-                return 1;
+                result = 1;
             }
 
-            notificationSVC.WriteString("Successfully started the network service!", LogEventLevel.Debug);
-
-            return 0;
+            return result;
         }
     }
 }

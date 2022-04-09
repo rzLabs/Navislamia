@@ -26,7 +26,12 @@ namespace Navislamia.Network.Objects
 {
     public class AuthClient : Client
     {
-        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) { }
+        bool debugPackets = false;
+
+        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) 
+        {
+            debugPackets = ConfigurationService.Get<bool>("packet.debug", "Logs", false);
+        }
 
         public override void Send(Packet msg, bool beginReceive = true)
         {
@@ -37,13 +42,14 @@ namespace Navislamia.Network.Objects
 
             if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
             {
-                NotificationService.WriteMarkup($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
+                NotificationService.WriteDebug($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
                 NotificationService.WriteString((msg).DumpToString());
             }
 
             Data = new byte[512];
 
-            Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
+            if (beginReceive)
+                Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
         }
 
         public override void Receive()
@@ -56,7 +62,7 @@ namespace Navislamia.Network.Objects
 
         private void ReceiveCallback(IAsyncResult ar)
         {
-            NotificationService.WriteMarkup("[orange3]Receiving data from the auth server...[/]");
+            NotificationService.WriteDebug("Receiving data from the auth server...");
 
             Client auth = (Client)ar.AsyncState;
 
@@ -68,7 +74,8 @@ namespace Navislamia.Network.Objects
                 return;
             }
 
-            NotificationService.WriteMarkup($"[orange3]{readCnt} bytes received from the Auth server![/]");
+            if (debugPackets)
+                NotificationService.WriteDebug($"{readCnt} bytes received from the Auth server!");
 
             try
             {
@@ -76,13 +83,12 @@ namespace Navislamia.Network.Objects
                 {
                     Span<byte> data = auth.Data;
 
-                    byte checksum = data.Slice(6, 7).ToArray()[0];
+                    byte checksum = data.Slice(6, 1).ToArray()[0];
 
                     TS_AG_LOGIN_RESULT msg = new TS_AG_LOGIN_RESULT(data);
 
-                    
-
-                    NotificationService.WriteString(msg.DumpToString());
+                    if (debugPackets)
+                        NotificationService.WriteString(msg.DumpToString());
 
                     if (checksum != msg.Checksum)
                     {

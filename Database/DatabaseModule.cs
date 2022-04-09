@@ -44,7 +44,7 @@ namespace Database
 
             int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count;
 
-            notificationSVC.WriteMarkup($"[italic green]{stringCnt}[/] strings loaded!",  LogEventLevel.Debug);
+            notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- {stringCnt} strings loaded!" },  true);
         }
     }
 }

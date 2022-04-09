@@ -16,7 +16,11 @@ namespace Notification
 
         public void WriteMarkup(string message, LogEventLevel level = LogEventLevel.Verbose);
 
-        public void WriteSuccess(string message, LogEventLevel level = LogEventLevel.Verbose);
+        public void WriteDebug(string message);
+
+        public void WriteWarning(string message);
+
+        public void WriteSuccess(string[] messages, bool tabbedIndent);
 
         public void WriteException(Exception exception, LogEventLevel level = LogEventLevel.Error);
 

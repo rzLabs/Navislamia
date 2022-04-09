@@ -18,6 +18,8 @@ namespace Navislamia.Network.Objects
     public interface IClient
     {
         public int Connect(IPEndPoint ep);
+
+        public void Send(Packet msg, bool beginReceive = true);
     }
 
 

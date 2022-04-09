@@ -125,8 +125,6 @@ namespace Configuration
         public void Set(string key, string parent = null, object value = null)
         {
             throw new NotImplementedException();
-
-            // TODO: register log through subscribed log module
         }
 
         public bool Load(string path = null)
@@ -146,10 +144,14 @@ namespace Configuration
                 {
                     Configurations = JsonConvert.DeserializeObject<ConfigurationCollection>(jsonStr);
 
+#if DEBUG 
+                    var runtimeCfg = new Configuration("Runtime");
+                    runtimeCfg.Collection.Add("debug", true);
+                    Configurations.Add(runtimeCfg);
+#endif
+
                     return Configurations.Count > 0;                    
                 }
-
-                // TODO: register log through subscribed log module
             }
             catch (Exception ex)
             {

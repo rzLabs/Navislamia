@@ -4,6 +4,7 @@ using Navislamia.Command;
 using Navislamia.Game;
 using Notification;
 using Serilog.Events;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using System;
 using System.Collections.Generic;
@@ -37,14 +38,10 @@ namespace DevConsole
             short port = configurationService.Get<short>("io.port", "Network", 4502);
             int backlog = configurationService.Get<int>("io.backlog", "Network", 100);
 
-            if (gameService.Start("", 4502, 100) == 1)
-            {
+            int result = 0;
+
+            if ((result = gameService.Start("", 4502, 100)) == 1)
                 notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
-
-                return;
-            }
-
-            notificationService.WriteString("Successfully started and subscribed to the game service!", LogEventLevel.Information);
         }
     }
 }
