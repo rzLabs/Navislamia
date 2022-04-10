@@ -52,11 +52,10 @@ namespace Navislamia.Game
             {
                 scriptSVC.Init();
 
-                notificationSVC.WriteSuccess(new string[] { $"Successfully started the script service!", $"{scriptSVC.ScriptCount} scripts loaded!" }, true);
+                notificationSVC.WriteSuccess(new string[] { $"Successfully started the script service!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
             else
                 notificationSVC.WriteWarning("Script loading disabled!");
-
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {

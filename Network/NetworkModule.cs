@@ -79,7 +79,7 @@ namespace Network
             BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
 
             if (configSVC.Get<bool>("debug", "Runtime", false))
-                notificationSVC.WriteDebug($"IOCP Buffer Length {BufferLength} loaded from config!");
+                notificationSVC.WriteDebug($"io.buffer_length is: {BufferLength}");
 
             int status = 0;
 
@@ -102,7 +102,7 @@ namespace Network
                 return 1;
             }
 
-            notificationSVC.WriteString("Connected to Auth server successfully!");
+            notificationSVC.WriteSuccess(new[] { "Connected to Auth server successfully!" }, false);
 
             return 0;
         }
@@ -156,7 +156,7 @@ namespace Network
             listener.Start(backlog);
             listener.BeginAcceptSocket(AttemptAcceptScoket, listener);
 
-            notificationSVC.WriteSuccess(new string[] { "Game network started!", $"- Listening at: {addrStr} : {port} with backlog of: {backlog}\n" }, true);
+            notificationSVC.WriteSuccess(new string[] { "Game network started!", $"- [yellow]Listening at: {addrStr} : {port} with backlog of: {backlog}[/]\n" }, true);
 
             return true;
         }

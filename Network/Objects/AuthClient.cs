@@ -42,7 +42,7 @@ namespace Navislamia.Network.Objects
 
             if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
             {
-                NotificationService.WriteDebug($"[orange3]\nSending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
+                NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
                 NotificationService.WriteString((msg).DumpToString());
             }
 
@@ -62,7 +62,8 @@ namespace Navislamia.Network.Objects
 
         private void ReceiveCallback(IAsyncResult ar)
         {
-            NotificationService.WriteDebug("Receiving data from the auth server...");
+            if (ConfigurationService.Get<bool>("debug", "Runtime", false))
+                NotificationService.WriteDebug("Receiving data from the auth server...");
 
             Client auth = (Client)ar.AsyncState;
 

@@ -124,7 +124,12 @@ namespace Configuration
 
         public void Set(string key, string parent = null, object value = null)
         {
-            throw new NotImplementedException();
+            var category = Configurations.Find(c => c.Category == parent);
+
+            if (category is null)
+                Configurations.Add(new Configuration(parent));
+
+            Configurations[parent].Collection.Add(key, value);
         }
 
         public bool Load(string path = null)
@@ -132,31 +137,24 @@ namespace Configuration
             string filename = path ?? $"{Directory.GetCurrentDirectory()}\\{configName}";
 
             if (!File.Exists(filename))
+                return false;
+
+
+            string jsonStr = File.ReadAllText(filename);
+
+            if (!string.IsNullOrEmpty(jsonStr))
             {
-                // TODO: register log through subscribed log module
-            }
+                Configurations = JsonConvert.DeserializeObject<ConfigurationCollection>(jsonStr);
 
-            try
-            {
-                string jsonStr = File.ReadAllText(filename);
-
-                if (!string.IsNullOrEmpty(jsonStr))
-                {
-                    Configurations = JsonConvert.DeserializeObject<ConfigurationCollection>(jsonStr);
-
-#if DEBUG 
-                    var runtimeCfg = new Configuration("Runtime");
-                    runtimeCfg.Collection.Add("debug", true);
-                    Configurations.Add(runtimeCfg);
+#if DEBUG
+                var runtimeCfg = new Configuration("Runtime");
+                runtimeCfg.Collection.Add("debug", true);
+                Configurations.Add(runtimeCfg);
 #endif
 
-                    return Configurations.Count > 0;                    
-                }
+                return Configurations.Count > 0;
             }
-            catch (Exception ex)
-            {
-                // TODO: register log through subscribed log module
-            }
+
 
             return false;
         }
@@ -169,18 +167,9 @@ namespace Configuration
 
             serializer.Formatting = Formatting.Indented;
 
-            try
-            {
-                using (StreamWriter sw = new StreamWriter(filename)) { 
-                    using (JsonWriter jw = new JsonTextWriter(sw))
-                        serializer.Serialize(jw, Configurations);
-                    }
-            }
-            catch (Exception ex)
-            {
-                //LogUtility.MessageBoxAndLog(ex, "serializing provided object", "Json Serialize Exception", LogEventLevel.Error);
-                return;
-            }
+            using (StreamWriter sw = new StreamWriter(filename))
+                using (JsonWriter jw = new JsonTextWriter(sw))
+                    serializer.Serialize(jw, Configurations);
         }
 
         public IEnumerator<ConfigurationCollection> GetEnumerator()
