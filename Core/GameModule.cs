@@ -61,7 +61,7 @@ namespace Navislamia.Game
             {
                 mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
 
-                notificationSVC.WriteSuccess(new string[] { $"Successfully started the map service!", $"{mapSVC.MapCount.CX * mapSVC.MapCount.CY} maps loaded!" }, true);
+                notificationSVC.WriteSuccess(new string[] { $"Successfully started the map service!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
@@ -70,7 +70,7 @@ namespace Navislamia.Game
 
             if (networkSVC.ConnectToAuth() > 0)
             {
-                notificationSVC.WriteMarkup("[bold red]Network service failed to start![/]");
+                notificationSVC.WriteError("Network service failed to start!");
                 result = 1;
             }
 

@@ -20,17 +20,56 @@ namespace Notification
                             .CreateLogger();
         }
 
+        public void WriteString(string message, LogEventLevel level = LogEventLevel.Verbose)
+        {
+            AnsiConsole.Write($"{message}\n");
+            Log.Write(level, message);
+        }
+
         public void WriteMarkup(string message, LogEventLevel level = LogEventLevel.Verbose)
         {
             AnsiConsole.Write(new Markup($"{message}\n"));
             Log.Write(level, message);
         }
 
-        public void WriteString(string message, LogEventLevel level = LogEventLevel.Verbose)
+        public void WriteDebug(string message)
         {
-            AnsiConsole.Write($"{message}\n");
-            Log.Write(level, message);
+#if DEBUG
+            WriteMarkup($"[bold orange3]{message}[/]\n");
+            Log.Debug(message);
+#endif
         }
+
+        public void WriteDebug(string[] messages, bool indented = true)
+        {
+#if DEBUG
+            string str = $"[bold orange3]{messages[0]}\n";
+
+            for (int i = 1; i < messages.Length; i++)
+            {
+                if (indented)
+                    str += "\t";
+
+                str += $"{messages[i]}\n";
+            }
+
+            WriteMarkup($"{str}[/]");
+#endif
+        }
+
+        public void WriteWarning(string message)
+        {
+            WriteMarkup($"[bold yellow]{message}[/]\n");
+            Log.Warning(message);
+        }
+
+        public void WriteError(string message)
+        {
+            WriteMarkup($"[bold red]{message}[/]\n");
+            Log.Error(message);
+        }
+
+        public void WriteSuccess(string message) => WriteSuccess(new string[] { message }, false);
 
         public void WriteSuccess(string[] messages, bool tabbedIndent)
         {
@@ -51,20 +90,6 @@ namespace Notification
         {
             AnsiConsole.WriteException(exception);
             Log.Write(level, exception, "An exception has occured!");
-        }
-
-        public void WriteDebug(string message)
-        {
-#if DEBUG
-            WriteMarkup($"[bold orange3]{message}[/]\n");
-            Log.Debug(message);
-#endif
-        }
-
-        public void WriteWarning(string message)
-        {
-            WriteMarkup($"[bold yellow]{message}[/]\n");
-            Log.Warning(message);
         }
     }
 }

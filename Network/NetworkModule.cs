@@ -60,7 +60,7 @@ namespace Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                notificationSVC.WriteMarkup("[bold red]Invalid network auth.io configuration! Review your Configuration.json![/]");
+                notificationSVC.WriteError("Invalid network auth.io.ip configuration! Review your Configuration.json!");
                 return 1;
             }
 
@@ -68,7 +68,7 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteMarkup($"[bold red]Failed to parse auth.io.ip: {addrStr}[/]");
+                notificationSVC.WriteError($"Failed to parse auth.io.ip: {addrStr}");
                 return 1;
             }
 
@@ -86,23 +86,23 @@ namespace Network
             try
             {
                 auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this);
-                auth.Connect(authEP);
+                status = auth.Connect(authEP);
             }
             catch (Exception ex)
             {
                 notificationSVC.WriteException(ex);
 
-                return 1;
+                status = 1;
             }
 
             if (status == 1)
             {
-                notificationSVC.WriteMarkup("[bold red]Failed to connect to the auth server![/]");
+                notificationSVC.WriteError("Failed to connect to the auth server!");
 
                 return 1;
             }
 
-            notificationSVC.WriteSuccess(new[] { "Connected to Auth server successfully!" }, false);
+            notificationSVC.WriteSuccess(new[] { "Connected to Auth server successfully!" }, false); // TODO: last param should be default
 
             return 0;
         }
@@ -140,7 +140,7 @@ namespace Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0 || backlog == 0)
             {
-                notificationSVC.WriteMarkup("Invalid network io configuration! Review your Configuration.json!");
+                notificationSVC.WriteError("Invalid network io configuration! Review your Configuration.json!");
                 return false;
             }
 
@@ -148,7 +148,7 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteMarkup($"[bold red]Failed to parse io.ip: {addrStr}[/]");
+                notificationSVC.WriteError($"Failed to parse io.ip: {addrStr}");
                 return false;
             }
 
@@ -196,7 +196,7 @@ namespace Network
         {
             if (!startClientListener())
             {
-                notificationSVC.WriteMarkup("[bold red]Failed to start client listener![/]", LogEventLevel.Error);
+                notificationSVC.WriteError("Failed to start client listener!");
                 return 1;
             }
 

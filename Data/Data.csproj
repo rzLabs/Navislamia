@@ -6,4 +6,8 @@
     <RootNamespace>Navislamia.Data</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Maps\Maps.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -14,8 +14,8 @@ using System.Reflection;
 using Configuration;
 using Notification;
 using Serilog.Events;
-using Navislamia.Database.GameContent;
 using Navislamia.Data;
+using Navislamia.Data.GameContent;
 
 namespace Database
 {
@@ -24,6 +24,7 @@ namespace Database
         IConfigurationService configSVC;
         INotificationService notificationSVC;
         IDataService dataSVC;
+
         WorldDbContext worldDbContext;
 
         public DatabaseModule() { }

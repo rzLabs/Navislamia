@@ -1,4 +1,4 @@
-﻿using Navislamia.Database.GameContent;
+﻿using Navislamia.Data.GameContent;
 using Notification;
 using Serilog.Events;
 using System;

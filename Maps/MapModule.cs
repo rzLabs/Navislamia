@@ -67,13 +67,13 @@ namespace Maps
             tasks.Add(Task.Run(() =>
             {
                 seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
-                notificationSVC.WriteMarkup("[green]TerrainSeamlessWorld.cfg loaded![/]", LogEventLevel.Information);
+                notificationSVC.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
             }));
 
             tasks.Add(Task.Run(() =>
             {
                 propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-                notificationSVC.WriteMarkup("[green]TerrainPropInfo.cfg loaded![/]", LogEventLevel.Information);
+                notificationSVC.WriteSuccess("TerrainPropInfo.cfg loaded!");
             }));
 
             worker = Task.WhenAll(tasks);
@@ -103,7 +103,7 @@ namespace Maps
             {
                 for (int x = 0; x < MapCount.CX; ++x)
                 {
-                    notificationSVC.WriteMarkup($"Loading map assets for: m{x.ToString("D3")}_{y.ToString("D3")}...", LogEventLevel.Debug);
+                    notificationSVC.WriteDebug($"Loading map: m{x.ToString("D3")}_{y.ToString("D3")}...");
 
                     string locationFileName = seamlessWorldInfo.GetLocationFileName(x, y);
 
@@ -141,16 +141,15 @@ namespace Maps
                         }));
                     }
 
-                    // TODO: Uncomment this once db loading has been implemented
-                    /*string eventAreaFileName = seamlessWorldInfo.GetEventAreaFileName(x, y);
+                    string eventAreaFileName = seamlessWorldInfo.GetEventAreaFileName(x, y);
 
                     if (string.IsNullOrEmpty(eventAreaFileName))
                         continue;
 
-                    tasks.Add(Task.Run(() => { 
+                    tasks.Add(Task.Run(() =>
+                    {
                         LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
-                        logger.Debug("- Loaded event areas");
-                    }))*/
+                    }));
 
                     worker = Task.WhenAll(tasks);
                     worker.Wait();
@@ -209,8 +208,6 @@ namespace Maps
                         QtAutoBlockInfo.Add(new MapLocationInfo(new PolygonF(block_info)));
                 }
             }
-
-            notificationSVC.WriteMarkup($"[orange3]\t- {polygonCnt} collision polygons loaded[/]",  LogEventLevel.Debug);
         }
 
         public void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
@@ -345,8 +342,6 @@ namespace Maps
                     registerMapLocationInfo(location_info);
                 }
             }
-
-            notificationSVC.WriteMarkup("[orange3]\t- {0} location polygons loaded![/]", LogEventLevel.Debug);
         }
 
         private void registerMapLocationInfo(MapLocationInfo location_info) => QtLocationInfo.Add(location_info);
@@ -372,13 +367,13 @@ namespace Maps
 
             if (header.Sign != NFSFILE_SIGN)
             {
-                notificationSVC.WriteMarkup("[bold red]\t- Invalid script header![/]", LogEventLevel.Fatal);
+                notificationSVC.WriteMarkup("[bold red]\t- Invalid script header![/]\n", LogEventLevel.Fatal);
                 return;
             }
 
             if (header.Version != NFSCurrentVer)
             {
-                notificationSVC.WriteMarkup("[red\\t- Invalid script version![/]", LogEventLevel.Fatal);
+                notificationSVC.WriteMarkup("[red\\t- Invalid script version![/]\n", LogEventLevel.Fatal);
                 return;
             }
 
@@ -392,8 +387,6 @@ namespace Maps
             loadPropScriptInfo(propInfo, stream, x, y, mapLength);
 
             currentRegionIdx = regionList.Count;
-
-            notificationSVC.WriteMarkup($"[orange3]\t- {currentRegionIdx} spawn areas loaded![/]", LogEventLevel.Debug);
         }
 
         void loadRegion(KStream stream, int x, int y, float mapLength)
@@ -546,7 +539,9 @@ namespace Maps
         {
             if (PropScriptInfo.ContainsKey(propID))
             {
-                notificationSVC.WriteMarkup($"[bold orange3]Duplicate prop index: {propID}[/]", LogEventLevel.Warning);
+                notificationSVC.WriteWarning($"Duplicate prop index: {propID}");
+
+                return false;
             }
 
             PropContactScriptInfo tag = new PropContactScriptInfo()
@@ -572,7 +567,6 @@ namespace Maps
 
         static TerrainSeamlessWorldInfo seamlessWorldInfo = new TerrainSeamlessWorldInfo();
         static TerrainPropInfo propInfo = new TerrainPropInfo();
-
         static List<ScriptRegion> regionList = new List<ScriptRegion>();
         static List<ScriptRegionInfo> scriptEvents = new List<ScriptRegionInfo>();
     }

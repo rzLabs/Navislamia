@@ -18,7 +18,13 @@ namespace Notification
 
         public void WriteDebug(string message);
 
+        public void WriteDebug(string[] messages, bool indented = true);
+
         public void WriteWarning(string message);
+
+        public void WriteError(string message);
+
+        public void WriteSuccess(string message);
 
         public void WriteSuccess(string[] messages, bool tabbedIndent);
 
