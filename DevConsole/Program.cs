@@ -9,6 +9,7 @@ namespace DevConsole
     {
         static void Main(string[] args)
         {
+
             var container = ContainerConfig.Configure();
             var resolver = container.Build();      
             var app = resolver.Resolve(typeof(IApplication)) as IApplication;

@@ -8,6 +8,8 @@ namespace Network
     {
         public int ConnectToAuth();
 
+        public int ConnectToUpload();
+
         public int StartListener();
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Packets
+namespace Navislamia.Network.Packets.Auth
 {
     /// <summary>
     /// Packet class inspired and partially ported from Glandu2 Packet CLI Serializer

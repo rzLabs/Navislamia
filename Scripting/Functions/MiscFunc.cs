@@ -27,5 +27,14 @@ namespace Scripting.Functions
             return 0;
 
         }
+
+        public static int GetEnv(params object[] args)
+        {
+            //var config = configSVC.Get<T>(CATEGORY, KEY, DEFAULTVALUE)
+
+            // return config;
+
+            return 0;
+        }
     }
 }

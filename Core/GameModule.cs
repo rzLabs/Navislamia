@@ -70,7 +70,13 @@ namespace Navislamia.Game
 
             if (networkSVC.ConnectToAuth() > 0)
             {
-                notificationSVC.WriteError("Network service failed to start!");
+                notificationSVC.WriteError("Failed to connect to the auth server!");
+                result = 1;
+            }
+
+            if (networkSVC.ConnectToUpload() > 0)
+            {
+                notificationSVC.WriteError("Failed to connect to the upload server!");
                 result = 1;
             }
 

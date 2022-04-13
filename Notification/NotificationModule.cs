@@ -7,6 +7,7 @@ using Serilog;
 using Serilog.Events;
 
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace Notification
 {
@@ -90,6 +91,12 @@ namespace Notification
         {
             AnsiConsole.WriteException(exception);
             Log.Write(level, exception, "An exception has occured!");
+        }
+
+        public void Write(IRenderable renderable, LogEventLevel level = LogEventLevel.Verbose)
+        {
+            AnsiConsole.Write(renderable);
+            Log.Write(level, renderable.ToString());
         }
     }
 }

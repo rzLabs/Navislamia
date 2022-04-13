@@ -17,6 +17,8 @@ using Serilog.Events;
 
 using Spectre.Console;
 
+using Navislamia.Scripting.Functions;
+
 namespace Scripting
 {
     public class ScriptModule : IScriptingService
@@ -89,10 +91,14 @@ namespace Scripting
             return 1;
         }
 
+
+        // TODO: Sandro, this is where you register your lua functions
         void registerFunctions()
         {
             RegisterFunction("call_lc_In", MiscFunc.SetCurrentLocationID);
             RegisterFunction("get_monster_id", MonsterFunc.get_monster_id);
+            RegisterFunction("get_value", Player.get_value);
+            //RegisterFunction("get_local", MiscFunc.GetLocal);
         }
 
         void loadScripts()

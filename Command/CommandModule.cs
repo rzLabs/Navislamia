@@ -37,16 +37,21 @@ namespace Navislamia.Command
             notificationSVC = notificaftionService;
         }
 
+        // TODO: register all CommandModule.Commands and Implementations here!
         public int Init(ITypeRegistrar registrar)
         {
             registrar.Register(typeof(IGetter), typeof(ConfigurationGetter));
+            registrar.Register(typeof(IConfigurationCreator), typeof(ConfigurationCreator));
+            registrar.Register(typeof(IAbout), typeof(AboutPrinter));
 
             commandApp = new CommandApp(registrar);
 
             commandApp.Configure(config =>
             {
-                config.AddCommand<GetCommand>("get").WithAlias("GetConfig").WithDescription("Print configuration value").WithExample(new string[] { "get", "io.ip" });
-
+                config.AddCommand<About>("about").WithDescription("Print information about the Navislamia Framework").WithExample(new string[] { "about" });
+                config.AddCommand<GetConfiguration>("get").WithAlias("GetConfig").WithDescription("Print configuration value").WithExample(new string[] { "get", "io.ip" });
+                config.AddCommand<CreateDefaultConfig>("create_default_config").WithDescription("Create a new or overwrite existing Configuration.json with option t").WithExample(new string[] { "create_default_config", ".\\" });
+                
             });
 
             return 0;

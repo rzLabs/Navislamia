@@ -24,15 +24,13 @@ namespace Navislamia.Command.Commands
         public dynamic Get(string key, string parent) => configSVC.Get(key, parent);
     }
 
-    public sealed class GetCommand : Command<GetCommand.Settings>
+    public sealed class GetConfiguration : Command<GetConfiguration.Settings>
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
         IGetter _getter;
 
-        public GetCommand(IConfigurationService configurationService, INotificationService notificationService, IGetter getter)
+        public GetConfiguration(INotificationService notificationService, IGetter getter)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
             _getter = getter;
         }

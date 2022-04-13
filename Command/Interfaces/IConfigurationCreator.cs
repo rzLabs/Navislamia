@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Enums
+namespace Navislamia.Command.Interfaces
 {
-    public enum UploadPackets
+    public interface IConfigurationCreator
     {
-        TS_SU_LOGIN = 50001,
-        TS_US_LOGIN_RESULT = 50002
+        public void Create(string path = null);
     }
 }

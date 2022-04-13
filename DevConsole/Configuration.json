@@ -12,7 +12,7 @@
     "Category": "Logs",
     "Collection": {
       "minimum-level": 0,
-      "packet.debug": false
+      "packet.debug": true
     }
   },
   {
