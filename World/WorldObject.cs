@@ -142,7 +142,7 @@ namespace Navislamia.World
 
         public bool IsMoving() => (mv.IsMoving() && IsInWorld);
 
-        public bool IsMoving(float t) => mv.IsMoving(t);
+        public bool IsMoving(ulong t) => mv.IsMoving(t);
 
         public void SetDirection(WorldPosition _to) => mv.SetDirection(_to);
 
