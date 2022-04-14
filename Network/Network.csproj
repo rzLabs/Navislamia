@@ -16,10 +16,4 @@
     <ProjectReference Include="..\Objects\Objects.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="packet_cppcli">
-      <HintPath>..\Core\Libs\packet_cppcli.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
