@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Maps.X2D;
 
-namespace Navislamia.Data.GameContent
+namespace Navislamia.World.Map
 {
     public enum LIMIT_CONDITION
     {

@@ -184,7 +184,7 @@ namespace Network
 
             if (status == 1)
             {
-                notificationSVC.WriteError("Failed to connect to the auth server!");
+                notificationSVC.WriteError("Failed to connect to the upload server!");
 
                 return 1;
             }

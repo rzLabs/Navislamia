@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>Module.World</AssemblyName>
+    <RootNamespace>Navislamia.World</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Maps\Maps.csproj" />
+    <ProjectReference Include="..\Notification\Notification.csproj" />
+  </ItemGroup>
+
+</Project>

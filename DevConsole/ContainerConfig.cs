@@ -6,7 +6,8 @@ using Navislamia.Command;
 using Navislamia.Command.Commands;
 using Navislamia.Data;
 using Navislamia.Game;
-using Network;
+using Navislamia.World;
+
 using Notification;
 using Scripting;
 using Spectre.Console.Cli;
@@ -15,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Network;
 
 namespace DevConsole
 {
@@ -32,6 +34,7 @@ namespace DevConsole
 
             serviceCollection.AddSingleton<IDataService, DataModule>();
             serviceCollection.AddSingleton<IDatabaseService, DatabaseModule>();
+            serviceCollection.AddSingleton<IWorldService, WorldModule>();
             serviceCollection.AddSingleton<IScriptingService, ScriptModule>();
             serviceCollection.AddSingleton<IMapService, MapModule>();
             serviceCollection.AddSingleton<INetworkService, NetworkModule>();

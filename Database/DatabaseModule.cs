@@ -15,7 +15,7 @@ using Configuration;
 using Notification;
 using Serilog.Events;
 using Navislamia.Data;
-using Navislamia.Data.GameContent;
+using Navislamia.World.DB;
 
 namespace Database
 {

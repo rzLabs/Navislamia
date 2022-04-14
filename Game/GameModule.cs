@@ -17,12 +17,14 @@ using Scripting;
 using Serilog.Events;
 using System.Collections.Generic;
 using Spectre.Console;
+using Navislamia.World;
 
 namespace Navislamia.Game
 {
     public class GameModule : IGameService
     {
         IConfigurationService configSVC;
+        IWorldService worldSVC;
         IDatabaseService dbSVC;
         IDataService dataSVC;
         IScriptingService scriptSVC;
@@ -32,10 +34,11 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, INotificationService notificationService, IDatabaseService databaseService, IDataService dataService, 
+        public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, IDataService dataService, 
             IScriptingService scriptingService, IMapService mapService, INetworkService networkService)
         {
             configSVC = configurationService;
+            worldSVC = contentService;
             notificationSVC = notificationService;
             dbSVC = databaseService;
             dataSVC = dataService;
@@ -68,17 +71,9 @@ namespace Navislamia.Game
 
             dbSVC.Init();
 
-            if (networkSVC.ConnectToAuth() > 0)
-            {
-                notificationSVC.WriteError("Failed to connect to the auth server!");
-                result = 1;
-            }
 
-            if (networkSVC.ConnectToUpload() > 0)
-            {
-                notificationSVC.WriteError("Failed to connect to the upload server!");
+            if (networkSVC.ConnectToAuth() > 0 || networkSVC.ConnectToUpload() > 0)
                 result = 1;
-            }
 
             return result;
         }
