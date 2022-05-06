@@ -12,12 +12,7 @@ namespace Navislamia.Network.Packets.Auth
 
         public ushort Result { get; set; }
 
-        public TS_AG_LOGIN_RESULT(Span<byte> buffer) : base(buffer.ToArray())
-        {
-            Checksum = this.Calculate();
-
-            Deserialize();
-        }
+        public TS_AG_LOGIN_RESULT(Span<byte> buffer) : base(buffer.ToArray()) => Deserialize();
 
         public void Serialize()
         {

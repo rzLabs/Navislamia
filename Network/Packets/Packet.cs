@@ -31,7 +31,7 @@ namespace Navislamia.Network.Packets // TODO: I should be able to parse my own c
 
             Length = BitConverter.ToUInt32(buffer.Slice(0, 4));
             ID = BitConverter.ToUInt16(buffer.Slice(4, 2));
-            Checksum = buffer.Slice(6, 1)[0];        
+            Checksum = this.Calculate();  
 
             Data = buffer.Slice(7, (int)Length - 7).ToArray();
         }

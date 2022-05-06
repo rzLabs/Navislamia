@@ -18,12 +18,7 @@ namespace Navislamia.Network.Packets.Upload
 
         public TS_US_LOGIN_RESULT(ushort result) : base(id) => Result = result;
 
-        public TS_US_LOGIN_RESULT(Span<byte> buffer) : base(buffer)
-        {
-            Checksum = this.Calculate();
-
-            Deserialize();
-        }
+        public TS_US_LOGIN_RESULT(Span<byte> buffer) : base(buffer) => Deserialize();
 
         public void Deserialize() 
         {
