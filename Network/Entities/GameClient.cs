@@ -1,6 +1,7 @@
 ﻿using Configuration;
 using Navislamia.Network.Packets;
 using Network;
+using Network.Security;
 using Notification;
 using System;
 using System.Collections.Generic;
@@ -11,15 +12,21 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Objects
 {
-    using static Navislamia.Network.Packets.Actions;
+    using static Navislamia.Network.Packets.GameActions;
 
     public class GameClient : Client
     {
-        protected byte[] encryptedData;
+        XRC4Cipher recvCipher = new XRC4Cipher();
+        XRC4Cipher sendCipher = new XRC4Cipher();
 
-        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) 
+        protected byte[] encryptedData;
+        protected IGameActionService actionSVC;
+
+        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService) 
         {
             encryptedData = new byte[BufferLen];
+
+            actionSVC = actionService;
         }
 
         public override void Send(Packet msg, bool beginReceive = true)
@@ -53,12 +60,15 @@ namespace Navislamia.Network.Objects
             if (DebugPackets)
                 NotificationService.WriteDebug($"{readCnt} bytes received from the game client!");
 
+            client.Data = new byte[encryptedData.Length];
+
+            // TODO: decode the data
+            recvCipher.Decode(encryptedData, client.Data, encryptedData.Length);
+
             // TODO: deserialize the gameclient data
             var header = Header.GetPacketHeader(client.Data);
 
-            // TODO: if header.ID == GAMEPACKET.ID
-            // TODO: Construct proper packet type
-            // TODO: msg.Actions.OnReceive()
+            
         }
     }
 }

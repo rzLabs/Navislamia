@@ -63,5 +63,7 @@ namespace Navislamia.Network.Packets
 
             return length;
         }
+
+        public static bool ChecksumPassed(this ISerializablePacket msg, PacketHeader header) => msg.Checksum == header.Checksum;
     }
 }

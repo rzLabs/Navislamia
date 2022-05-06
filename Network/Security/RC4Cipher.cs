@@ -80,7 +80,7 @@ namespace Network.Security
                 state.S[x] = sy; state.S[y] = sx;
 
                 // *(pDst++) = *(pSrc++) ^ m_state.s[ (sx + sy) & 0xff ];
-                destination[destIdx] = Convert.ToByte(srcIdx ^ state.S[(sx + sy) & 0xff]);
+                destination[destIdx++] = Convert.ToByte(srcIdx ^ state.S[(sx + sy) & 0xff]);
             }
         }
 

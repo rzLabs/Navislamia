@@ -54,11 +54,10 @@ namespace Database
 
                 return 1;
             }
-
-            
+     
             dataSVC.Set<List<StringResource>>("strings", stringRepo);
 
-            int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count;
+            int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count; // TODO: these should say their counts individually not within the success statement
 
             notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- [green]{stringCnt}[/] strings loaded!" },  true);
 

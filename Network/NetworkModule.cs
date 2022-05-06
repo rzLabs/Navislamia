@@ -33,17 +33,23 @@ namespace Network
         List<GameClient> connections = new List<GameClient>();
 
         AuthClient auth = null;
+        IAuthActionService authActionsSVC;
+
+        IGameActionService gameActionsSVC;
+
         UploadClient upload = null;
 
-        XRC4Cipher recvCipher = new XRC4Cipher();
-        XRC4Cipher sendCipher = new XRC4Cipher();
+
 
         public NetworkModule() { }
 
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
+        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionsService, IGameActionService gameActionsService)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
+
+            authActionsSVC = authActionsService;
+            gameActionsSVC = gameActionsService;
         }
 
         public int ConnectToAuth()
@@ -51,7 +57,7 @@ namespace Network
             if (connectToAuth() > 0)
                 return 1;
 
-            notificationSVC.WriteSuccess(new[] { "Connected to Auth server successfully!" }, false); 
+            notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true); 
 
             return sendGSInfoToAuth();
         }
@@ -61,7 +67,7 @@ namespace Network
             if (connectToUpload() > 0)
                 return 1;
 
-            notificationSVC.WriteSuccess(new[] { "Connected to Upload server successfully!" }, false); // TODO: last param should be default
+            notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, false); // TODO: last param should be default
 
             return sendInfoToUpload();
         }
@@ -98,7 +104,7 @@ namespace Network
 
             try
             {
-                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this);
+                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this, authActionsSVC);
                 status = auth.Connect(authEP);
             }
             catch (Exception ex)
@@ -248,7 +254,7 @@ namespace Network
 
             Socket socket = listener.EndAcceptSocket(ar);
 
-            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this);
+            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionsSVC);
 
             if (connections.Contains(client))
             {

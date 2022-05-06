@@ -7,7 +7,7 @@ namespace DevConsole
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main(string[] args) // TODO: need to stop idle message from showing up before its time
         {
 
             var container = ContainerConfig.Configure();

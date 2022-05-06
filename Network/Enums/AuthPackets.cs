@@ -9,6 +9,7 @@ namespace Navislamia.Network.Enums
     public enum AuthPackets
     {
         TS_GA_LOGIN = 20001,
-        TS_AG_LOGIN_RESULT = 20002
+        TS_AG_LOGIN_RESULT = 20002,
+
     }
 }

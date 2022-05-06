@@ -16,11 +16,8 @@ namespace Navislamia.Network.Objects
 {
     public class UploadClient : Client
     {
-        bool debugPackets = false;
-
         public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService)
         {
-            debugPackets = ConfigurationService.Get<bool>("packet.debug", "Logs", false);
         }
         public override void Send(Packet msg, bool beginReceive = true)
         {
@@ -64,7 +61,7 @@ namespace Navislamia.Network.Objects
                 return;
             }
 
-            if (debugPackets)
+            if (DebugPackets)
                 NotificationService.WriteDebug($"{readCnt} bytes received from the Upload server!");
 
             try
@@ -75,7 +72,7 @@ namespace Navislamia.Network.Objects
                 {
                     TS_US_LOGIN_RESULT msg = new TS_US_LOGIN_RESULT(upload.Data);
 
-                    if (debugPackets)
+                    if (DebugPackets)
                         NotificationService.WriteString(msg.DumpToString());
 
                     if (header.Checksum != msg.Checksum)

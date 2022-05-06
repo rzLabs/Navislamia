@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Network;
+using Navislamia.Network.Packets;
 
 namespace DevConsole
 {
@@ -41,6 +42,9 @@ namespace DevConsole
             serviceCollection.AddSingleton<IGameService, GameModule>();
 
             serviceCollection.AddSingleton<ITypeResolver, TypeResolver>();
+
+            serviceCollection.AddSingleton<IAuthActionService, AuthActions>();
+            serviceCollection.AddSingleton<IGameActionService, GameActions>();
 
             return new TypeRegistrar(serviceCollection);
         }

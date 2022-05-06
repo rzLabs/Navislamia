@@ -23,8 +23,11 @@ namespace Navislamia.Network.Objects
 {
     public class AuthClient : Client
     {
-        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) 
+        IAuthActionService authActions;
+
+        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IAuthActionService actions) : base(socket, length, configurationService, notificationService, networkService) 
         {
+            authActions = actions;
         }
 
         public override void Send(Packet msg, bool beginReceive = true)
@@ -76,6 +79,13 @@ namespace Navislamia.Network.Objects
             {
                 PacketHeader header = Header.GetPacketHeader(auth.Data);
 
+                if (!Enum.IsDefined(typeof(AuthPackets), (int)header.ID)) // Unlisted packet
+                {
+                    NotificationService.WriteWarning($"Unlisted packet received! ID: {header.ID} Length: {header.Length} Checksum: {header.Checksum}");
+
+                    return;
+                }
+
                 if (header.ID == (uint)AuthPackets.TS_AG_LOGIN_RESULT)
                 {
                     var msg = new TS_AG_LOGIN_RESULT(auth.Data);
@@ -83,11 +93,13 @@ namespace Navislamia.Network.Objects
                     if (DebugPackets)
                         NotificationService.WriteString(msg.DumpToString());
 
-                    if (msg.Checksum != header.Checksum)
+                    if (!msg.ChecksumPassed(header))
                     {
                         NotificationService.WriteMarkup("[bold red]TS_AG_LOGIN_RESULT bears an invalid checksum![/]");
                         return;
                     }
+
+                    authActions.Execute(msg);
                 }
             }
             catch (Exception ex)
