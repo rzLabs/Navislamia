@@ -11,7 +11,7 @@ namespace Navislamia.Network.Packets
     {
         static Dictionary<ushort, Func<ISerializablePacket, int>> actions = new Dictionary<ushort, Func<ISerializablePacket, int>>()
         {
-            new KeyValuePair<ushort, Func<ISerializablePacket, int>((ushort)AuthPackets.TS_AG_LOGIN_RESULT, Foo) // TODO: just example, remove me!
+            //new KeyValuePair<ushort, Func<ISerializablePacket, int>>((ushort)AuthPackets.TS_AG_LOGIN_RESULT, Foo) // TODO: just example, remove me!
         };
 
         public static int OnReceive(this ISerializablePacket msg)
