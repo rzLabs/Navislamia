@@ -38,9 +38,7 @@ namespace DevConsole
             short port = configurationService.Get<short>("io.port", "Network", 4502);
             int backlog = configurationService.Get<int>("io.backlog", "Network", 100);
 
-            int result = 0;
-
-            if ((result = gameService.Start("", 4502, 100)) == 1)
+            if (gameService.Start(ip, port, backlog) >= 1)
                 notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
         }
     }

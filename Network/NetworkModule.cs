@@ -18,7 +18,6 @@ using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Network.Objects;
 using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Interfaces;
 
 namespace Network
 {
@@ -33,8 +32,8 @@ namespace Network
 
         List<GameClient> connections = new List<GameClient>();
 
-        IClient auth = null;
-        IClient upload = null;
+        AuthClient auth = null;
+        UploadClient upload = null;
 
         XRC4Cipher recvCipher = new XRC4Cipher();
         XRC4Cipher sendCipher = new XRC4Cipher();
@@ -113,7 +112,7 @@ namespace Network
             {
                 notificationSVC.WriteError("Failed to connect to the auth server!");
 
-                return 1;
+                return status;
             }
 
             return 0;
@@ -215,7 +214,7 @@ namespace Network
 
         int startClientListener()
         {
-            string addrStr = configSVC.Get<string>("io.ip", "Network", "127.0.0.1");
+            string addrStr = configSVC.Get<string>("io.ip", "Network", "0.0.0.0");
             short port = configSVC.Get<short>("io.port", "Network", 4515);
             int backlog = configSVC.Get<int>("io.backlog", "Network", 100);
 
@@ -249,29 +248,18 @@ namespace Network
 
             Socket socket = listener.EndAcceptSocket(ar);
 
-            //GameClient client = new GameClient(socket, bufferLen);
+            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this);
 
-            //if (!connections.Contains(client))
-            //    connections.Add(client);
+            if (connections.Contains(client))
+            {
+                notificationSVC.WriteWarning($"Connection from duplicate client!");
 
-            //socket.BeginReceive(client.Data, 0, client.DataLength, 0, new AsyncCallback(AttemptReceive), client);
-        }
+                return;
+            }
+                
+            connections.Add(client);
 
-        private void AttemptReceive(IAsyncResult ar) // TODO: reimplement
-        {
-            GameClient client = (GameClient)ar.AsyncState;
-            //Socket socket = client.Socket; // TODO:
-
-            //int readCount = socket.EndReceive(ar);
-
-            //if (readCount > 0)
-            //{
-            //    byte[] decodedBytes = new byte[readCount];
-
-            //    //recvCipher.Decode(client.Data, decodedBytes, readCount, true);
-            //}
-
-            // TODO: set client socket for next read
+            client.Receive();
         }
 
         public int StartListener()

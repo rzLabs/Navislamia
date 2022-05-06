@@ -24,21 +24,28 @@ namespace Navislamia.Database.Repositories
         public override List<StringResource> Get()
         {        
             var queryString = "SELECT * FROM dbo.StringResource";
-            SqlConnection conn = (SqlConnection)DbContext.CreateConnection();
-            var cmd = new SqlCommand(queryString, conn);
 
-            conn.Open();
-            SqlDataReader reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using (SqlConnection conn = (SqlConnection)DbContext.CreateConnection())
             {
-                StringResource strResource = new StringResource();
-                strResource.Code = Convert.ToInt32(reader["code"]);
-                strResource.Name = reader["name"].ToString();
-                strResource.Value = reader["value"].ToString();
-                Strings.Add(strResource);
-            }
+                var cmd = new SqlCommand(queryString, conn);
 
-            conn.Close();
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    StringResource strResource = new StringResource();
+
+                    strResource.Name = reader[0].ToString();
+                    strResource.Code = Convert.ToInt32(reader[2]);
+                    strResource.Value = reader[3].ToString();
+
+                    Strings.Add(strResource);
+                }
+
+                conn.Close();
+            }
 
             return Strings;
         }

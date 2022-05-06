@@ -12,11 +12,10 @@ using Notification;
 using Configuration;
 using Network;
 using Navislamia.Network.Packets;
-using Navislamia.Network.Interfaces;
 
 namespace Navislamia.Network.Objects
 {
-    public class Client : IClient
+    public class Client
     {
         public IConfigurationService ConfigurationService;
         public INotificationService NotificationService;
@@ -31,11 +30,14 @@ namespace Navislamia.Network.Objects
             ConfigurationService = configurationService;
             NotificationService = notificationService;
             NetworkService = networkService;
+            DebugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
         }
 
         public int DataLength => Data?.Length ?? -1;
 
         public int BufferLen = -1;
+
+        public bool DebugPackets = false;
 
         public byte[] Data;
 

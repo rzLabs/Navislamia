@@ -1,6 +1,5 @@
 ﻿using Configuration;
 using Navislamia.Network.Enums;
-using Navislamia.Network.Interfaces;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
 using Network;
@@ -15,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Objects
 {
-    public class UploadClient : Client, IClient
+    public class UploadClient : Client
     {
         bool debugPackets = false;
 
@@ -71,7 +70,7 @@ namespace Navislamia.Network.Objects
             try
             {
                 PacketHeader header = Header.GetPacketHeader(upload.Data);
-
+              
                 if (header.ID == (uint)UploadPackets.TS_US_LOGIN_RESULT)
                 {
                     TS_US_LOGIN_RESULT msg = new TS_US_LOGIN_RESULT(upload.Data);
@@ -86,7 +85,7 @@ namespace Navislamia.Network.Objects
                     }
 
                     if (msg.Result == 0)
-                        if (NetworkService.StartListener() > 0)
+                        if (NetworkService.StartListener() > 0) // TODO: this shit ain't right, uploadclient should not be able to start other network modules!
                             NotificationService.WriteError("Failed to start network listener!");
                 }
             }

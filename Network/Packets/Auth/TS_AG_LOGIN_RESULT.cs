@@ -14,7 +14,7 @@ namespace Navislamia.Network.Packets.Auth
 
         public TS_AG_LOGIN_RESULT(Span<byte> buffer) : base(buffer.ToArray()) => Deserialize();
 
-        public void Serialize()
+        public void Serialize() // TODO: this packet will never be serialized
         {
         }
 

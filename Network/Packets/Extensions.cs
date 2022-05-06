@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets
 {
-    public static class PacketExtension
+    public static class Extensions
     {
         public static string DumpToString(this Packet packet)
         {

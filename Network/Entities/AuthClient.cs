@@ -13,7 +13,7 @@ using System.Net.Sockets;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Auth;
-using static Navislamia.Network.Packets.PacketExtension;
+using static Navislamia.Network.Packets.Extensions;
 
 using Notification;
 using Network;
@@ -23,11 +23,8 @@ namespace Navislamia.Network.Objects
 {
     public class AuthClient : Client
     {
-        bool debugPackets = false;
-
         public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) 
         {
-            debugPackets = ConfigurationService.Get<bool>("packet.debug", "Logs", false);
         }
 
         public override void Send(Packet msg, bool beginReceive = true)
@@ -72,7 +69,7 @@ namespace Navislamia.Network.Objects
                 return;
             }
 
-            if (debugPackets)
+            if (DebugPackets)
                 NotificationService.WriteDebug($"{readCnt} bytes received from the Auth server!");
 
             try
@@ -83,7 +80,7 @@ namespace Navislamia.Network.Objects
                 {
                     var msg = new TS_AG_LOGIN_RESULT(auth.Data);
 
-                    if (debugPackets)
+                    if (DebugPackets)
                         NotificationService.WriteString(msg.DumpToString());
 
                     if (msg.Checksum != header.Checksum)

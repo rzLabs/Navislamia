@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace Navislamia.Network.Packets // TODO: I should be able to parse my own checksum, id and length
+namespace Navislamia.Network.Packets
 {
-    using static Navislamia.Network.Packets.PacketExtension;
+    using static Navislamia.Network.Packets.Extensions;
     using static Navislamia.Network.Packets.Header;
     using static Navislamia.Network.Packets.Checksum;
 
@@ -33,7 +33,7 @@ namespace Navislamia.Network.Packets // TODO: I should be able to parse my own c
             ID = BitConverter.ToUInt16(buffer.Slice(4, 2));
             Checksum = this.Calculate();  
 
-            Data = buffer.Slice(7, (int)Length - 7).ToArray();
+            Data = buffer[7..(int)Length].ToArray();
         }
 
         public Packet(ushort id)

@@ -51,7 +51,12 @@ namespace Navislamia.Game
         {
             if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
             {
-                scriptSVC.Init();
+                if (scriptSVC.Init() > 0)
+                {
+                    notificationSVC.WriteError("Failed to start script service!");
+
+                    return 1;
+                }
 
                 notificationSVC.WriteSuccess(new string[] { $"Successfully started the script service!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
@@ -60,7 +65,12 @@ namespace Navislamia.Game
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
-                mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
+                if (!mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
+                {
+                    notificationSVC.WriteError("Failed to start the map service!");
+
+                    return 1;
+                }
 
                 notificationSVC.WriteSuccess(new string[] { $"Successfully started the map service!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
@@ -73,7 +83,6 @@ namespace Navislamia.Game
 
                 return 1;
             }
-
 
             if (networkSVC.ConnectToAuth() > 0 || networkSVC.ConnectToUpload() > 0)
                 return 1;
