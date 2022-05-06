@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Maps.Structures
+namespace Navislamia.Maps.Entities
 {
     public struct PropContactScriptInfo
     {

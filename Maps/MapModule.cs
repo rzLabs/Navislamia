@@ -5,15 +5,15 @@ using System.Linq;
 using System.Reflection;
 
 using Configuration;
-using static Maps.Structures.ScriptDefine;
 using Scripting;
-using Maps.Structures;
+using Navislamia.Maps.Entities;
 using Maps.X2D;
 using Notification;
 using Objects;
 
 using Serilog.Events;
 using System;
+using static Navislamia.Maps.Entities.ScriptDefine;
 
 namespace Maps
 {
@@ -227,8 +227,6 @@ namespace Maps
                 int eventAreaID = stream.ReadInt();
                 int polygonCnt = stream.ReadInt();
 
-                PolygonF block_info = new PolygonF();
-
                 for (int i = 0; i < polygonCnt; ++i)
                 {
                     int ptCnt = stream.ReadInt();
@@ -244,18 +242,9 @@ namespace Maps
                         points[pointNum].Y = mapLength * y + points[pointNum].Y * attrLen;
                     }
 
-                    if (block_info.Set(points))
-                        registerEventAreaBlock(eventAreaID, block_info);
+                    EventAreaInfo[eventAreaID] = new EventAreaInfo(eventAreaID, points);
                 }
             }
-        }
-
-        private void registerEventAreaBlock(int eventAreaID, PolygonF block_info)
-        {
-            if (!EventAreaInfo.ContainsKey(eventAreaID))
-                return;
-
-            EventAreaInfo[eventAreaID].Area.Add(block_info);
         }
 
         public void LoadLocationFile(string fileName, int x, int y, float attrLen, float mapLength)

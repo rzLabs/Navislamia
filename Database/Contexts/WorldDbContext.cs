@@ -1,4 +1,5 @@
 ﻿using Configuration;
+using Navislamia.Database.Interfaces;
 using Notification;
 using System;
 using System.Data;
@@ -8,9 +9,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Database
+namespace Navislamia.Database.Contexts
 {
-    public class WorldDbContext
+    public class WorldDbContext : IDbContext
     {
         private IConfigurationService _configSVC;
         private string _connString;

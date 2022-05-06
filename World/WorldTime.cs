@@ -41,6 +41,10 @@ namespace Navislamia.World
 
         }
 
+        /// <summary>
+        /// 1 / 100 second
+        /// </summary>
+        /// <returns></returns>
         public static ulong GetWorldTime()
         {
             if (mode == Mode.Lib)

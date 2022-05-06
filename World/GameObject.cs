@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.World
 {
-    public class Creature : WorldObject
+    public class GameObject : WorldObject
     {
     }
 }

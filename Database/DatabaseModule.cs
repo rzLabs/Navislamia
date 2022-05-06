@@ -15,7 +15,9 @@ using Configuration;
 using Notification;
 using Serilog.Events;
 using Navislamia.Data;
-using Navislamia.World.DB;
+using Navislamia.Database.Contexts;
+using Navislamia.Database.Repositories;
+using Navislamia.Database.Entities;
 
 namespace Database
 {
@@ -36,16 +38,31 @@ namespace Database
             dataSVC = dataService;
         }
 
-        public void Init() // TODO: arcadia table loading logic should occur here
+        public int Init() // TODO: arcadia table loading logic should occur here
         {
-            worldDbContext = new WorldDbContext(configSVC);
+            List<StringResource> stringRepo = null;
 
-            var stringRepo = new StringResourceRespository(notificationSVC, worldDbContext);
-            dataSVC.Set<List<StringResource>>("strings", stringRepo.GetStrings());
+            try
+            {
+                worldDbContext = new WorldDbContext(configSVC);
+
+                stringRepo = new StringResourceRespository(notificationSVC, worldDbContext).Get();
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteException(ex);
+
+                return 1;
+            }
+
+            
+            dataSVC.Set<List<StringResource>>("strings", stringRepo);
 
             int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count;
 
             notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- [green]{stringCnt}[/] strings loaded!" },  true);
+
+            return 0;
         }
     }
 }

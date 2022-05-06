@@ -1,27 +1,35 @@
-﻿using Configuration;
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets;
-using Navislamia.Network.Packets.Upload;
-using Network;
-using Notification;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.IO;
+
+using System.Net;
+using System.Net.Sockets;
+
+
+using Navislamia.Network.Enums;
+using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Auth;
+using static Navislamia.Network.Packets.PacketExtension;
+
+using Notification;
+using Network;
+using Configuration;
+
 namespace Navislamia.Network.Objects
 {
-    public class UploadClient : Client, IClient
+    public class AuthClient : Client
     {
         bool debugPackets = false;
 
-        public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService)
+        public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService) 
         {
             debugPackets = ConfigurationService.Get<bool>("packet.debug", "Logs", false);
         }
+
         public override void Send(Packet msg, bool beginReceive = true)
         {
             if (!Socket.Connected)
@@ -31,7 +39,7 @@ namespace Navislamia.Network.Objects
 
             if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
             {
-                NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Upload Server...[/]");
+                NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
                 NotificationService.WriteString((msg).DumpToString());
             }
 
@@ -52,7 +60,7 @@ namespace Navislamia.Network.Objects
         private void ReceiveCallback(IAsyncResult ar)
         {
             if (ConfigurationService.Get<bool>("debug", "Runtime", false))
-                NotificationService.WriteDebug("Receiving data from the Upload server...");
+                NotificationService.WriteDebug("Receiving data from the auth server...");
 
             Client auth = (Client)ar.AsyncState;
 
@@ -60,35 +68,29 @@ namespace Navislamia.Network.Objects
 
             if (readCnt <= 0)
             {
-                NotificationService.WriteMarkup("[bold red]Failed to read data from the Upload server![/]");
+                NotificationService.WriteMarkup("[bold red]Failed to read data from the Auth server![/]");
                 return;
             }
 
             if (debugPackets)
-                NotificationService.WriteDebug($"{readCnt} bytes received from the Upload server!");
+                NotificationService.WriteDebug($"{readCnt} bytes received from the Auth server!");
 
             try
             {
-                if (auth.MessageID == (uint)UploadPackets.TS_US_LOGIN_RESULT)
+                PacketHeader header = Header.GetPacketHeader(auth.Data);
+
+                if (header.ID == (uint)AuthPackets.TS_AG_LOGIN_RESULT)
                 {
-                    Span<byte> data = auth.Data;
-
-                    byte checksum = data.Slice(6, 1).ToArray()[0];
-
-                    TS_US_LOGIN_RESULT msg = new TS_US_LOGIN_RESULT(data);
+                    var msg = new TS_AG_LOGIN_RESULT(auth.Data);
 
                     if (debugPackets)
                         NotificationService.WriteString(msg.DumpToString());
 
-                    if (checksum != msg.Checksum)
+                    if (msg.Checksum != header.Checksum)
                     {
-                        NotificationService.WriteMarkup($"[bold red]{msg.GetType().Name} bears an invalid checksum![/]");
+                        NotificationService.WriteMarkup("[bold red]TS_AG_LOGIN_RESULT bears an invalid checksum![/]");
                         return;
                     }
-
-                    if (msg.Result == 0)
-                        if (NetworkService.StartListener() > 0)
-                            NotificationService.WriteError("Failed to start network listener!");
                 }
             }
             catch (Exception ex)

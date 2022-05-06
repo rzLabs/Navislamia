@@ -3,7 +3,7 @@
 using Maps.X2D;
 using static Maps.X2D.X2DUtil;
 
-namespace Maps.Structures
+namespace Navislamia.Maps.Entities
 {
     public class QuadTree
     {

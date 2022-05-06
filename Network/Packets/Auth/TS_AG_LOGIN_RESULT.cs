@@ -12,35 +12,22 @@ namespace Navislamia.Network.Packets.Auth
 
         public ushort Result { get; set; }
 
-        public TS_AG_LOGIN_RESULT(Span<byte> buffer) : base(id) 
+        public TS_AG_LOGIN_RESULT(Span<byte> buffer) : base(buffer.ToArray())
         {
-            Data = buffer.ToArray();
+            Checksum = this.Calculate();
 
             Deserialize();
         }
 
         public void Serialize()
         {
-            Length = this.GetLength();
-
-            byte[] headerBuffer = this.CreateHeader();
-            Data = new byte[512/*Length + headerBuffer.Length*/];
-
-            byte[] buffer = BitConverter.GetBytes(Result);
-            Buffer.BlockCopy(buffer, 0, Data, 7, 2);
         }
 
         public void Deserialize()
         {
-            Span<byte> _data = Data;
+            Span<byte> data = Data;
 
-            Length = BitConverter.ToUInt32(_data.Slice(0, 4));
-
-            base.ID = BitConverter.ToUInt16(_data.Slice(4, 2));
-
-            Checksum = _data.Slice(6, 1)[0];
-
-            Result = BitConverter.ToUInt16(_data.Slice(7, 2));
+            Result = BitConverter.ToUInt16(data.Slice(0, 2));
         }
     }
 }

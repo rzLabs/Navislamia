@@ -49,8 +49,6 @@ namespace Navislamia.Game
 
         public int Start(string ip, int port, int backlog)
         {
-            int result = 0;
-
             if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
             {
                 scriptSVC.Init();
@@ -69,13 +67,18 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            dbSVC.Init();
+            if (dbSVC.Init() > 0)
+            {
+                notificationSVC.WriteError("Failed to start the database service!");
+
+                return 1;
+            }
 
 
             if (networkSVC.ConnectToAuth() > 0 || networkSVC.ConnectToUpload() > 0)
-                result = 1;
+                return 1;
 
-            return result;
+            return 0;
         }
     }
 }

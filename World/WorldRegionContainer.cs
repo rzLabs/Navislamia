@@ -13,6 +13,18 @@ namespace Navislamia.World
     {
         public const int RegionBlockCount = 100;
 
+        public float MapWidth, MapHeight;
+        public uint RegionWidth;
+        public uint RegionHeight;
+
+        public uint RegionBlockWidth;
+        public uint RegionBlockHeight;
+
+        public WorldRegionBlock[] RegionBlock;
+        public SpinLock Lock;
+
+        bool isLocked = false;
+
         public WorldRegionContainer(float mapWidth, float mapHeight)
         {
             MapWidth = mapWidth;
@@ -134,7 +146,6 @@ namespace Navislamia.World
 
             int right = Math.Min(Math.Max((int)rx1 + VisibleRegionRange, (int)rx2 + VisibleRegionRange), (int)RegionWidth - 1);
             int bottom = Math.Min(Math.Max((int)ry1 + VisibleRegionRange, (int)ry2 + VisibleRegionRange), (int)RegionHeight - 1);
-
 
             int pos1, pos2;
 
@@ -311,15 +322,24 @@ namespace Navislamia.World
 
         public WorldRegion GetRegionPtr(uint rx, uint ry, byte layer)
         {
-            uint rcx = rx / RegionBlockCount;
-            uint rcy = ry / RegionBlockCount;
+            Lock.TryEnter(1000, ref isLocked);
 
-            WorldRegionBlock block = GetRegionBlockPtr(rcx, rcy);
+            if (isLocked)
+            {
+                uint rcx = rx / RegionBlockCount;
+                uint rcy = ry / RegionBlockCount;
 
-            if (block is null)
-                return null;
+                WorldRegionBlock block = GetRegionBlockPtr(rcx, rcy);
 
-            return block.GetRegionPtr(rx % RegionBlockCount, ry % RegionBlockCount, layer);
+                if (block is null)
+                    return null;
+
+                Lock.Exit();
+
+                return block.GetRegionPtr(rx % RegionBlockCount, ry % RegionBlockCount, layer);
+            }
+
+            return null;
         }
 
         WorldRegion getRegion(uint rx, uint ry, byte layer)
@@ -331,17 +351,5 @@ namespace Navislamia.World
 
             return block.GetRegion(rx % RegionBlockCount, ry % RegionBlockCount, layer);
         }
-
-        public float MapWidth, MapHeight;
-        public uint RegionWidth;
-        public uint RegionHeight;
-
-        public uint RegionBlockWidth;
-        public uint RegionBlockHeight;
-
-        public WorldRegionBlock[] RegionBlock;
-        public SpinLock Lock;
-
-        bool isLocked = false;
     }
 }

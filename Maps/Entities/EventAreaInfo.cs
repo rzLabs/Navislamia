@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Maps.X2D;
 
-namespace Navislamia.World.Map
+namespace Navislamia.Maps.Entities
 {
     public enum LIMIT_CONDITION
     {
@@ -83,22 +83,45 @@ namespace Navislamia.World.Map
     {
         const int MaxActivateConditions = 6;
 
+        public readonly int ID;
+
         public static bool IsActivatable(/*StructPlayer pPlayer, int areaIndex*/) => false; // TODO: implement EventAreaInfo.IsActivtable
 
-        PolygonF area;
+        public PolygonF Area;
 
-        int beginTime;
-        int endTime;
-        int minLevel;
-        int maxLevel;
+        public EventAreaInfo(int id, PointF[] points)
+        {
+            ID = id;
+            Area = new PolygonF(points);
 
-        long raceJobLimit;
+            BeginTime = 0;
+            EndTime = 0;
+            MinLevel = 0;
+            MaxLevel = 0;
+            RaceJobLimit = 0;
+            LimitActivateCount = 0;
+            EnterHandler = "";
+            LeaveHandler = "";
 
-        int[] activatieCondition = new int[MaxActivateConditions];
-        int[][] activateValue = new int[MaxActivateConditions][];
-        int activateMax;
+            for (int idx = 0; idx < MaxActivateConditions; ++idx)
+            {
+                ActivateCondition[idx] = 0;
+                ActivateValue[idx] = new []{ 0, 0 };
+            }
+        }
 
-        string enterHandler = string.Empty;
-        string leaveHandler = string.Empty;
+        public int BeginTime;
+        public int EndTime;
+        public int MinLevel;
+        public int MaxLevel;
+
+        public long RaceJobLimit;
+
+        public int[] ActivateCondition = new int[MaxActivateConditions];
+        public int[][] ActivateValue = new int[MaxActivateConditions][];
+        public int LimitActivateCount;
+
+        public string EnterHandler = string.Empty;
+        public string LeaveHandler = string.Empty;
     }
 }

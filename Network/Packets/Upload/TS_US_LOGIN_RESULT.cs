@@ -7,40 +7,33 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets.Upload
 {
+    using static Navislamia.Network.Packets.Checksum;
+
+
     public class TS_US_LOGIN_RESULT : Packet, ISerializablePacket
     {
         const int id = (int)UploadPackets.TS_US_LOGIN_RESULT;
 
         public ushort Result { get; set; }
 
-        public TS_US_LOGIN_RESULT(ushort result) : base(id)
-        {
-            Result = result;
-        }
+        public TS_US_LOGIN_RESULT(ushort result) : base(id) => Result = result;
 
-        public TS_US_LOGIN_RESULT(Span<byte> buffer) : base(id)
+        public TS_US_LOGIN_RESULT(Span<byte> buffer) : base(buffer)
         {
-            Data = buffer.ToArray();
+            Checksum = this.Calculate();
 
             Deserialize();
         }
 
-        public void Deserialize() // We will never serialize this packet
+        public void Deserialize() 
         {
             Span<byte> _data = Data;
 
-            Length = BitConverter.ToUInt32(_data.Slice(0, 4));
-
-            base.ID = BitConverter.ToUInt16(_data.Slice(4, 2));
-
-            Checksum = _data.Slice(6, 1)[0];
-
-            Result = BitConverter.ToUInt16(_data.Slice(7, 2));
+            Result = BitConverter.ToUInt16(_data.Slice(0, 2));
         }
 
-        public void Serialize()
+        public void Serialize() // We will never serialize this packet
         {
-            throw new NotImplementedException();
         }
     }
 }

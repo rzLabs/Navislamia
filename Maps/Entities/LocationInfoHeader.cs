@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Maps.X2D;
 
-namespace Maps.Structures
+namespace Navislamia.Maps.Entities
 {
     public struct LocationInfoHeader
     {

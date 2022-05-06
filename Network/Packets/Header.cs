@@ -9,6 +9,13 @@ using System.Reflection;
 
 namespace Navislamia.Network.Packets
 {
+    public class PacketHeader
+    {
+        public uint Length;
+        public ushort ID;
+        public byte Checksum;
+    }
+
     public static class Header
     {
         public static byte[] CreateHeader(this Packet packet)
@@ -20,6 +27,17 @@ namespace Navislamia.Network.Packets
             Buffer.BlockCopy(new byte[] { Checksum.Calculate(packet) }, 0, buffer, 6, 1);
 
             return buffer;
+        }
+
+        public static PacketHeader GetPacketHeader(Span<byte> buffer)
+        {
+            if (buffer.Length < 7)
+                throw new Exception("Not enough data to form header!");
+
+            return new PacketHeader() { Length = BitConverter.ToUInt32(buffer.Slice(0, 4)),
+                                      ID = BitConverter.ToUInt16(buffer.Slice(4,2)),
+                                      Checksum = buffer.Slice(6,1)[0] 
+            };
         }
     }
 }

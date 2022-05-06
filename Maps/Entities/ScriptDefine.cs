@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Maps.Structures
+namespace Navislamia.Maps.Entities
 {
     public static class ScriptDefine
     {

@@ -27,9 +27,7 @@ namespace Navislamia.Network.Packets.Auth
 
         public bool IsAdultServer { get; set; }
 
-        public TS_GA_LOGIN(byte[] buffer) : base(id, buffer) => throw new NotImplementedException(); // We will never receive this packet. No reason to implement this constructor
-
-        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) // TODO: this is not sustainable!
+        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) 
         {
 
             ServerIndex = index;

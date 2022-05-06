@@ -9,20 +9,13 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Notification;
+using Configuration;
 using Network;
 using Navislamia.Network.Packets;
-using Configuration;
+using Navislamia.Network.Interfaces;
 
 namespace Navislamia.Network.Objects
 {
-    public interface IClient
-    {
-        public int Connect(IPEndPoint ep);
-
-        public void Send(Packet msg, bool beginReceive = true);
-    }
-
-
     public class Client : IClient
     {
         public IConfigurationService ConfigurationService;
@@ -45,19 +38,6 @@ namespace Navislamia.Network.Objects
         public int BufferLen = -1;
 
         public byte[] Data;
-
-        public uint MessageID
-        {
-            get
-            {
-                if (Data == null)
-                    return 0;
-
-                Span<byte> data = Data;
-
-                return BitConverter.ToUInt16(data.Slice(4, 2));
-            }
-        }
 
         public Socket Socket = null;
 
