@@ -18,6 +18,8 @@ using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Network.Objects;
 using Navislamia.Network.Packets.Auth;
+using Navislamia.Network.Packets.Actions;
+using Navislamia.Network.Packets.Actions.Interfaces;
 
 namespace Network
 {
@@ -38,8 +40,6 @@ namespace Network
         IGameActionService gameActionsSVC;
 
         UploadClient upload = null;
-
-
 
         public NetworkModule() { }
 

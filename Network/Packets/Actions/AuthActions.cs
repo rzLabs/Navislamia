@@ -9,8 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Navislamia.Network.Packets.Auth;
+using Navislamia.Network.Packets;
 
-namespace Navislamia.Network.Packets
+namespace Navislamia.Network.Packets.Actions
 {
     public interface IAuthActionService
     {

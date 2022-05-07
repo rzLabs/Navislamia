@@ -17,7 +17,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Network;
-using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Actions;
+using Navislamia.Network.Packets.Actions.Interfaces;
 
 namespace DevConsole
 {

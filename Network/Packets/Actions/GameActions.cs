@@ -9,20 +9,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Navislamia.Network.Packets.Game;
+using Navislamia.Network.Objects;
+using Navislamia.Network.Packets.Actions.Interfaces;
 
-namespace Navislamia.Network.Packets
+namespace Navislamia.Network.Packets.Actions
 {
-    public interface IGameActionService
-    {
-        public int Execute(ISerializablePacket msg);
-    }
-
     public class GameActions : IGameActionService
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<ISerializablePacket, int>> actions = new Dictionary<ushort, Func<ISerializablePacket, int>>();
+        Dictionary<ushort, Func<GameClient, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<GameClient, ISerializablePacket, int>>();
 
         public GameActions(IConfigurationService configService, INotificationService notificationService)
         {
@@ -33,20 +30,20 @@ namespace Navislamia.Network.Packets
             actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
-        public int Execute(ISerializablePacket msg)
+        public int Execute(GameClient client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return 1;
 
-            return actions[msg.ID]?.Invoke(msg) ?? 2;
+            return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
-        private int OnVersion(ISerializablePacket arg)
+        private int OnVersion(GameClient client, ISerializablePacket arg)
         {
             throw new NotImplementedException();
         }
 
-        public int OnAccountWithAuth(ISerializablePacket msg)
+        public int OnAccountWithAuth(GameClient client, ISerializablePacket msg)
         {
             // new TM_CS_ACCOUNT_WITH_AUTH(msg.Data)
 

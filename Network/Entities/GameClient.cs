@@ -2,6 +2,7 @@
 using Navislamia.Network.Enums;
 using Navislamia.Network.Extensions;
 using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Game;
 using Network;
 using Network.Security;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Objects
 {
-    using static Navislamia.Network.Packets.GameActions;
+    using static Navislamia.Network.Packets.Actions.GameActions;
     using static Navislamia.Network.Extensions.GameClientExtensions;
 
     public class GameClient : Client
@@ -104,7 +105,7 @@ namespace Navislamia.Network.Objects
                 return;
             }
 
-            gameActionsSVC.Execute(msg);
+            gameActionsSVC.Execute(client, msg);
         }
     }
 }
