@@ -39,7 +39,7 @@ namespace Network.Security
         void tryCipher(byte[] source, byte[] destination, int length)
         {
             RC4Cipher.State backup = null;
-            Impl.SaveStateTo(backup);
+            Impl.SaveStateTo(out backup);
 
             doCipher(source, destination, length);
 

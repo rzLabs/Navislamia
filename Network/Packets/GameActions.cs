@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Navislamia.Network.Packets.Game;
+
 namespace Navislamia.Network.Packets
 {
     public interface IGameActionService
@@ -26,6 +28,9 @@ namespace Navislamia.Network.Packets
         {
             configSVC = configService;
             notificationSVC = notificationService;
+
+            actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
+            actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
         public int Execute(ISerializablePacket msg)
@@ -36,5 +41,16 @@ namespace Navislamia.Network.Packets
             return actions[msg.ID]?.Invoke(msg) ?? 2;
         }
 
+        private int OnVersion(ISerializablePacket arg)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int OnAccountWithAuth(ISerializablePacket msg)
+        {
+            // new TM_CS_ACCOUNT_WITH_AUTH(msg.Data)
+
+            return 0;
+        }
     }
 }

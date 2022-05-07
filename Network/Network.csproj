@@ -16,8 +16,4 @@
     <ProjectReference Include="..\Objects\Objects.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Packets\Game\" />
-  </ItemGroup>
-
 </Project>

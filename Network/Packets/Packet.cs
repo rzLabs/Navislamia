@@ -14,7 +14,7 @@ namespace Navislamia.Network.Packets
 
     public class Packet
     {
-        public uint Version { get; set; } = 0x070300;
+        public uint Epic { get; set; } = 0x070300;
 
         public uint Length { get; set; }
 

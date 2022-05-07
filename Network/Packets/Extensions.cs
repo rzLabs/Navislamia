@@ -65,5 +65,10 @@ namespace Navislamia.Network.Packets
         }
 
         public static bool ChecksumPassed(this ISerializablePacket msg, PacketHeader header) => msg.Checksum == header.Checksum;
+   
+        public static bool IsValid(this ISerializablePacket msg)
+        {
+            return msg.Checksum == Checksum.Calculate(msg as Packet);
+        }
     }
 }
