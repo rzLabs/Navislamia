@@ -8,7 +8,7 @@ namespace Network.Security
 {
     public class RC4Cipher
     {
-        public bool Init(string key, int keyLen = 0) => prepareKey(state, key, 0); // Can be 0 because prepareKey will automatically generate keyLen from key.Length if length == 0
+        public bool Init(string key, int keyLen = 0) => prepareKey(state, key, keyLen); // Can be 0 because prepareKey will automatically generate keyLen from key.Length if length == 0
 
         public void Code(byte[] source, byte[] destination, int length) => codeBlock(state, source, destination, length);
 
@@ -16,11 +16,11 @@ namespace Network.Security
 
         public void Decode(byte[] source, byte[] destination, int length) => codeBlock(state, source, destination, length);
 
-        public void SaveStateTo(out State outState) => outState = state;
+        public State GetState() => state;
 
         public void LoadStateFrom(State aState) => state = aState;
 
-        static bool prepareKey(State mState, string key, int keyLen)
+        bool prepareKey(State mState, string key, int keyLen)
         {
             if (string.IsNullOrEmpty(key))
                 return false;
@@ -60,12 +60,12 @@ namespace Network.Security
             state.X = 0;
             state.Y = 0;
       
-            skipFor(state, 1013);
+            skipFor(ref state, 1013);
 
             return true;
         }
 
-        static void codeBlock(State state, byte[] source, byte[] destination, int len)
+        void codeBlock(State state, byte[] source, byte[] destination, int len)
         {
             int x = state.X, y = state.Y;
             int d = 0, s = 0;
@@ -90,7 +90,7 @@ namespace Network.Security
             state.Y = y;
         }
 
-        static void skipFor(State state, int len)
+        void skipFor(ref State state, int len)
         {
             int x = state.X, y = state.Y;
 
@@ -112,7 +112,7 @@ namespace Network.Security
             state.Y = y;
         }
 
-        static Tuple<byte, byte> swapByte(byte a, byte b)
+        Tuple<byte, byte> swapByte(byte a, byte b)
         {
             byte t = a;
             a = b;
@@ -121,12 +121,29 @@ namespace Network.Security
             return new Tuple<byte, byte>(a, b);
         }
 
-        static State state = new State();
+        public State state = new State(256);
 
-        public class State
+        public struct State
         {
+            public State(int length = 256)
+            {
+                X = 0;
+                Y = 0;
+                S = new byte[length];
+            }
+
+            public State(State state)
+            {
+                X = state.X;
+                Y = state.Y;
+                S = new byte[256];
+
+                for (int i = 0; i < state.S.Length; i++)
+                    S[i] = state.S[i];
+            }
+
             public int X, Y;
-            public byte[] S = new byte[256];
+            public byte[] S;
         }
     }
 }

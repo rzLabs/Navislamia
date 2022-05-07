@@ -1,5 +1,6 @@
 ﻿using Configuration;
 using Navislamia.Network.Enums;
+using Navislamia.Network.Extensions;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Game;
 using Network;
@@ -15,6 +16,7 @@ using System.Threading.Tasks;
 namespace Navislamia.Network.Objects
 {
     using static Navislamia.Network.Packets.GameActions;
+    using static Navislamia.Network.Extensions.GameClientExtensions;
 
     public class GameClient : Client
     {
@@ -23,21 +25,19 @@ namespace Navislamia.Network.Objects
         protected IConfigurationService configSVC;
         protected IGameActionService gameActionsSVC;
 
-        XRC4Cipher recvCipher = new XRC4Cipher();
-        XRC4Cipher sendCipher = new XRC4Cipher();
-
         public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService) 
         {
 
             messageBuffer = new byte[BufferLen];
+            Data = new byte[BufferLen];
 
             configSVC = configurationService;
             gameActionsSVC = actionService;
 
             var key = configSVC.Get<string>("cipher.key", "Network");
 
-            recvCipher.SetKey(key);
-            sendCipher.SetKey(key);
+            RecvCipher.SetKey(key);
+            SendCipher.SetKey(key);
         }
 
         public override void Send(Packet msg, bool beginReceive = true)
@@ -50,7 +50,7 @@ namespace Navislamia.Network.Objects
             if (!Socket.Connected)
                 return;
 
-            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, ReceiveCallback, this);
+            Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
         }
 
         private void ReceiveCallback(IAsyncResult ar)  // TODO: implement message queue
@@ -71,31 +71,40 @@ namespace Navislamia.Network.Objects
             if (DebugPackets)
                 NotificationService.WriteDebug($"{readCnt} bytes received from the game client!");
 
-            // Client needs to be ready to accept data
-            client.Data = new byte[messageBuffer.Length];
+            var header = client.PeekHeader();
 
-            // Decode the buffer to get header
-            recvCipher.Decode(messageBuffer, client.Data, messageBuffer.Length, true);
+            client.Read(out messageBuffer, (int)header.Length);
 
-            var header = Header.GetPacketHeader(client.Data);
+            if (header.ID == (ushort)ClientPackets.TM_NONE)
+                return;
 
-            // Actually decode the stream from t
-            recvCipher.Decode(messageBuffer, client.Data, (int)header.Length);
-
-            Buffer.BlockCopy(client.Data, 27, client.Data, 0, (int)header.Length);
-
-            if (header.ID == (ushort)ClientPackets.TM_CS_VERSION)
+            if (!Enum.IsDefined(typeof(AuthPackets), (int)header.ID)) // Unlisted packet
             {
-                var msg = new TM_CS_VERSION(client.Data);
+                NotificationService.WriteWarning($"Unlisted packet received! ID: {header.ID} Length: {header.Length} Checksum: {header.Checksum}");
 
-                if (!msg.IsValid())
-                {
-                    NotificationService.WriteMarkup($"[bold red]{msg.GetType().Name} bears an invalid checksum![/]");
-                    return;
-                }
-
-                gameActionsSVC.Execute(msg);
+                return;
             }
+
+            ISerializablePacket msg = null;
+
+            switch (header.ID)
+            {
+                case (ushort)ClientPackets.TM_CS_VERSION:
+                    msg = new TM_CS_VERSION(messageBuffer);
+                    break;
+
+                case (ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH:
+                    msg = new TM_CS_ACCOUNT_WITH_AUTH(messageBuffer);
+                    break;
+            }
+
+            if (!msg.IsValid())
+            {
+                NotificationService.WriteMarkup($"[bold red]{msg.GetType().Name} bears an invalid checksum![/]");
+                return;
+            }
+
+            gameActionsSVC.Execute(msg);
         }
     }
 }

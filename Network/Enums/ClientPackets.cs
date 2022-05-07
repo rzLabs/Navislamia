@@ -10,6 +10,8 @@ namespace Navislamia.Network.Enums
     {
         TM_CS_VERSION = 50,
 
-        TM_CS_ACCOUNT_WITH_AUTH = 2005
+        TM_CS_ACCOUNT_WITH_AUTH = 2005,
+
+        TM_NONE = 9999
     }
 }

@@ -38,8 +38,7 @@ namespace Network.Security
 
         void tryCipher(byte[] source, byte[] destination, int length)
         {
-            RC4Cipher.State backup = null;
-            Impl.SaveStateTo(out backup);
+            RC4Cipher.State backup = new RC4Cipher.State(Impl.GetState());
 
             doCipher(source, destination, length);
 
