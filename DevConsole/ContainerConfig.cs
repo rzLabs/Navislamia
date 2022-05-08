@@ -44,10 +44,6 @@ namespace DevConsole
 
             serviceCollection.AddSingleton<ITypeResolver, TypeResolver>();
 
-            serviceCollection.AddSingleton<IAuthActionService, AuthActions>();
-            serviceCollection.AddSingleton<IUploadActionService, UploadActions>();
-            serviceCollection.AddSingleton<IGameActionService, GameActions>();
-
             return new TypeRegistrar(serviceCollection);
         }
     }

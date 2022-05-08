@@ -102,6 +102,8 @@ namespace Navislamia.Network.Entities
                 if (!Enum.IsDefined(typeof(UploadPackets), (int)header.ID))
                 {
                     // TODO: packet is not implemented
+
+                    goto Listen;
                 }
 
                 switch (header.ID)

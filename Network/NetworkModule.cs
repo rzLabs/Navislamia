@@ -43,16 +43,20 @@ namespace Network
 
         public bool Ready => auth.Ready && upload.Ready;
 
+        public AuthClient AuthClient => auth;
+
+        public UploadClient UploadClient => upload;
+
         public NetworkModule() { }
 
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionsService, IUploadActionService uploadActionService, IGameActionService gameActionsService)
+        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
 
-            authActionSVC = authActionsService;
-            gameActionSVC = gameActionsService;
-            uploadActionSVC = uploadActionService;
+            authActionSVC = new AuthActions(configSVC, notificationSVC);
+            gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
+            uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
         }
 
         public int Initialize()

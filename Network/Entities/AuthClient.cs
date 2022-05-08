@@ -32,24 +32,30 @@ namespace Navislamia.Network.Entities
         public AuthClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IAuthActionService actions) : base(socket, length, configurationService, notificationService, networkService, actions, null, null) 
         {
             messageBuffer = new byte[BufferLen];
+            Data = new byte[BufferLen];
 
             authActions = actions;
         }
 
+        public override void PendMessage(ISerializablePacket msg) => base.PendMessage(msg);
+
         public override void Send(ISerializablePacket msg)
         {
-            if (!Socket.Connected)
-                return;
-
-            Socket.Send(msg.Data);
-
-            if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
+            if (DebugPackets)
             {
-                NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Auth Server...[/]");
+                NotificationService.WriteDebug($"Sending {msg.Length} bytes of data to Auth Server!");
                 NotificationService.WriteString(((Packet)msg).DumpToString());
             }
 
-            Data = new byte[512];
+            Socket.BeginSend(msg.Data, 0, msg.Data.Length, SocketFlags.None, SendCallback, this);
+        }     
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            AuthClient client = (AuthClient)ar.AsyncState;
+
+            // TODO: do something with this information
+            int bytesSent = client.Socket.EndSend(ar);
 
             Listen();
         }
@@ -112,6 +118,8 @@ namespace Navislamia.Network.Entities
                 if (!Enum.IsDefined(typeof(AuthPackets), (int)header.ID))
                 {
                     // TODO: packet is not implemented
+
+                    goto Listen;
                 }
 
                 switch (header.ID)

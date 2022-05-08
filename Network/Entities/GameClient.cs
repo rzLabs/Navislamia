@@ -34,10 +34,10 @@ namespace Navislamia.Network.Entities
 
         public void SendResult(ClientPackets id, ushort result, int value = 0)
         {
-            SendMsgCollection.Add(new TS_SC_RESULT((ushort)id, result, value));
-
-            SendMsgCollection.CompleteAdding();
+            PendMessage(new TS_SC_RESULT((ushort)id, result, value));
         }
+
+        public override void PendMessage(ISerializablePacket msg) => base.PendMessage(msg);
 
         public override void Send(ISerializablePacket msg)
         {
@@ -52,6 +52,8 @@ namespace Navislamia.Network.Entities
             SendCipher.Encode(msg.Data, encodedBuffer, (int)msg.Length);
 
             Socket.BeginSend(encodedBuffer, 0, encodedBuffer.Length, SocketFlags.None, SendCallback, this);
+
+            Listen();
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -60,6 +62,8 @@ namespace Navislamia.Network.Entities
 
             // TODO: do something with this information
             int bytesSent = client.Socket.EndSend(ar);
+
+            Listen();
         }
 
         public override void Listen()
@@ -126,13 +130,15 @@ namespace Navislamia.Network.Entities
                 if (!Enum.IsDefined(typeof(ClientPackets), (int)header.ID))
                 {
                     // TODO: packet is not implemented
+
+                    goto Listen;
                 }
+
+                if (header.ID == (int)ClientPackets.TM_NONE)
+                    goto Listen;
 
                 switch (header.ID)
                 {
-                    case (int)ClientPackets.TM_NONE:
-                        break;
-
                     case (int)ClientPackets.TM_CS_VERSION:
                         msg = new TM_CS_VERSION(msgBuffer);
                         break;

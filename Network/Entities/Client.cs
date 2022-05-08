@@ -16,6 +16,7 @@ using System.Collections.Concurrent;
 using Network.Security;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
+using System.Threading;
 
 namespace Navislamia.Network.Entities
 {
@@ -111,6 +112,13 @@ namespace Navislamia.Network.Entities
             return 0;
         }
 
+        public virtual void PendMessage(ISerializablePacket msg) 
+        {
+            SendMsgCollection.Add(msg);
+
+            SendMsgCollection.CompleteAdding();
+        }
+
         public virtual void Send(ISerializablePacket msg) { }
 
         public virtual void Listen() { }
@@ -124,9 +132,13 @@ namespace Navislamia.Network.Entities
                 ISerializablePacket msg;
 
                 while (true)
+                {
                     if (SendMsgCollection.IsAddingCompleted && !SendMsgCollection.IsCompleted)
                         while (SendMsgCollection.TryTake(out msg))
                             Send(msg);
+
+                    Thread.Sleep(500); // Slow down the execution to half second ticks, if ran wide open will consume a lot of processor
+                }
             }));
 
             tasks.Add(Task.Run(() =>
@@ -145,6 +157,8 @@ namespace Navislamia.Network.Entities
                             else if (this is UploadClient)
                                 uploadActionSVC.Execute(this, msg);
                         }
+
+                    Thread.Sleep(500);
                 }
             }));
 
