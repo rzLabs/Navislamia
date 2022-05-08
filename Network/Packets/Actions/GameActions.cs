@@ -45,7 +45,9 @@ namespace Navislamia.Network.Packets.Actions
 
         public int OnAccountWithAuth(GameClient client, ISerializablePacket msg)
         {
-            // new TM_CS_ACCOUNT_WITH_AUTH(msg.Data)
+            var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
+
+            // TODO: implement sending result
 
             return 0;
         }

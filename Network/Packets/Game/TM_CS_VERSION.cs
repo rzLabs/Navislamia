@@ -10,7 +10,7 @@ namespace Navislamia.Network.Packets.Game
 {
     public class TM_CS_VERSION : Packet, ISerializablePacket
     {
-        public CString Version = new CString(20);
+        public CString Version { get; set; } = new CString(20);
 
         public TM_CS_VERSION() : base((ushort)ClientPackets.TM_CS_VERSION) { }
 

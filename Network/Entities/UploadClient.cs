@@ -19,7 +19,7 @@ namespace Navislamia.Network.Objects
         public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService)
         {
         }
-        public override void Send(Packet msg, bool beginReceive = true)
+        public override void Send(ISerializablePacket msg, bool beginReceive = true)
         {
             if (!Socket.Connected)
                 return;
@@ -29,7 +29,7 @@ namespace Navislamia.Network.Objects
             if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
             {
                 NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Upload Server...[/]");
-                NotificationService.WriteString((msg).DumpToString());
+                NotificationService.WriteString(((Packet)msg).DumpToString());
             }
 
             Data = new byte[512];

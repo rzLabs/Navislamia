@@ -8,6 +8,8 @@ namespace Navislamia.Network.Enums
 {
     public enum ClientPackets
     {
+        TM_SC_RESULT = 0,
+
         TM_CS_VERSION = 50,
 
         TM_CS_ACCOUNT_WITH_AUTH = 2005,

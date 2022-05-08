@@ -13,7 +13,7 @@ namespace Navislamia.Network.Objects
 
         public string String
         {
-            get => Encoding.Default.GetString(Data);
+            get => Encoding.Default.GetString(Data).Trim('\0');
             set
             {
                 byte[] buffer = Encoding.Default.GetBytes(value);

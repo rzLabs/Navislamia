@@ -63,7 +63,7 @@ namespace Navislamia.Network.Objects
             return 0;
         }
 
-        public virtual void Send(Packet msg, bool beginReceive = true) { }
+        public virtual void Send(ISerializablePacket msg, bool beginReceive = true) { }
 
         public virtual void Receive() { }
     }

@@ -28,7 +28,7 @@ namespace Navislamia.Network.Packets
                     CString cVal = value as CString;
 
                     str += $"Simple: {cVal.String}\n\nDetailed:\n\n{Utilities.StringExt.ByteArrayToString(cVal.Data)}";
-                }
+                } 
                 else
                 {
                     byte[] bVal = BitConverter.GetBytes(value);
