@@ -25,13 +25,13 @@ namespace Navislamia.Network.Extensions
             return Header.GetPacketHeader(headerBuffer);
         }
 
-        public static int Read(this GameClient client, out byte[] buffer, int length)
+        public static int Read(this GameClient client, byte[] buffer, int length)
         {
             int len = Math.Min(length, client.BufferLen);
 
-            buffer = new byte[len];
+            RecvCipher.Decode(buffer, client.Data, len);
 
-            RecvCipher.Decode(client.Data, buffer, len);
+            //Buffer.BlockCopy(buffer, len, client.Data, 0, client.Data.Length - len);
 
             return buffer.Length;
         }

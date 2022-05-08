@@ -41,6 +41,8 @@ namespace Navislamia.Network.Objects
 
         public byte[] Data;
 
+        public int DataOffset;
+
         public Socket Socket = null;
 
         public bool Connected => Socket?.Connected ?? false;

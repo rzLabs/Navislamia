@@ -40,7 +40,7 @@ namespace Navislamia.Network.Packets.Actions
 
         private int OnVersion(GameClient client, ISerializablePacket arg)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public int OnAccountWithAuth(GameClient client, ISerializablePacket msg)

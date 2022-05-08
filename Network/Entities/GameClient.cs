@@ -8,6 +8,7 @@ using Network;
 using Network.Security;
 using Notification;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -16,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Objects
 {
-    using static Navislamia.Network.Packets.Actions.GameActions;
+    using static Navislamia.Network.Packets.Extensions;
     using static Navislamia.Network.Extensions.GameClientExtensions;
 
     public class GameClient : Client
@@ -25,6 +26,8 @@ namespace Navislamia.Network.Objects
 
         protected IConfigurationService configSVC;
         protected IGameActionService gameActionsSVC;
+
+        protected ConcurrentQueue<ISerializablePacket> msgQueue = new ConcurrentQueue<ISerializablePacket>();
 
         public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService) 
         {
@@ -39,6 +42,7 @@ namespace Navislamia.Network.Objects
 
             RecvCipher.SetKey(key);
             SendCipher.SetKey(key);
+
         }
 
         public override void Send(Packet msg, bool beginReceive = true)
@@ -51,7 +55,7 @@ namespace Navislamia.Network.Objects
             if (!Socket.Connected)
                 return;
 
-            Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
+            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, ReceiveCallback, this);
         }
 
         private void ReceiveCallback(IAsyncResult ar)  // TODO: implement message queue
@@ -61,51 +65,99 @@ namespace Navislamia.Network.Objects
 
             GameClient client = (GameClient)ar.AsyncState;
 
-            int readCnt = client.Socket.EndReceive(ar);
-
-            if (readCnt <= 0)
-            {
-                NotificationService.WriteMarkup("[bold red]Failed to read data from the game client![/]");
-                return;
-            }
+            int availableBytes = client.Socket.EndReceive(ar);
 
             if (DebugPackets)
-                NotificationService.WriteDebug($"{readCnt} bytes received from the game client!");
+                NotificationService.WriteDebug($"{availableBytes} bytes received from the game client!");
 
-            var header = client.PeekHeader();
-
-            client.Read(out messageBuffer, (int)header.Length);
-
-            if (header.ID == (ushort)ClientPackets.TM_NONE)
-                return;
-
-            if (!Enum.IsDefined(typeof(AuthPackets), (int)header.ID)) // Unlisted packet
+            if (client.Data.Length < DataOffset + availableBytes)
             {
-                NotificationService.WriteWarning($"Unlisted packet received! ID: {header.ID} Length: {header.Length} Checksum: {header.Checksum}");
 
-                return;
             }
 
-            ISerializablePacket msg = null;
+            // TODO: decode what data we have received
+            byte[] decodedBuffer = new byte[availableBytes];
 
-            switch (header.ID)
+            RecvCipher.Decode(messageBuffer, decodedBuffer, availableBytes);
+
+            // move the decoded data into the client.Data storage at front
+            Buffer.BlockCopy(decodedBuffer, 0, client.Data, DataOffset, availableBytes);
+
+            // increase the offset by the amount of bytes we are writing to the client data
+            DataOffset += availableBytes;
+
+            // Process data in the actual client
+            while (DataOffset >= 4)
             {
-                case (ushort)ClientPackets.TM_CS_VERSION:
-                    msg = new TM_CS_VERSION(messageBuffer);
+                // Get a pointer to the client data
+                Span<byte> data = client.Data;
+
+                // Read the messages length
+                int msgLength = BitConverter.ToInt32(data.Slice(0, 4));
+
+                if (msgLength > DataOffset || msgLength == 0)
                     break;
 
-                case (ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH:
-                    msg = new TM_CS_ACCOUNT_WITH_AUTH(messageBuffer);
-                    break;
+                // buffer the message
+                byte[] msgBuffer = ((Span<byte>)client.Data).Slice(0, msgLength).ToArray();
+
+                PacketHeader header = Header.GetPacketHeader(msgBuffer);
+                ISerializablePacket msg = null;
+
+                if (!Enum.IsDefined(typeof(ClientPackets), (int)header.ID))
+                {
+                    // TODO: packet is not implemented
+                }
+
+                switch (header.ID)
+                {
+                    case (int)ClientPackets.TM_NONE:
+                        break;
+
+                    case (int)ClientPackets.TM_CS_VERSION:
+                        msg = new TM_CS_VERSION(msgBuffer);
+                        break;
+
+                    case (int)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH:
+                        msg = new TM_CS_ACCOUNT_WITH_AUTH(msgBuffer);
+                        break;
+                }
+
+                // add message to the queue
+                if (msg is not null)
+                {
+                    msgQueue.Enqueue(msg);
+
+                    if (DebugPackets)
+                        NotificationService.WriteString(((Packet)msg).DumpToString());
+                }
+
+                // move the remaining bytes to the front of client data
+                Buffer.BlockCopy(client.Data, msgLength, client.Data, 0, msgLength);
+
+                // Reduce the data offset by the amount of bytes we have dropped from client data
+                DataOffset -= msgLength;
             }
 
-            if (!msg.IsValid())
+            Task.Run(() => processMsgQueue());
+
+            Receive();
+        }
+
+        private void processMsgQueue()
+        {
+            foreach (var queuedMsg in msgQueue)
             {
-                NotificationService.WriteMarkup($"[bold red]{msg.GetType().Name} bears an invalid checksum![/]");
-                return;
-            }
+                ISerializablePacket msg = null;
 
-            gameActionsSVC.Execute(client, msg);
+                if (!msgQueue.TryDequeue(out msg))
+                {
+                    // TODO: something happened
+                    continue;
+                }
+
+                gameActionsSVC.Execute(this, msg);
+            }
         }
     }
 }
