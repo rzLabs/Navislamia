@@ -1,4 +1,4 @@
-﻿using Navislamia.Network.Objects;
+﻿using Navislamia.Network.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

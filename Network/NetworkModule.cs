@@ -16,10 +16,10 @@ using Network.Security;
 
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
-using Navislamia.Network.Objects;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
+using Navislamia.Network.Entities;
 
 namespace Network
 {
@@ -35,41 +35,45 @@ namespace Network
         List<GameClient> connections = new List<GameClient>();
 
         AuthClient auth = null;
-        IAuthActionService authActionsSVC;
-
-        IGameActionService gameActionsSVC;
-
         UploadClient upload = null;
+
+        IAuthActionService authActionSVC;
+        IGameActionService gameActionSVC;
+        IUploadActionService uploadActionSVC;
+
+        public bool Ready => auth.Ready && upload.Ready;
 
         public NetworkModule() { }
 
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionsService, IGameActionService gameActionsService)
+        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionsService, IUploadActionService uploadActionService, IGameActionService gameActionsService)
         {
             configSVC = configurationService;
             notificationSVC = notificationService;
 
-            authActionsSVC = authActionsService;
-            gameActionsSVC = gameActionsService;
+            authActionSVC = authActionsService;
+            gameActionSVC = gameActionsService;
+            uploadActionSVC = uploadActionService;
         }
 
-        public int ConnectToAuth()
+        public int Initialize()
         {
             if (connectToAuth() > 0)
                 return 1;
 
-            notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true); 
+            notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
 
-            return sendGSInfoToAuth();
-        }
+            if (sendGSInfoToAuth() > 0)
+                return 2;
 
-        public int ConnectToUpload()
-        {
             if (connectToUpload() > 0)
-                return 1;
+                return 3;
 
-            notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, false); // TODO: last param should be default
+            notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
 
-            return sendInfoToUpload();
+            if (sendInfoToUpload() > 0)
+                return 4;
+
+            return 0;
         }
 
         int connectToAuth()
@@ -104,7 +108,7 @@ namespace Network
 
             try
             {
-                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this, authActionsSVC);
+                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this, authActionSVC);
                 status = auth.Connect(authEP);
             }
             catch (Exception ex)
@@ -178,7 +182,7 @@ namespace Network
 
             try
             {
-                upload = new UploadClient(uploadSock, BufferLength, configSVC, notificationSVC, this);
+                upload = new UploadClient(uploadSock, BufferLength, configSVC, notificationSVC, this, uploadActionSVC);
                 status = upload.Connect(uploadEP);
             }
             catch (Exception ex)
@@ -254,7 +258,7 @@ namespace Network
 
             Socket socket = listener.EndAcceptSocket(ar);
 
-            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionsSVC);
+            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionSVC);
 
             if (connections.Contains(client))
             {
@@ -265,7 +269,7 @@ namespace Network
                 
             connections.Add(client);
 
-            client.Receive();
+            client.Listen();
         }
 
         public int StartListener()

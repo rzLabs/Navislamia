@@ -1,5 +1,5 @@
-﻿using Navislamia.Network.Enums;
-using Navislamia.Network.Objects;
+﻿using Navislamia.Network.Entities;
+using Navislamia.Network.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

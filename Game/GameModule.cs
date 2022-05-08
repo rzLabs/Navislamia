@@ -18,6 +18,7 @@ using Serilog.Events;
 using System.Collections.Generic;
 using Spectre.Console;
 using Navislamia.World;
+using System.Threading;
 
 namespace Navislamia.Game
 {
@@ -84,8 +85,29 @@ namespace Navislamia.Game
                 return 1;
             }
 
-            if (networkSVC.ConnectToAuth() > 0 || networkSVC.ConnectToUpload() > 0)
+            if (networkSVC.Initialize() > 0)
+            {
+                // TODO: log this shit bruh
                 return 1;
+            }
+
+            int curTime = 0;
+            int maxTime = 5000;
+            while (!networkSVC.Ready)
+            {
+                if (curTime >= maxTime)
+                {
+                    notificationSVC.WriteError("Network service timed out!");
+                    return 1;
+                }
+
+                curTime += 500;
+
+                // Wait for the auth/upload servers to respond
+                Thread.Sleep(500);
+            }
+
+            networkSVC.StartListener();
 
             return 0;
         }

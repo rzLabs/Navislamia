@@ -9,8 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Navislamia.Network.Packets.Game;
-using Navislamia.Network.Objects;
 using Navislamia.Network.Packets.Actions.Interfaces;
+using Navislamia.Network.Entities;
 
 namespace Navislamia.Network.Packets.Actions
 {
@@ -19,7 +19,7 @@ namespace Navislamia.Network.Packets.Actions
         IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<GameClient, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<GameClient, ISerializablePacket, int>>();
+        Dictionary<ushort, Func<Client, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<Client, ISerializablePacket, int>>();
 
         public GameActions(IConfigurationService configService, INotificationService notificationService)
         {
@@ -30,7 +30,7 @@ namespace Navislamia.Network.Packets.Actions
             actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
-        public int Execute(GameClient client, ISerializablePacket msg)
+        public int Execute(Client client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return 1;
@@ -38,16 +38,18 @@ namespace Navislamia.Network.Packets.Actions
             return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
-        private int OnVersion(GameClient client, ISerializablePacket arg)
+        private int OnVersion(Client client, ISerializablePacket arg)
         {
             return 0;
         }
 
-        public int OnAccountWithAuth(GameClient client, ISerializablePacket msg)
+        public int OnAccountWithAuth(Client client, ISerializablePacket msg)
         {
+            var _client = client as GameClient;
             var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
 
-            // TODO: implement sending result
+            // Send test result denied
+            _client.SendResult((ClientPackets)msg.ID, (ushort)ResultCode.AccessDenied);
 
             return 0;
         }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets.Actions.Interfaces
 {
-    public interface IGameActionService
+    public interface IUploadActionService
     {
         public int Execute(Client client, ISerializablePacket msg);
     }

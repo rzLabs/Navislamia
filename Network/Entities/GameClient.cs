@@ -14,7 +14,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Objects
+namespace Navislamia.Network.Entities
 {
     using static Navislamia.Network.Packets.Extensions;
 
@@ -22,104 +22,82 @@ namespace Navislamia.Network.Objects
     {
         protected byte[] messageBuffer;
 
-        protected IConfigurationService configSVC;
         protected IGameActionService gameActionsSVC;
 
-        XRC4Cipher recvCipher = new XRC4Cipher();
-        XRC4Cipher sendCipher = new XRC4Cipher();
-
-        protected ConcurrentQueue<ISerializablePacket> recvMsgQueue = new ConcurrentQueue<ISerializablePacket>();
-        protected BlockingCollection<ISerializablePacket> recvMsgCollection;
-
-        protected ConcurrentQueue<ISerializablePacket> sendMsgQueue = new ConcurrentQueue<ISerializablePacket>();
-        protected BlockingCollection<ISerializablePacket> sendMsgCollection;
-
-        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService) 
+        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService, null, null, actionService)
         {
             messageBuffer = new byte[BufferLen];
             Data = new byte[BufferLen];
 
-            configSVC = configurationService;
             gameActionsSVC = actionService;
-
-            var key = configSVC.Get<string>("cipher.key", "Network");
-
-            recvCipher.SetKey(key);
-            sendCipher.SetKey(key);
-
-            recvMsgCollection = new BlockingCollection<ISerializablePacket>(recvMsgQueue);
-            sendMsgCollection = new BlockingCollection<ISerializablePacket>(sendMsgQueue);
-
-            List<Task> tasks = new List<Task>();
-
-            tasks.Add(Task.Run(() =>
-            {
-                ISerializablePacket msg;
-
-                while (true)
-                    if (sendMsgCollection.IsAddingCompleted && !sendMsgCollection.IsCompleted)
-                        while (sendMsgCollection.TryTake(out msg))
-                            Send(msg);
-            }));
-
-            tasks.Add(Task.Run(() =>
-            {
-                ISerializablePacket msg;
-
-                while (true)
-                {
-                    if (recvMsgCollection.IsAddingCompleted && !recvMsgCollection.IsCompleted)
-                        while (recvMsgCollection.TryTake(out msg))
-                            gameActionsSVC.Execute(this, msg);
-                }
-            }));
-
-            Task.WhenAll(tasks);
-        }
-
-        public override void Send(ISerializablePacket msg, bool beginReceive = true)
-        {
-            base.Send(msg, beginReceive);
         }
 
         public void SendResult(ClientPackets id, ushort result, int value = 0)
         {
-            sendMsgCollection.Add(new TS_SC_RESULT((ushort)id, result, value));
+            SendMsgCollection.Add(new TS_SC_RESULT((ushort)id, result, value));
 
-            sendMsgCollection.CompleteAdding();
+            SendMsgCollection.CompleteAdding();
         }
 
-        public override void Receive()
+        public override void Send(ISerializablePacket msg)
+        {
+            if (DebugPackets)
+            {
+                NotificationService.WriteDebug($"Sending {msg.Length} bytes of data to Game client @ {IP}");
+                NotificationService.WriteString(((Packet)msg).DumpToString());
+            }
+
+            byte[] encodedBuffer = new byte[msg.Length];
+
+            SendCipher.Encode(msg.Data, encodedBuffer, (int)msg.Length);
+
+            Socket.BeginSend(encodedBuffer, 0, encodedBuffer.Length, SocketFlags.None, SendCallback, this);
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            GameClient client = (GameClient)ar.AsyncState;
+
+            // TODO: do something with this information
+            int bytesSent = client.Socket.EndSend(ar);
+        }
+
+        public override void Listen()
         {
             if (!Socket.Connected)
                 return;
 
-            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, ReceiveCallback, this);
+            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, ListenCallback, this);
         }
 
-        private void ReceiveCallback(IAsyncResult ar)
+        private void ListenCallback(IAsyncResult ar)
         {
-            if (ConfigurationService.Get<bool>("debug", "Runtime", false))
-                NotificationService.WriteDebug("Receiving data from the game client...");
-
             GameClient client = (GameClient)ar.AsyncState;
 
-            // TODO: make sure the connection hasn't be unexpectedly closed
+            if (!Socket.Connected)
+            {
+                NotificationService.WriteError("Read attempted for closed game client!");
+                return;
+            }
 
             int availableBytes = client.Socket.EndReceive(ar);
 
+            if (availableBytes == 0)
+                goto Listen;
+
             if (DebugPackets)
+            {
+                NotificationService.WriteDebug($"Receiving data from a game client @ {client.IP}");
                 NotificationService.WriteDebug($"{availableBytes} bytes received from the game client!");
+            }
 
             if (client.Data.Length < DataOffset + availableBytes)
-            {
-
-            }
+                goto Listen;
 
             // TODO: decode what data we have received
             byte[] decodedBuffer = new byte[availableBytes];
 
-            recvCipher.Decode(messageBuffer, decodedBuffer, availableBytes);
+            RecvCipher.Decode(messageBuffer, decodedBuffer, availableBytes);
 
             // move the decoded data into the client.Data storage at front
             Buffer.BlockCopy(decodedBuffer, 0, client.Data, DataOffset, availableBytes);
@@ -167,7 +145,7 @@ namespace Navislamia.Network.Objects
                 // add message to the queue
                 if (msg is not null)
                 {
-                    recvMsgCollection.Add(msg);
+                    RecvMsgCollection.Add(msg);
 
                     if (DebugPackets)
                         NotificationService.WriteString(((Packet)msg).DumpToString());
@@ -180,9 +158,11 @@ namespace Navislamia.Network.Objects
                 DataOffset -= msgLength;
             }
 
-            recvMsgCollection.CompleteAdding();
+            RecvMsgCollection.CompleteAdding();
 
-            Receive();
+        Listen:
+
+            Listen();
         }
     }
 }

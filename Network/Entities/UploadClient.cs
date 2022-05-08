@@ -1,6 +1,8 @@
 ﻿using Configuration;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Actions;
+using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Upload;
 using Network;
 using Notification;
@@ -12,14 +14,19 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Objects
+namespace Navislamia.Network.Entities
 {
     public class UploadClient : Client
     {
-        public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService) : base(socket, length, configurationService, notificationService, networkService)
+        protected byte[] messageBuffer;
+
+        public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IUploadActionService uploadActionService) : base(socket, length, configurationService, notificationService, networkService, null, uploadActionService, null)
         {
+            messageBuffer = new byte[BufferLen];
+
         }
-        public override void Send(ISerializablePacket msg, bool beginReceive = true)
+
+        public override void Send(ISerializablePacket msg)
         {
             if (!Socket.Connected)
                 return;
@@ -34,65 +41,97 @@ namespace Navislamia.Network.Objects
 
             Data = new byte[512];
 
-            if (beginReceive)
-                Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
+            Listen();
         }
 
-        public override void Receive()
+        public override void Listen()
         {
             if (!Socket.Connected)
                 return;
 
-            Socket.BeginReceive(Data, 0, Data.Length, SocketFlags.None, ReceiveCallback, this);
+            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, ListenCallback, this);
         }
 
-        private void ReceiveCallback(IAsyncResult ar)
+        private void ListenCallback(IAsyncResult ar)
         {
-            if (ConfigurationService.Get<bool>("debug", "Runtime", false))
-                NotificationService.WriteDebug("Receiving data from the Upload server...");
+            var client = (UploadClient)ar.AsyncState;
 
-            Client upload = (Client)ar.AsyncState;
-
-            int readCnt = upload.Socket.EndReceive(ar);
-
-            if (readCnt <= 0)
+            if (!Socket.Connected)
             {
-                NotificationService.WriteMarkup("[bold red]Failed to read data from the Upload server![/]");
+                NotificationService.WriteError("Read attempted for closed Upload client!");
                 return;
             }
+
+            int availableBytes = client.Socket.EndReceive(ar);
+
+            // if there is no data, just start listening again
+            if (availableBytes == 0)
+                goto Listen;
 
             if (DebugPackets)
-                NotificationService.WriteDebug($"{readCnt} bytes received from the Upload server!");
+                NotificationService.WriteDebug($"{availableBytes} bytes received from the Upload Server!");
 
-            try
+            // If client.Data length is below our current offset + read bytes
+            if (client.Data.Length < DataOffset + availableBytes)
+                goto Listen;
+
+            // move the messageBuffer data into the client.Data storage at dataOffset
+            Buffer.BlockCopy(messageBuffer, 0, client.Data, DataOffset, availableBytes);
+
+            // increase the offset by the amount of bytes we are writing to the client data
+            DataOffset += availableBytes;
+
+            // Process data in the actual client
+            while (DataOffset >= 4)
             {
-                PacketHeader header = Header.GetPacketHeader(upload.Data);
-              
-                if (header.ID == (uint)UploadPackets.TS_US_LOGIN_RESULT)
+                // Get a pointer to the client data
+                Span<byte> data = client.Data;
+
+                // Read the messages length
+                int msgLength = BitConverter.ToInt32(data.Slice(0, 4));
+
+                if (msgLength > DataOffset || msgLength == 0)
+                    break;
+
+                // buffer the message
+                byte[] msgBuffer = ((Span<byte>)client.Data).Slice(0, msgLength).ToArray();
+
+                PacketHeader header = Header.GetPacketHeader(msgBuffer);
+                ISerializablePacket msg = null;
+
+                if (!Enum.IsDefined(typeof(UploadPackets), (int)header.ID))
                 {
-                    TS_US_LOGIN_RESULT msg = new TS_US_LOGIN_RESULT(upload.Data);
+                    // TODO: packet is not implemented
+                }
+
+                switch (header.ID)
+                {
+                    case (int)UploadPackets.TS_US_LOGIN_RESULT:
+                        msg = new TS_US_LOGIN_RESULT(msgBuffer);
+                        break;
+                }
+
+                // add message to the queue
+                if (msg is not null)
+                {
+                    RecvMsgCollection.Add(msg);
 
                     if (DebugPackets)
-                        NotificationService.WriteString(msg.DumpToString());
-
-                    if (header.Checksum != msg.Checksum)
-                    {
-                        NotificationService.WriteMarkup($"[bold red]{msg.GetType().Name} bears an invalid checksum![/]");
-                        return;
-                    }
-
-                    if (msg.Result == 0)
-                        if (NetworkService.StartListener() > 0) // TODO: this shit ain't right, uploadclient should not be able to start other network modules!
-                            NotificationService.WriteError("Failed to start network listener!");
+                        NotificationService.WriteString(((Packet)msg).DumpToString());
                 }
-            }
-            catch (Exception ex)
-            {
-                NotificationService.WriteException(ex);
-                return;
+
+                // move the remaining bytes to the front of client data
+                Buffer.BlockCopy(client.Data, msgLength, client.Data, 0, msgLength);
+
+                // Reduce the data offset by the amount of bytes we have dropped from client data
+                DataOffset -= msgLength;
             }
 
-            Receive();
+            RecvMsgCollection.CompleteAdding();
+
+        Listen:
+
+            Listen();
         }
     }
 }

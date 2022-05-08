@@ -6,9 +6,9 @@ namespace Network
 {
     public interface INetworkService
     {
-        public int ConnectToAuth();
+        public int Initialize();
 
-        public int ConnectToUpload();
+        public bool Ready { get; }
 
         public int StartListener();
     }
