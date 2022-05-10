@@ -107,7 +107,7 @@ namespace Configuration
             if (category is null)
                 return default(T);
 
-            var val = category.Collection?[key] ?? defaultValue ?? default(T);
+            var val = (category.Collection.ContainsKey(key)) ? category.Collection[key] : defaultValue ?? default(T);
 
             return (T)Convert.ChangeType(val, typeof(T));
         }
@@ -119,7 +119,7 @@ namespace Configuration
             if (category is null)
                 return default;
 
-            return category.Collection?[key] ?? defaultValue ?? default;
+            return (category.Collection.ContainsKey(key)) ? category.Collection[key] : defaultValue ?? default;
         }
 
         public void Set(string key, string parent = null, object value = null)

@@ -32,7 +32,7 @@ namespace Navislamia.Network.Entities
             gameActionsSVC = actionService;
         }
 
-        public void SendResult(ClientPackets id, ushort result, int value = 0)
+        public void SendResult(ushort id, ushort result, int value = 0)
         {
             PendMessage(new TS_SC_RESULT((ushort)id, result, value));
         }
@@ -44,7 +44,7 @@ namespace Navislamia.Network.Entities
             if (DebugPackets)
             {
                 NotificationService.WriteDebug($"Sending {msg.Length} bytes of data to Game client @ {IP}");
-                NotificationService.WriteString(((Packet)msg).DumpToString());
+                NotificationService.WriteMarkup(((Packet)msg).DumpToString());
             }
 
             byte[] encodedBuffer = new byte[msg.Length];
@@ -91,8 +91,7 @@ namespace Navislamia.Network.Entities
 
             if (DebugPackets)
             {
-                NotificationService.WriteDebug($"Receiving data from a game client @ {client.IP}");
-                NotificationService.WriteDebug($"{availableBytes} bytes received from the game client!");
+                NotificationService.WriteDebug($"Receiving {availableBytes} bytes from a game client @ {client.IP}");
             }
 
             if (client.Data.Length < DataOffset + availableBytes)
@@ -129,13 +128,10 @@ namespace Navislamia.Network.Entities
 
                 if (!Enum.IsDefined(typeof(ClientPackets), (int)header.ID))
                 {
-                    // TODO: packet is not implemented
+                    NotificationService.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from game client @ {client.IP}");
 
                     goto Listen;
                 }
-
-                if (header.ID == (int)ClientPackets.TM_NONE)
-                    goto Listen;
 
                 switch (header.ID)
                 {
@@ -154,11 +150,13 @@ namespace Navislamia.Network.Entities
                     RecvMsgCollection.Add(msg);
 
                     if (DebugPackets)
-                        NotificationService.WriteString(((Packet)msg).DumpToString());
+                        NotificationService.WriteMarkup(((Packet)msg).DumpToString());
                 }
 
+                client.Data = data.Slice(msgLength, data.Length - msgLength).ToArray();
+
                 // move the remaining bytes to the front of client data
-                Buffer.BlockCopy(client.Data, msgLength, client.Data, 0, msgLength);
+                //Buffer.BlockCopy(client.Data, msgLength, client.Data, 0, msgLength);
 
                 // Reduce the data offset by the amount of bytes we have dropped from client data
                 DataOffset -= msgLength;

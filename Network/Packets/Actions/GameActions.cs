@@ -43,6 +43,8 @@ namespace Navislamia.Network.Packets.Actions
 
         private int OnVersion(Client client, ISerializablePacket arg)
         {
+            // TODO: properly implement this action
+
             return 0;
         }
 
@@ -52,11 +54,27 @@ namespace Navislamia.Network.Packets.Actions
             var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
             var _loginInfo = new TS_GA_CLIENT_LOGIN(_msg.Account, _msg.OneTimePassword);
 
+            var connMax = configSVC.Get<int>("io.max_connection", "Network", 2000);
+
+            if (networkSVC.PlayerCount > connMax)
+            {
+                _client.SendResult(msg.ID, (ushort)ResultCode.LimitMax);
+                return 1;
+            }
+
+            if (string.IsNullOrEmpty(_client.ClientInfo.AccountName.String))
+            {
+                if (networkSVC.GameClients.ContainsKey(_msg.Account.String))
+                {
+                    _client.SendResult(msg.ID, (ushort)ResultCode.AccessDenied);
+                    return 1;
+                }
+
+                networkSVC.GameClients.Add(_msg.Account.String, _client);
+            }
+
             if (networkSVC.AuthClient?.Connected ?? false)
                 networkSVC.AuthClient.PendMessage(_loginInfo);
-
-            // Send test result denied
-            _client.SendResult((ClientPackets)msg.ID, (ushort)ResultCode.AccessDenied);
 
             return 0;
         }

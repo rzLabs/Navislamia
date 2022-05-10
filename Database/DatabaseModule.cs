@@ -19,15 +19,19 @@ using Navislamia.Database.Contexts;
 using Navislamia.Database.Repositories;
 using Navislamia.Database.Entities;
 
+using Dapper;
+using Navislamia.Database.Interfaces;
+
 namespace Database
 {
-    public class DatabaseModule :  IDatabaseService
+    public class DatabaseModule : IDatabaseService
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
         IDataService dataSVC;
 
         WorldDbContext worldDbContext;
+        PlayerDbContext playerDbContext;
 
         public DatabaseModule() { }
 
@@ -36,6 +40,9 @@ namespace Database
             configSVC = configurationService;
             notificationSVC = notificationService;
             dataSVC = dataService;
+
+            worldDbContext = new WorldDbContext(configSVC);
+            playerDbContext = new PlayerDbContext(configSVC);
         }
 
         public int Init() // TODO: arcadia table loading logic should occur here
@@ -44,7 +51,6 @@ namespace Database
 
             try
             {
-                worldDbContext = new WorldDbContext(configSVC);
 
                 stringRepo = new StringResourceRespository(notificationSVC, worldDbContext).Get();
             }
@@ -54,14 +60,34 @@ namespace Database
 
                 return 1;
             }
-     
+
             dataSVC.Set<List<StringResource>>("strings", stringRepo);
 
             int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count; // TODO: these should say their counts individually not within the success statement
 
-            notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- [green]{stringCnt}[/] strings loaded!" },  true);
+            notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- [green]{stringCnt}[/] strings loaded!" }, true);
 
             return 0;
+        }
+
+        public enum TargetType
+        {
+            Player,
+            World
+        }
+
+        public async Task<int> ExecuteScalar(string command, TargetType type = TargetType.Player)
+        {
+            using IDbConnection dbConnection = (type == TargetType.Player) ? playerDbContext.CreateConnection() : worldDbContext.CreateConnection();
+
+            return await dbConnection.ExecuteScalarAsync<int>(command);
+        }
+
+        public async Task<int> ExecuteStoredProcedure<T>(string storedProcedure, T parameters)
+        {
+            using IDbConnection dbConnection = playerDbContext.CreateConnection();
+
+            return await dbConnection.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
         }
     }
 }

@@ -44,11 +44,13 @@ namespace Navislamia.Network.Entities
             if (DebugPackets)
             {
                 NotificationService.WriteDebug($"Sending {msg.Length} bytes of data to Auth Server!");
-                NotificationService.WriteString(((Packet)msg).DumpToString());
+                NotificationService.WriteMarkup(((Packet)msg).DumpToString());
             }
 
-            Socket.BeginSend(msg.Data, 0, msg.Data.Length, SocketFlags.None, SendCallback, this);
-        }     
+            SocketError errorCode;
+
+            Socket.BeginSend(msg.Data, 0, msg.Data.Length, SocketFlags.None, out errorCode, SendCallback, this);
+        }
 
         private void SendCallback(IAsyncResult ar)
         {
@@ -85,7 +87,10 @@ namespace Navislamia.Network.Entities
                 goto Listen;
 
             if (DebugPackets)
+            {
                 NotificationService.WriteDebug($"{availableBytes} bytes received from the Auth Server!");
+            }
+
 
             // If client.Data length is below our current offset + read bytes
             if (client.Data.Length < DataOffset + availableBytes)
@@ -117,7 +122,7 @@ namespace Navislamia.Network.Entities
 
                 if (!Enum.IsDefined(typeof(AuthPackets), (int)header.ID))
                 {
-                    // TODO: packet is not implemented
+                    NotificationService.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from game client @ {client.IP}");
 
                     goto Listen;
                 }
@@ -127,6 +132,10 @@ namespace Navislamia.Network.Entities
                     case (int)AuthPackets.TS_AG_LOGIN_RESULT:
                         msg = new TS_AG_LOGIN_RESULT(msgBuffer);
                         break;
+
+                    case (int)AuthPackets.TS_AG_CLIENT_LOGIN:
+                        msg = new TS_AG_CLIENT_LOGIN(msgBuffer);
+                        break;
                 }
 
                 // add message to the queue
@@ -135,7 +144,7 @@ namespace Navislamia.Network.Entities
                     RecvMsgCollection.Add(msg);
 
                     if (DebugPackets)
-                        NotificationService.WriteString(((Packet)msg).DumpToString());
+                        NotificationService.WriteMarkup(((Packet)msg).DumpToString());
                 }
 
                 // move the remaining bytes to the front of client data

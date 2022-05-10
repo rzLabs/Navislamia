@@ -43,6 +43,8 @@ namespace Navislamia.Network.Entities
 
         public uint MsgVersion = 0x070300;
 
+        public Tag ClientInfo = new Tag();
+
         public Client(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IAuthActionService authActionService, IUploadActionService uploadActionService, IGameActionService gameActionService)
         {
             Socket = socket;
@@ -134,8 +136,18 @@ namespace Navislamia.Network.Entities
                 while (true)
                 {
                     if (SendMsgCollection.IsAddingCompleted && !SendMsgCollection.IsCompleted)
+                    {
                         while (SendMsgCollection.TryTake(out msg))
-                            Send(msg);
+                        {
+                            if (this is AuthClient)
+                                ((AuthClient)this).Send(msg); // TODO: why is 20011 not sending to the auth server
+                            else if (this is GameClient)
+                                ((GameClient)this).Send(msg);
+                        }
+
+                        if (SendMsgCollection.IsCompleted)
+                            SendMsgCollection = new BlockingCollection<ISerializablePacket>(sendMsgQueue);
+                    }
 
                     Thread.Sleep(500); // Slow down the execution to half second ticks, if ran wide open will consume a lot of processor
                 }
@@ -148,6 +160,7 @@ namespace Navislamia.Network.Entities
                 while (true)
                 {
                     if (RecvMsgCollection.IsAddingCompleted && !RecvMsgCollection.IsCompleted)
+                    {
                         while (RecvMsgCollection.TryTake(out msg))
                         {
                             if (this is AuthClient)
@@ -157,6 +170,10 @@ namespace Navislamia.Network.Entities
                             else if (this is UploadClient)
                                 uploadActionSVC.Execute(this, msg);
                         }
+
+                        if (RecvMsgCollection.IsCompleted)
+                            RecvMsgCollection = new BlockingCollection<ISerializablePacket>(recvMsgQueue);
+                    }
 
                     Thread.Sleep(500);
                 }

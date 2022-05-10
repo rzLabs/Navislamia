@@ -19,15 +19,18 @@ namespace Navislamia.Network.Packets.Actions
     {
         IConfigurationService configSVC;
         INotificationService notificationSVC;
+        INetworkService networkSVC;
 
         Dictionary<ushort, Func<Client, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<Client, ISerializablePacket, int>>();
 
-        public AuthActions(IConfigurationService configService, INotificationService notificationService)
+        public AuthActions(IConfigurationService configService, INotificationService notificationService, INetworkService networkService)
         {
             configSVC = configService;
             notificationSVC = notificationService;
+            networkSVC = networkService;
 
-            actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult; // TODO: example, remove me!
+            actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
+            actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
         }
 
         public int Execute(Client client, ISerializablePacket msg)
@@ -52,6 +55,46 @@ namespace Navislamia.Network.Packets.Actions
             client.Ready = true;
 
             notificationSVC.WriteSuccess("Successfully registered to the Auth Server!");
+
+            return 0;
+        }
+
+        public int OnAuthClientLoginResult(Client client, ISerializablePacket msg)
+        {
+            var _msg = msg as TS_AG_CLIENT_LOGIN;
+
+            if (!networkSVC.AuthAccounts.ContainsKey(_msg.Account.String))
+            {
+                notificationSVC.WriteError($"Account register failed for: {_msg.Account.String}");
+
+                _msg.Result = (ushort)ResultCode.AccessDenied;
+            }
+            else
+                networkSVC.AuthAccounts.Remove(_msg.Account.String);
+
+            if (_msg.Result == (ushort)ResultCode.Success)
+            {
+                var info = client.ClientInfo;
+
+                if (!networkSVC.RegisterAccount(client, _msg.Account.String))
+                {
+                    // TODO: SendLogoutToAuth
+                    info.AuthVerified = false;
+                }
+                else
+                {
+                    info.AccountName = _msg.Account;
+                    info.AccountID = _msg.AccountID;
+                    info.AuthVerified = true;
+                    info.PCBangMode = _msg.PcBangMode;
+                    info.EventCode = _msg.EventCode;
+                    info.Age = _msg.Age;
+                    info.ContinuousPlayTime = _msg.ContinuousPlayTime;
+                    info.ContinuousLogoutTime = _msg.ContinuousLogoutTime;
+                }
+            }
+
+            ((GameClient)networkSVC.GameClients[_msg.Account.String]).SendResult((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, _msg.Result);
 
             return 0;
         }

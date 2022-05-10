@@ -13,8 +13,18 @@ namespace Network
 
         public UploadClient UploadClient { get; }
 
+        public Dictionary<string, Client> AuthAccounts { get; set; }
+
+        public Dictionary<string, Client> AccountList { get; set; }
+
+        public Dictionary<string, Client> GameClients { get; set; }
+
+        public int PlayerCount { get; }
+
         public int Initialize();
 
         public int StartListener();
+
+        public bool RegisterAccount(Client client, string accountName);
     }
 }

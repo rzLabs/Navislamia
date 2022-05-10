@@ -41,6 +41,14 @@ namespace Network
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
 
+        public Dictionary<string, Client> AuthAccounts { get; set; } = new Dictionary<string, Client>();
+
+        public Dictionary<string, Client> AccountList { get; set; } = new Dictionary<string, Client>();
+
+        public Dictionary<string, Client> GameClients { get; set; } = new Dictionary<string, Client>();
+
+        public int PlayerCount { get; set; } = 0;
+
         public bool Ready => auth.Ready && upload.Ready;
 
         public AuthClient AuthClient => auth;
@@ -54,7 +62,7 @@ namespace Network
             configSVC = configurationService;
             notificationSVC = notificationService;
 
-            authActionSVC = new AuthActions(configSVC, notificationSVC);
+            authActionSVC = new AuthActions(configSVC, notificationSVC, this);
             gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
             uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
         }
@@ -145,7 +153,7 @@ namespace Network
 
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
-                auth.Send(msg);
+                auth.PendMessage(msg);
             }
             catch (Exception ex)
             {
@@ -285,6 +293,16 @@ namespace Network
             }
 
             return 0;
+        }
+
+        public bool RegisterAccount(Client client, string accountName)
+        {
+            if (GameClients.ContainsKey(accountName))
+                return false;
+
+            GameClients[accountName] = client;
+
+            return true;
         }
     }
 }

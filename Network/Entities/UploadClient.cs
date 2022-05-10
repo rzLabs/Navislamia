@@ -36,7 +36,7 @@ namespace Navislamia.Network.Entities
             if (ConfigurationService.Get<bool>("packet.debug", "Logs", false))
             {
                 NotificationService.WriteDebug($"[orange3]Sending {msg.GetType().Name} ({msg.Data.Length} bytes) to the Upload Server...[/]");
-                NotificationService.WriteString(((Packet)msg).DumpToString());
+                NotificationService.WriteMarkup(((Packet)msg).DumpToString());
             }
 
             Data = new byte[512];
@@ -119,7 +119,7 @@ namespace Navislamia.Network.Entities
                     RecvMsgCollection.Add(msg);
 
                     if (DebugPackets)
-                        NotificationService.WriteString(((Packet)msg).DumpToString());
+                        NotificationService.WriteMarkup(((Packet)msg).DumpToString());
                 }
 
                 // move the remaining bytes to the front of client data

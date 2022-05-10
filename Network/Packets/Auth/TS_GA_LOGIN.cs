@@ -47,7 +47,7 @@ namespace Navislamia.Network.Packets.Auth
             Length = this.GetLength();
 
             byte[] headerBuffer = this.CreateHeader();
-            Data = new byte[512/*Length + headerBuffer.Length*/];
+            Data = new byte[Length];
 
             Buffer.BlockCopy(headerBuffer, 0, Data, 0, headerBuffer.Length);
 

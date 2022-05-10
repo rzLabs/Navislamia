@@ -17,6 +17,7 @@ namespace Notification
         {
             Log.Logger = new LoggerConfiguration()
                             //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
+                            .MinimumLevel.Verbose()
                             .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
                             .CreateLogger();
         }

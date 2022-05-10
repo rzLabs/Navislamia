@@ -22,10 +22,7 @@ namespace Navislamia.Network.Packets.Game
         {
             Span<byte> data = Data;
 
-            string str = Encoding.Default.GetString(data.Slice(0, Account.Length).ToArray());
-            int nullOffset = str.IndexOf('\0');
-
-            Account.String = str.Substring(0, nullOffset);
+            Account.Data = data.Slice(0, Account.Length).ToArray();
 
             OneTimePassword = BitConverter.ToInt64(data.Slice(Account.Length, sizeof(long)));
         }
