@@ -125,7 +125,7 @@ namespace Navislamia.Network.Entities
         {
             if (!sendCollection.TryAdd(new QueuedMessage(client, msg)))
             {
-                //notificationService.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
+                notificationSVC.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
 
                 return;
             }
@@ -135,7 +135,7 @@ namespace Navislamia.Network.Entities
         {
             if (!recvCollection.TryAdd(new QueuedMessage(client, msg)))
             {
-                //notificationService.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
+                notificationSVC.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
 
                 return;
             }

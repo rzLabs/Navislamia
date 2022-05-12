@@ -46,16 +46,12 @@ namespace Navislamia.Network.Entities
 
             messageBuffer = new byte[BufferLen];
 
-            DebugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
-
             MessageQueue = new MessageQueue(this.configSVC, this.notificationSVC, authActionService, gameActionService, uploadActionService);
         }
 
         public int DataLength => Data?.Length ?? -1;
 
         public int BufferLen = -1;
-
-        public bool DebugPackets = false;
 
         public byte[] Data;
 
@@ -103,6 +99,7 @@ namespace Navislamia.Network.Entities
             }
             catch (Exception ex)
             {
+                notificationSVC.WriteError($"An error occured while attempting to connect to {IP}:{Port}");
                 notificationSVC.WriteException(ex);
 
                 return 1;
@@ -118,8 +115,19 @@ namespace Navislamia.Network.Entities
             MessageQueue.Finalize(QueueType.Send);
         }
 
-        public void Send(byte[] data) =>
-            Socket.BeginSend(data, 0, data.Length, SocketFlags.None, sendCallback, this);
+        public void Send(byte[] data)
+        {
+            try
+            {
+                Socket.BeginSend(data, 0, data.Length, SocketFlags.None, sendCallback, this);
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteError($"An error occured while attempting to send data to connection! {IP}:{Port}");
+                notificationSVC.WriteException(ex);
+                return;
+            }
+        }
 
         private void sendCallback(IAsyncResult ar)
         {
@@ -135,7 +143,16 @@ namespace Navislamia.Network.Entities
             if (!Socket.Connected)
                 return;
 
-            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, listenCallback, this);
+            try
+            {
+                Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, listenCallback, this);
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteError($"An error occured while attempting to read listen for data from connection! {IP}:{Port}");
+                notificationSVC.WriteException(ex);
+                return;
+            }
         }
 
         private void listenCallback(IAsyncResult ar)
@@ -148,28 +165,24 @@ namespace Navislamia.Network.Entities
                 return;
             }
 
-            int availableBytes = 0;
-
             try
             {
-                availableBytes = client.Socket.EndReceive(ar);
+                int availableBytes = client.Socket.EndReceive(ar);
+
+                if (availableBytes == 0)
+                    Listen();
+
+                if (client is GameClient)
+                    MessageQueue.LoadEncryptedBuffer(this, messageBuffer, availableBytes);
+                else
+                    MessageQueue.LoadPlainBuffer(this, messageBuffer, availableBytes);
             }
             catch (Exception ex)
             {
                 notificationSVC.WriteError($"An error occured while attempting to read data from connection! {client.IP}:{client.Port}");
                 notificationSVC.WriteException(ex);
                 return;
-            }
-
-            if (availableBytes == 0)
-                Listen();
-
-            if (client is GameClient)
-                MessageQueue.LoadEncryptedBuffer(this, messageBuffer, availableBytes);
-            else
-                MessageQueue.LoadPlainBuffer(this, messageBuffer, availableBytes);
-
-            Listen();
+            }        
         }
     }
 }

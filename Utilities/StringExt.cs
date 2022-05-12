@@ -102,7 +102,8 @@ namespace Utilities
 
         public static string ByteArrayToString(byte[] buffer)
         {
-            int length = buffer.Length;
+            int maxWidth = Math.Min(16, buffer.Length);
+            int rowHeader = 0;
 
             string outStr = null;
             string curRowStr = null;
@@ -110,19 +111,21 @@ namespace Utilities
 
             for (int i = 0; i < buffer.Length; i++)
             {
-                string byteStr = $"0x{buffer[i].ToString("x2")}";
+                string byteStr = $"0x{buffer[i]:x2}";
                 curRowStr += $"{byteStr},";
                 curCol++;
 
-                if (curCol == length)
+                if (curCol == maxWidth)
                 {
-                    outStr += $"{curRowStr}\n";
+                    rowHeader += 10;
+
+                    curRowStr = curRowStr.Remove(curRowStr.Length - 1, 1);
+
+                    outStr += $"{rowHeader.ToString("D8")}: {curRowStr}\n";
                     curRowStr = null;
                     curCol = 0;
                 }
             }
-
-            outStr = outStr.Remove(outStr.Length - 2, 1);
 
             return outStr;
         }
