@@ -40,6 +40,9 @@ namespace Navislamia.Network.Entities
     {
         bool debugPackets = false;
 
+        bool sendProcessing = false;
+        bool recvProcessing = false;
+
         XRC4Cipher RecvCipher = new XRC4Cipher();
         XRC4Cipher SendCipher = new XRC4Cipher();
 
@@ -48,9 +51,6 @@ namespace Navislamia.Network.Entities
 
         ConcurrentQueue<QueuedMessage> recvQueue = new ConcurrentQueue<QueuedMessage>();
         BlockingCollection<QueuedMessage> recvCollection;
-
-        Task sendHandler;
-        Task recvHandler;
 
         IConfigurationService configSVC;
         INotificationService notificationSVC;
@@ -78,11 +78,11 @@ namespace Navislamia.Network.Entities
             uploadActionSVC = uploadActionService;
             gameActionSVC = gameActionService;
 
-            sendHandler = Task.Run(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
-                    if (sendCollection.IsAddingCompleted && !sendCollection.IsCompleted)
+                    if (sendCollection.IsAddingCompleted && !sendProcessing)
                         processQueue(QueueType.Send);
 
                     if (sendCollection.IsCompleted)
@@ -92,11 +92,11 @@ namespace Navislamia.Network.Entities
                 }
             });
 
-            recvHandler = Task.Run(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
-                    if (recvCollection.IsAddingCompleted && !recvCollection.IsCompleted)
+                    if (recvCollection.IsAddingCompleted && !recvProcessing)
                         processQueue(QueueType.Receive);
 
                     if (recvCollection.IsCompleted)
@@ -105,9 +105,6 @@ namespace Navislamia.Network.Entities
                     Thread.Sleep(250);
                 }
             });
-
-            Task.Run(() => sendHandler);
-            Task.Run(() => recvHandler);
         }
 
         public void Finalize(QueueType type)
@@ -213,10 +210,14 @@ namespace Navislamia.Network.Entities
                     // add message to the queue
                     if (msg is not null)
                     {
-                        PendReceive(client, msg);
-
                         if (debugPackets)
-                            notificationSVC.WriteMarkup(((Packet)msg).DumpToString());
+                        {
+                            string packetDmp = ((Packet)msg).DumpToString();
+
+                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {client.IP}:{client.Port}@{client.ClientInfo.AccountName.String}[/]\n\n{packetDmp}");
+                        }
+
+                        PendReceive(client, msg);
                     }
                 }
 
@@ -232,6 +233,11 @@ namespace Navislamia.Network.Entities
 
         public void LoadPlainBuffer(Client client, byte[] messageBuffer, int count)
         {
+            string clientTag = "Auth Server Client";
+
+            if (client is UploadClient)
+                clientTag = "Upload Server Client";
+        
             // move the decoded data into the client data at the current client.DataOffset
             Buffer.BlockCopy(messageBuffer, 0, client.Data, client.DataOffset, count);
 
@@ -296,7 +302,11 @@ namespace Navislamia.Network.Entities
                         PendReceive(client, msg);
 
                         if (debugPackets)
-                            notificationSVC.WriteMarkup(((Packet)msg).DumpToString());
+                        {
+                            string packetDmp = ((Packet)msg).DumpToString();
+
+                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {clientTag}[/]\n\n{packetDmp}");
+                        }
                     }
                 }
 
@@ -314,6 +324,11 @@ namespace Navislamia.Network.Entities
         {
             BlockingCollection<QueuedMessage> queue = (type == QueueType.Send) ? sendCollection : recvCollection;
 
+            if (type == QueueType.Send)
+                sendProcessing = true;
+            else
+                recvProcessing = true;
+
             queue.CompleteAdding();
 
             QueuedMessage queuedMsg = null;
@@ -324,24 +339,25 @@ namespace Navislamia.Network.Entities
 
                 if (type == QueueType.Send)
                 {
-                    if (queuedMsg.Client is AuthClient)
-                    {
-                        if (debugPackets)
-                            notificationSVC.WriteDebug($"Sending {queuedMsg.Message.GetType().Name} ({queuedMsg.Message.Data.Length} bytes) to the Auth Server...");
+                    string clientTag = "Auth Server Client";
 
-                    }
+                    if (queuedMsg.Client is UploadClient)
+                        clientTag = "Upload Server Client";
                     else if (queuedMsg.Client is GameClient)
-                    {
-                        SendCipher.Encode(queuedMsg.Message.Data, sendBuffer, sendBuffer.Length);
-
-                        if (debugPackets)
-                            notificationSVC.WriteDebug($"Sending {queuedMsg.Message.Length} bytes of data to Game client @ {queuedMsg.Client.IP}:{queuedMsg.Client.Port}@{queuedMsg.Client.ClientInfo.AccountName.String}");
-                    }
+                        clientTag = $"Game Client {queuedMsg.Client.IP}:{queuedMsg.Client.Port}@{queuedMsg.Client.ClientInfo.AccountName.String}";
 
                     sendBuffer = queuedMsg.Message.Data;
 
+                    if (queuedMsg.Client is GameClient)
+                        SendCipher.Encode(queuedMsg.Message.Data, sendBuffer, sendBuffer.Length);
+
+
                     if (debugPackets)
-                        notificationSVC.WriteMarkup(((Packet)queuedMsg.Message).DumpToString());
+                    {
+                        string packetDmp = ((Packet)queuedMsg.Message).DumpToString();
+
+                        notificationSVC.WriteMarkup($"[bold orange3]Sending {queuedMsg.Message.GetType().Name} ({queuedMsg.Message.Data.Length} bytes) to the {clientTag}[/]\n\n{packetDmp}");
+                    }
 
                     queuedMsg.Client.Send(sendBuffer);
                 }
@@ -355,6 +371,11 @@ namespace Navislamia.Network.Entities
                         uploadActionSVC.Execute(queuedMsg.Client, queuedMsg.Message);
                 }
             }
+
+            if (type == QueueType.Send)
+                sendProcessing = false;
+            else
+                recvProcessing = false;
         }
 
     }

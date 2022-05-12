@@ -142,16 +142,9 @@ namespace Navislamia.Network.Entities
         {
             Client client = (Client)ar.AsyncState;
 
-            string clientTag = "Auth Server Client";
-
-            if (client is UploadClient)
-                clientTag = "Upload Server Client";
-            else if (client is GameClient)
-                clientTag = "Game Client";
-
             if (!Socket.Connected)
             {
-                notificationSVC.WriteError($"Read attempted for closed {clientTag}!");
+                notificationSVC.WriteError($"Read attempted for closed connection! {client.IP}:{client.Port}");
                 return;
             }
 
@@ -163,16 +156,13 @@ namespace Navislamia.Network.Entities
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteError($"An error occured while attempting to read from client {client.IP}:{client.Port}");
+                notificationSVC.WriteError($"An error occured while attempting to read data from connection! {client.IP}:{client.Port}");
                 notificationSVC.WriteException(ex);
                 return;
             }
 
             if (availableBytes == 0)
                 Listen();
-
-            if (DebugPackets)
-                notificationSVC.WriteDebug($"Receiving {availableBytes} bytes from a game client {client.IP}:{client.Port}@{client.ClientInfo.AccountName.String}");
 
             if (client is GameClient)
                 MessageQueue.LoadEncryptedBuffer(this, messageBuffer, availableBytes);
