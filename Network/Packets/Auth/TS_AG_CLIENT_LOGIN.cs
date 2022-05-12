@@ -50,7 +50,7 @@ namespace Navislamia.Network.Packets.Auth
 
             PcBangMode = data.Slice(offset, 1)[0];
 
-            offset++;
+            offset += 1;
 
             EventCode = BitConverter.ToUInt16(data.Slice(offset, 2));
 

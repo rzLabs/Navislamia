@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets
 {
-    public enum ResultCode
+    public enum ResultCode : ushort
     {
 		Success = 0,
 

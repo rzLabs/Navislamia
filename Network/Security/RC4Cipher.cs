@@ -123,7 +123,7 @@ namespace Network.Security
 
         public State state = new State(256);
 
-        public struct State
+        public class State
         {
             public State(int length = 256)
             {

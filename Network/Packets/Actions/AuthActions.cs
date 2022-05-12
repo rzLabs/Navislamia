@@ -62,7 +62,9 @@ namespace Navislamia.Network.Packets.Actions
         public int OnAuthClientLoginResult(Client client, ISerializablePacket msg)
         {
             var _msg = msg as TS_AG_CLIENT_LOGIN;
+            GameClient _gameClient = null;
 
+            // Check if the game client connection is queued in AuthAccounts
             if (!networkSVC.AuthAccounts.ContainsKey(_msg.Account.String))
             {
                 notificationSVC.WriteError($"Account register failed for: {_msg.Account.String}");
@@ -70,32 +72,36 @@ namespace Navislamia.Network.Packets.Actions
                 _msg.Result = (ushort)ResultCode.AccessDenied;
             }
             else
+            {
+                _gameClient = networkSVC.AuthAccounts[_msg.Account.String] as GameClient;
+
                 networkSVC.AuthAccounts.Remove(_msg.Account.String);
 
-            if (_msg.Result == (ushort)ResultCode.Success)
-            {
-                var info = client.ClientInfo;
+                if (_msg.Result == (ushort)ResultCode.Success)
+                {
+                    var info = _gameClient.ClientInfo;
 
-                if (!networkSVC.RegisterAccount(client, _msg.Account.String))
-                {
-                    // TODO: SendLogoutToAuth
-                    info.AuthVerified = false;
-                }
-                else
-                {
-                    info.AccountName = _msg.Account;
-                    info.AccountID = _msg.AccountID;
-                    info.AuthVerified = true;
-                    info.PCBangMode = _msg.PcBangMode;
-                    info.EventCode = _msg.EventCode;
-                    info.Age = _msg.Age;
-                    info.ContinuousPlayTime = _msg.ContinuousPlayTime;
-                    info.ContinuousLogoutTime = _msg.ContinuousLogoutTime;
+                    if (!networkSVC.RegisterAccount(client, _msg.Account.String))
+                    {
+                        // TODO: SendLogoutToAuth
+                        info.AuthVerified = false;
+                    }
+                    else
+                    {
+                        info.AccountName = _msg.Account;
+                        info.AccountID = _msg.AccountID;
+                        info.AuthVerified = true;
+                        info.PCBangMode = _msg.PcBangMode;
+                        info.EventCode = _msg.EventCode;
+                        info.Age = _msg.Age;
+                        info.ContinuousPlayTime = _msg.ContinuousPlayTime;
+                        info.ContinuousLogoutTime = _msg.ContinuousLogoutTime;
+                    }
                 }
             }
 
-            ((GameClient)networkSVC.GameClients[_msg.Account.String]).SendResult((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, _msg.Result);
-
+            _gameClient.SendResult((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, _msg.Result);
+            
             return 0;
         }
     }

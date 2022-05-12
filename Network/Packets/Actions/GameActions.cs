@@ -30,6 +30,8 @@ namespace Navislamia.Network.Packets.Actions
             networkSVC = networkService;
 
             actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
+            actions.Add((ushort)ClientPackets.TS_CS_REPORT, onReport);
+            actions.Add((ushort)ClientPackets.TS_CS_CHARACTER_LIST, onCharacterList);
             actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
@@ -44,6 +46,20 @@ namespace Navislamia.Network.Packets.Actions
         private int OnVersion(Client client, ISerializablePacket arg)
         {
             // TODO: properly implement this action
+
+            return 0;
+        }
+
+        private int onReport(Client arg1, ISerializablePacket arg2)
+        {
+            // TODO: implement me
+
+            return 0;
+        }
+
+        private int onCharacterList(Client arg1, ISerializablePacket arg2)
+        {
+            // TODO: implement me
 
             return 0;
         }
@@ -64,13 +80,13 @@ namespace Navislamia.Network.Packets.Actions
 
             if (string.IsNullOrEmpty(_client.ClientInfo.AccountName.String))
             {
-                if (networkSVC.GameClients.ContainsKey(_msg.Account.String))
+                if (networkSVC.AuthAccounts.ContainsKey(_msg.Account.String))
                 {
                     _client.SendResult(msg.ID, (ushort)ResultCode.AccessDenied);
                     return 1;
                 }
 
-                networkSVC.GameClients.Add(_msg.Account.String, _client);
+                networkSVC.AuthAccounts.Add(_msg.Account.String, _client);
             }
 
             if (networkSVC.AuthClient?.Connected ?? false)

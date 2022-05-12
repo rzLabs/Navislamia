@@ -22,24 +22,15 @@ namespace Navislamia.Network.Entities
 {
     public class Client
     {
+        byte[] messageBuffer;
+
         public bool Ready = false;
 
-        public IConfigurationService ConfigurationService;
-        public INotificationService NotificationService;
-        public INetworkService NetworkService;
+        public IConfigurationService configSVC;
+        public INotificationService notificationSVC;
+        public INetworkService networkSVC;
 
-        public IAuthActionService authActionSVC;
-        public IGameActionService gameActionSVC;
-        public IUploadActionService uploadActionSVC;
-
-        public XRC4Cipher RecvCipher = new XRC4Cipher();
-        public XRC4Cipher SendCipher = new XRC4Cipher();
-
-        protected ConcurrentQueue<ISerializablePacket> recvMsgQueue = new ConcurrentQueue<ISerializablePacket>();
-        public BlockingCollection<ISerializablePacket> RecvMsgCollection;
-
-        protected ConcurrentQueue<ISerializablePacket> sendMsgQueue = new ConcurrentQueue<ISerializablePacket>();
-        public BlockingCollection<ISerializablePacket> SendMsgCollection;
+        public MessageQueue MessageQueue;
 
         public uint MsgVersion = 0x070300;
 
@@ -49,24 +40,15 @@ namespace Navislamia.Network.Entities
         {
             Socket = socket;
             BufferLen = length;
-            ConfigurationService = configurationService;
-            NotificationService = notificationService;
-            NetworkService = networkService;
-            authActionSVC = authActionService;
-            uploadActionSVC = uploadActionService;
-            gameActionSVC = gameActionService;
+            configSVC = configurationService;
+            notificationSVC = notificationService;
+            networkSVC = networkService;
+
+            messageBuffer = new byte[BufferLen];
 
             DebugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
 
-            var key = configurationService.Get<string>("cipher.key", "Network");
-
-            RecvCipher.SetKey(key);
-            SendCipher.SetKey(key);
-
-            RecvMsgCollection = new BlockingCollection<ISerializablePacket>(recvMsgQueue);
-            SendMsgCollection = new BlockingCollection<ISerializablePacket>(sendMsgQueue);
-
-            initTasks();
+            MessageQueue = new MessageQueue(this.configSVC, this.notificationSVC, authActionService, gameActionService, uploadActionService);
         }
 
         public int DataLength => Data?.Length ?? -1;
@@ -98,6 +80,21 @@ namespace Navislamia.Network.Entities
             }
         }
 
+        public short Port
+        {
+            get
+            {
+                if (Socket is not null)
+                {
+                    IPEndPoint ep = Socket.LocalEndPoint as IPEndPoint;
+
+                    return (short)ep.Port;
+                }
+
+                return -1;
+            }
+        }
+
         public int Connect(IPEndPoint ep)
         {
             try
@@ -106,7 +103,7 @@ namespace Navislamia.Network.Entities
             }
             catch (Exception ex)
             {
-                NotificationService.WriteException(ex);
+                notificationSVC.WriteException(ex);
 
                 return 1;
             }
@@ -116,70 +113,73 @@ namespace Navislamia.Network.Entities
 
         public virtual void PendMessage(ISerializablePacket msg) 
         {
-            SendMsgCollection.Add(msg);
+            MessageQueue.PendSend(this, msg);
 
-            SendMsgCollection.CompleteAdding();
+            MessageQueue.Finalize(QueueType.Send);
         }
 
-        public virtual void Send(ISerializablePacket msg) { }
+        public void Send(byte[] data) =>
+            Socket.BeginSend(data, 0, data.Length, SocketFlags.None, sendCallback, this);
 
-        public virtual void Listen() { }
-
-        void initTasks() // Do not wait, these tasks will run for the lifetime of the server instance
+        private void sendCallback(IAsyncResult ar)
         {
-            List<Task> tasks = new List<Task>();
+            Client client = (Client)ar.AsyncState;
 
-            tasks.Add(Task.Run(() =>
+            int bytesSent = client.Socket.EndSend(ar);
+
+            Listen();
+        }
+
+        public void Listen()
+        {
+            if (!Socket.Connected)
+                return;
+
+            Socket.BeginReceive(messageBuffer, 0, messageBuffer.Length, SocketFlags.None, listenCallback, this);
+        }
+
+        private void listenCallback(IAsyncResult ar)
+        {
+            Client client = (Client)ar.AsyncState;
+
+            string clientTag = "Auth Server Client";
+
+            if (client is UploadClient)
+                clientTag = "Upload Server Client";
+            else if (client is GameClient)
+                clientTag = "Game Client";
+
+            if (!Socket.Connected)
             {
-                ISerializablePacket msg;
+                notificationSVC.WriteError($"Read attempted for closed {clientTag}!");
+                return;
+            }
 
-                while (true)
-                {
-                    if (SendMsgCollection.IsAddingCompleted && !SendMsgCollection.IsCompleted)
-                    {
-                        while (SendMsgCollection.TryTake(out msg))
-                        {
-                            if (this is AuthClient)
-                                ((AuthClient)this).Send(msg); // TODO: why is 20011 not sending to the auth server
-                            else if (this is GameClient)
-                                ((GameClient)this).Send(msg);
-                        }
+            int availableBytes = 0;
 
-                        if (SendMsgCollection.IsCompleted)
-                            SendMsgCollection = new BlockingCollection<ISerializablePacket>(sendMsgQueue);
-                    }
-
-                    Thread.Sleep(500); // Slow down the execution to half second ticks, if ran wide open will consume a lot of processor
-                }
-            }));
-
-            tasks.Add(Task.Run(() =>
+            try
             {
-                ISerializablePacket msg;
+                availableBytes = client.Socket.EndReceive(ar);
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteError($"An error occured while attempting to read from client {client.IP}:{client.Port}");
+                notificationSVC.WriteException(ex);
+                return;
+            }
 
-                while (true)
-                {
-                    if (RecvMsgCollection.IsAddingCompleted && !RecvMsgCollection.IsCompleted)
-                    {
-                        while (RecvMsgCollection.TryTake(out msg))
-                        {
-                            if (this is AuthClient)
-                                authActionSVC.Execute(this, msg);
-                            else if (this is GameClient)
-                                gameActionSVC.Execute(this, msg);
-                            else if (this is UploadClient)
-                                uploadActionSVC.Execute(this, msg);
-                        }
+            if (availableBytes == 0)
+                Listen();
 
-                        if (RecvMsgCollection.IsCompleted)
-                            RecvMsgCollection = new BlockingCollection<ISerializablePacket>(recvMsgQueue);
-                    }
+            if (DebugPackets)
+                notificationSVC.WriteDebug($"Receiving {availableBytes} bytes from a game client {client.IP}:{client.Port}@{client.ClientInfo.AccountName.String}");
 
-                    Thread.Sleep(500);
-                }
-            }));
+            if (client is GameClient)
+                MessageQueue.LoadEncryptedBuffer(this, messageBuffer, availableBytes);
+            else
+                MessageQueue.LoadPlainBuffer(this, messageBuffer, availableBytes);
 
-            Task.WhenAll(tasks);
+            Listen();
         }
     }
 }

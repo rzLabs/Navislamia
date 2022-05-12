@@ -222,7 +222,7 @@ namespace Network
 
                 var msg = new TS_SU_LOGIN(serverName);
 
-                upload.Send(msg);
+                upload.PendMessage(msg);
             }
             catch (Exception ex)
             {
@@ -270,16 +270,13 @@ namespace Network
 
             Socket socket = listener.EndAcceptSocket(ar);
 
+            socket.NoDelay = true;
+
             GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionSVC);
 
-            if (connections.Contains(client))
-            {
-                notificationSVC.WriteWarning($"Connection from duplicate client!");
+            notificationSVC.WriteDebug($"Game client connected from: {client.IP}");
 
-                return;
-            }
-                
-            connections.Add(client);
+            //connections.Add(client);
 
             client.Listen();
         }
