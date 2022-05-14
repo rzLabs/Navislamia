@@ -30,7 +30,7 @@ namespace DevConsole
             this.commandService = commandService;
         }
 
-        public void Run()
+        public async Task<int> Run()
         {
             notificationService.WriteString($"{Resources.arcadia}\n\nNavislamia starting...\n");
 
@@ -38,8 +38,14 @@ namespace DevConsole
             short port = configurationService.Get<short>("io.port", "Network", 4502);
             int backlog = configurationService.Get<int>("io.backlog", "Network", 100);
 
-            if (gameService.Start(ip, port, backlog) >= 1)
+            if (await gameService.Start(ip, port, backlog) >= 1)
+            {
                 notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
+
+                return 1;
+            }
+
+            return 0;
         }
     }
 }

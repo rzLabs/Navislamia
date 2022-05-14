@@ -21,6 +21,7 @@ using Navislamia.Database.Entities;
 
 using Dapper;
 using Navislamia.Database.Interfaces;
+using Navislamia.Database.Enums;
 
 namespace Database
 {
@@ -32,6 +33,8 @@ namespace Database
 
         WorldDbContext worldDbContext;
         PlayerDbContext playerDbContext;
+
+        HashSet<IRepository> worldRepositories = new HashSet<IRepository>();
 
         public DatabaseModule() { }
 
@@ -45,40 +48,9 @@ namespace Database
             playerDbContext = new PlayerDbContext(configSVC);
         }
 
-        public int Init() // TODO: arcadia table loading logic should occur here
+        public async Task<int> ExecuteScalar(string command, DbContextType type = DbContextType.Player)
         {
-            List<StringResource> stringRepo = null;
-
-            try
-            {
-
-                stringRepo = new StringResourceRespository(notificationSVC, worldDbContext).Get();
-            }
-            catch (Exception ex)
-            {
-                notificationSVC.WriteException(ex);
-
-                return 1;
-            }
-
-            dataSVC.Set<List<StringResource>>("strings", stringRepo);
-
-            int stringCnt = dataSVC.Get<List<StringResource>>("strings").Count; // TODO: these should say their counts individually not within the success statement
-
-            notificationSVC.WriteSuccess(new string[] { "Successfully started the database server", $"- [green]{stringCnt}[/] strings loaded!" }, true);
-
-            return 0;
-        }
-
-        public enum TargetType
-        {
-            Player,
-            World
-        }
-
-        public async Task<int> ExecuteScalar(string command, TargetType type = TargetType.Player)
-        {
-            using IDbConnection dbConnection = (type == TargetType.Player) ? playerDbContext.CreateConnection() : worldDbContext.CreateConnection();
+            using IDbConnection dbConnection = (type == DbContextType.Player) ? playerDbContext.CreateConnection() : worldDbContext.CreateConnection();
 
             return await dbConnection.ExecuteScalarAsync<int>(command);
         }
@@ -88,6 +60,33 @@ namespace Database
             using IDbConnection dbConnection = playerDbContext.CreateConnection();
 
             return await dbConnection.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+        }
+
+        public async Task<int> LoadRepositories() // TODO: Arcadia table loads go here
+        {
+            List<string> successMsgs = new List<string>();
+
+            successMsgs.Add("Successfully loaded database repositories!");
+
+            try
+            {
+                using IDbConnection dbConnection = worldDbContext.CreateConnection();
+
+                var repo = await new StringRepository(dbConnection).Init();
+
+                successMsgs.Add($"- [yellow]{repo.Count}[/] rows loaded from {repo.Name}");
+            }
+            catch (Exception ex)
+            {
+                notificationSVC.WriteError("An error occured while attempting to load world repositories!");
+                notificationSVC.WriteException(ex);
+
+                return 1;
+            }
+
+            notificationSVC.WriteSuccess(successMsgs.ToArray(), true);
+
+            return 0;
         }
     }
 }

@@ -7,23 +7,23 @@ namespace DevConsole
 {
     class Program
     {
-        static void Main(string[] args) // TODO: need to stop idle message from showing up before its time
+        static async Task Main(string[] args)
         {
-
             var container = ContainerConfig.Configure();
             var resolver = container.Build();      
             var app = resolver.Resolve(typeof(IApplication)) as IApplication;
 
-            app.Run();
+            if (await app.Run() == 0) // If the application has started without error, only then expose the command module
+            {
+                var cli = resolver.Resolve(typeof(ICommandService)) as ICommandService;
 
-            var cli = resolver.Resolve(typeof(ICommandService)) as ICommandService;
+                if (cli.Init(container) > 0)
+                    return;
 
-            if (cli.Init(container) > 0)
-                return;
-
-            while (true)
-                if (cli.Wait() == 0)
-                    break;
+                while (true)
+                    if (cli.Wait() == 0)
+                        break;
+            }
         }
     }
 }

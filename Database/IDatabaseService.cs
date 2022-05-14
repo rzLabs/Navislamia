@@ -10,7 +10,7 @@ namespace Database
 {
     public interface IDatabaseService
     {
-        public int Init() => 0;
+        public async Task<int> LoadRepositories() => 0;
 
     }
 }

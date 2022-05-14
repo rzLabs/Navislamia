@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Database.Queries.User
+namespace Navislamia.Database.Enums
 {
-    public static class UserDbQuery
+    public enum DbContextType
     {
+        Player,
+        World
     }
 }

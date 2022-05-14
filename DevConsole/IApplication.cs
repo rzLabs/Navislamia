@@ -1,7 +1,9 @@
-﻿namespace DevConsole
+﻿using System.Threading.Tasks;
+
+namespace DevConsole
 {
     public interface IApplication
     {
-        void Run();
+        public async Task<int> Run() => 0;
     }
 }

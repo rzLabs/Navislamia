@@ -48,7 +48,7 @@ namespace Navislamia.Game
             networkSVC = networkService;
         }
 
-        public int Start(string ip, int port, int backlog)
+        public async Task<int> Start(string ip, int port, int backlog)
         {
             if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
             {
@@ -78,10 +78,9 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (dbSVC.Init() > 0)
+            if (await dbSVC.LoadRepositories() > 0)
             {
-                notificationSVC.WriteError("Failed to start the database service!");
-
+                // TODO: log this shit bruh
                 return 1;
             }
 
