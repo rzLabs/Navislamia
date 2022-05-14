@@ -18,24 +18,6 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Network.Entities
 {
-    public enum QueueType
-    {
-        Send, 
-        Receive
-    }
-
-    public class QueuedMessage
-    {
-        public Client Client;
-        public ISerializablePacket Message;
-
-        public QueuedMessage(Client client, ISerializablePacket message)
-        {
-            Client = client;
-            Message = message;
-        }
-    }
-
     public class MessageQueue
     {
         bool debugPackets = false;
@@ -339,10 +321,10 @@ namespace Navislamia.Network.Entities
 
                 if (type == QueueType.Send)
                 {
-                    string clientTag = "Auth Server Client";
+                    string clientTag = "Auth Server";
 
                     if (queuedMsg.Client is UploadClient)
-                        clientTag = "Upload Server Client";
+                        clientTag = "Upload Server";
                     else if (queuedMsg.Client is GameClient)
                         clientTag = $"Game Client {queuedMsg.Client.IP}:{queuedMsg.Client.Port}@{queuedMsg.Client.ClientInfo.AccountName.String}";
 
@@ -350,7 +332,6 @@ namespace Navislamia.Network.Entities
 
                     if (queuedMsg.Client is GameClient)
                         SendCipher.Encode(queuedMsg.Message.Data, sendBuffer, sendBuffer.Length);
-
 
                     if (debugPackets)
                     {

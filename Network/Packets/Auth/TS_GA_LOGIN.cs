@@ -17,15 +17,15 @@ namespace Navislamia.Network.Packets.Auth
 
         public ushort ServerIndex { get; set; }
 
-        public CString ServerIP { get; set; } = new CString(16);
-
-        public int ServerPort { get; set; }
-
         public CString ServerName { get; set; } = new CString(21);
 
         public CString ServerScreenshotURL { get; set; } = new CString(256);
 
         public bool IsAdultServer { get; set; }
+
+        public CString ServerIP { get; set; } = new CString(16);
+
+        public int ServerPort { get; set; }
 
         public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) 
         {

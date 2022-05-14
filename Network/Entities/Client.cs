@@ -17,6 +17,7 @@ using Network.Security;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using System.Threading;
+using Navislamia.Network.Enums;
 
 namespace Navislamia.Network.Entities
 {
@@ -69,7 +70,7 @@ namespace Navislamia.Network.Entities
                 {
                     IPEndPoint ep = Socket.RemoteEndPoint as IPEndPoint;
 
-                    return ep.Address.ToString();
+                    return ep?.Address.ToString();
                 }
 
                 return null;
@@ -82,9 +83,11 @@ namespace Navislamia.Network.Entities
             {
                 if (Socket is not null)
                 {
-                    IPEndPoint ep = Socket.LocalEndPoint as IPEndPoint;
+                    IPEndPoint ep = null;
 
-                    return (short)ep.Port;
+                    ep = (this is AuthClient || this is UploadClient) ? Socket.RemoteEndPoint as IPEndPoint : Socket.LocalEndPoint as IPEndPoint;
+
+                    return (ep is null) ? (short)-1 : (short)ep.Port;
                 }
 
                 return -1;
@@ -99,7 +102,7 @@ namespace Navislamia.Network.Entities
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteError($"An error occured while attempting to connect to {IP}:{Port}");
+                notificationSVC.WriteError($"An error occured while attempting to connect to remote endpoint!");
                 notificationSVC.WriteException(ex);
 
                 return 1;

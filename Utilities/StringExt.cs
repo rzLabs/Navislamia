@@ -67,39 +67,6 @@ namespace Utilities
             return $"Details: {exception}\n\tLine: {lineVals[0].Remove(0, 1)}\n\tOffset: {lineVals[1].Remove(lineVals[1].Length - 1)}";
         }
 
-        /// <summary>
-        /// Convert a byte array to a prepared string capable of representing the array via hex values.
-        /// </summary>
-        /// <param name="buffer">Byte array containing information</param>
-        /// <returns>Formatted string representing the provided byte array</returns>
-        public static string ByteArrayToString(byte[] buffer, int count = 512)
-        {
-            string outStr = null;
-            string curRowStr = null;
-            int curCol = 0;
-
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                string byteStr = $"0x{buffer[i].ToString("x2")}";
-                curRowStr += $"{byteStr},";
-                curCol++;
-
-                if (curCol == 16)
-                {
-                    outStr += $"{curRowStr}\n";
-                    curRowStr = null;
-                    curCol = 0;
-                }
-
-                if (i == count)
-                    break;
-            }
-
-            outStr = outStr.Remove(outStr.Length - 2, 1);
-
-            return outStr;
-        }
-
         public static string ByteArrayToString(byte[] buffer)
         {
             int maxWidth = Math.Min(16, buffer.Length);
@@ -111,17 +78,26 @@ namespace Utilities
 
             for (int i = 0; i < buffer.Length; i++)
             {
-                string byteStr = $"0x{buffer[i]:x2}";
-                curRowStr += $"{byteStr},";
+                string byteStr = $"{buffer[i]:x2}";
+                curRowStr += $"{byteStr} ";
                 curCol++;
 
                 if (curCol == maxWidth)
                 {
                     rowHeader += 10;
 
-                    curRowStr = curRowStr.Remove(curRowStr.Length - 1, 1);
+                    byte[] lineBuffer = ((Span<byte>)buffer).Slice(i + 1 - maxWidth, maxWidth).ToArray();
+                    string lineBufferStr = string.Empty;
 
-                    outStr += $"{rowHeader.ToString("D8")}: {curRowStr}\n";
+                    foreach (byte b in lineBuffer)
+                    {
+                        if (b == 0)
+                            lineBufferStr += ".";
+                        else
+                            lineBufferStr += System.Text.Encoding.Default.GetString(new byte[] { b });
+                    }
+
+                    outStr += $"{rowHeader.ToString("D8")}: {curRowStr}  {lineBufferStr}\n";
                     curRowStr = null;
                     curCol = 0;
                 }
