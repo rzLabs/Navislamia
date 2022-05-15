@@ -34,7 +34,6 @@ namespace DevConsole
 
             serviceCollection.AddSingleton<ICommandService, CommandModule>();
 
-            serviceCollection.AddSingleton<IDataService, DataModule>();
             serviceCollection.AddSingleton<IDatabaseService, DatabaseModule>();
             serviceCollection.AddSingleton<IWorldService, WorldModule>();
             serviceCollection.AddSingleton<IScriptingService, ScriptModule>();

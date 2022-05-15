@@ -91,6 +91,7 @@ namespace Notification
         public void WriteException(Exception exception, LogEventLevel level = LogEventLevel.Error)
         {
             AnsiConsole.WriteException(exception);
+            AnsiConsole.Write("\n");
             Log.Write(level, exception, "An exception has occured!");
         }
 

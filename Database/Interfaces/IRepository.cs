@@ -13,5 +13,7 @@ namespace Navislamia.Database.Interfaces
         public int Count { get; }
 
         public IEnumerable<T> GetData<T>();
+
+        public async Task<IRepository> Load() => null;
     }
 }

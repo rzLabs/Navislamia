@@ -43,15 +43,15 @@ namespace Navislamia.Network.Entities
 
         public MessageQueue(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
         {
-            var key = configurationService.Get<string>("cipher.key", "Network");
+            var cipherKey = configurationService.Get<string>("cipher.key", "Network");
 
             debugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
 
             configSVC = configurationService;
             notificationSVC = notificationService;
 
-            RecvCipher.SetKey(key);
-            SendCipher.SetKey(key);
+            RecvCipher.SetKey(cipherKey);
+            SendCipher.SetKey(cipherKey);
 
             sendCollection = new BlockingCollection<QueuedMessage>(sendQueue);
             recvCollection = new BlockingCollection<QueuedMessage>(recvQueue);
@@ -70,7 +70,7 @@ namespace Navislamia.Network.Entities
                     if (sendCollection.IsCompleted)
                         sendCollection = new BlockingCollection<QueuedMessage>(sendQueue);
 
-                    Thread.Sleep(250);
+                    Thread.Sleep(100);
                 }
             });
 
@@ -84,7 +84,7 @@ namespace Navislamia.Network.Entities
                     if (recvCollection.IsCompleted)
                         recvCollection = new BlockingCollection<QueuedMessage>(recvQueue);
 
-                    Thread.Sleep(250);
+                    Thread.Sleep(100);
                 }
             });
         }
@@ -252,7 +252,7 @@ namespace Navislamia.Network.Entities
                     PacketHeader header = Header.GetPacketHeader(msgBuffer);
                     ISerializablePacket msg = null;
 
-                    if (!Enum.IsDefined(typeof(ClientPackets), header.ID))
+                    if (!Enum.IsDefined(typeof(AuthPackets), header.ID) && !Enum.IsDefined(typeof(UploadPackets), header.ID))
                         notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {((client is AuthClient) ? "Auth" : "Upload")} server!");
 
                     if (client is AuthClient)

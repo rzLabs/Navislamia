@@ -55,7 +55,7 @@ namespace Navislamia.Network.Packets
                 curRowStr += $"{byteStr} ";
                 curCol++;
 
-                if (curCol == maxWidth)
+                if (curCol == maxWidth) 
                 {
                     rowHeader += 10;
 
@@ -70,9 +70,23 @@ namespace Navislamia.Network.Packets
                             lineBufferStr += System.Text.Encoding.Default.GetString(new byte[] { b });
                     }
 
+                    if (maxWidth < 16) // There was not 16 bytes of data, so we must pad the rest to keep output aligned
+                    {
+                        int remainder = 16 - maxWidth;
+
+                        for (int j = 0; j < remainder; j++)
+                        {
+                            curRowStr += "00 ";
+                            lineBufferStr += ".";
+                        }
+                    }
+
                     outStr += $"{rowHeader.ToString("D8")}: {curRowStr}  {lineBufferStr}\n";
                     curRowStr = null;
                     curCol = 0;
+
+                    if (buffer.Length - i < maxWidth)
+                        maxWidth = buffer.Length - (i + 1);
                 }
             }
 

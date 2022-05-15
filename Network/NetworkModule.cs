@@ -41,13 +41,17 @@ namespace Network
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
 
+        /// <summary>
+        /// Game clients that have not been authorized yet
+        /// </summary>
         public Dictionary<string, Client> AuthAccounts { get; set; } = new Dictionary<string, Client>();
 
-        public Dictionary<string, Client> AccountList { get; set; } = new Dictionary<string, Client>();
-
+        /// <summary>
+        /// Game clients that have been authorized and are now only the gameserver
+        /// </summary>
         public Dictionary<string, Client> GameClients { get; set; } = new Dictionary<string, Client>();
 
-        public int PlayerCount { get; set; } = 0;
+        public int PlayerCount => GameClients.Count;
 
         public bool Ready => auth.Ready && upload.Ready;
 
@@ -112,9 +116,6 @@ namespace Network
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
-
-            if (configSVC.Get<bool>("debug", "Runtime", false))
-                notificationSVC.WriteDebug($"io.buffer_length is: {BufferLength}");
 
             int status = 0;
 
@@ -240,12 +241,6 @@ namespace Network
             short port = configSVC.Get<short>("io.port", "Network", 4515);
             int backlog = configSVC.Get<int>("io.backlog", "Network", 100);
 
-            if (string.IsNullOrEmpty(addrStr) || port == 0 || backlog == 0)
-            {
-                notificationSVC.WriteError("Invalid network io configuration! Review your Configuration.json!");
-                return 1;
-            }
-
             IPAddress addr;
 
             if (!IPAddress.TryParse(addrStr, out addr))
@@ -275,8 +270,6 @@ namespace Network
             GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionSVC);
 
             notificationSVC.WriteDebug($"Game client connected from: {client.IP}");
-
-            //connections.Add(client);
 
             client.Listen();
         }

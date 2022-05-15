@@ -27,7 +27,6 @@ namespace Navislamia.Game
         IConfigurationService configSVC;
         IWorldService worldSVC;
         IDatabaseService dbSVC;
-        IDataService dataSVC;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
         IMapService mapSVC;
@@ -35,14 +34,13 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, IDataService dataService, 
+        public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
             IScriptingService scriptingService, IMapService mapService, INetworkService networkService)
         {
             configSVC = configurationService;
             worldSVC = contentService;
             notificationSVC = notificationService;
             dbSVC = databaseService;
-            dataSVC = dataService;
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
@@ -78,7 +76,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (await dbSVC.LoadRepositories() > 0)
+            if (!dbSVC.Init())
             {
                 // TODO: log this shit bruh
                 return 1;

@@ -15,8 +15,6 @@ namespace Network
 
         public Dictionary<string, Client> AuthAccounts { get; set; }
 
-        public Dictionary<string, Client> AccountList { get; set; }
-
         public Dictionary<string, Client> GameClients { get; set; }
 
         public int PlayerCount { get; }

@@ -29,7 +29,7 @@ namespace Navislamia.Command.Commands
             mainTbl.AddColumn("Description");
             mainTbl.AddColumn("Contributors and Advisors");
             mainTbl.AddColumns("Third Party Software");
-            mainTbl.AddRow("Navislamia is a .NET 5 reimplementation of the Arcadia Framework", "- Aodai\n- iSmokeDrow\n- Glandu2\n- Graphos\n- Mango\n- Sandro", "- Moonsharp\n- Newtonsoft.JSON\n- Serilog\n- Spectre.Console");
+            mainTbl.AddRow("Navislamia is a .NET 5 reimplementation of the Arcadia Framework", "- Aodai\n- iSmokeDrow\n- Glandu2\n- Graphos\n- Mango\n- Sandro\n- Pyrok", "- Moonsharp\n- Newtonsoft.JSON\n- Serilog\n- Spectre.Console\n- Dapper");
 
             mainTbl.Border = TableBorder.Ascii;
 
