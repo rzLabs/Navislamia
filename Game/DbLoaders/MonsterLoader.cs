@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Database.Loaders
+namespace Navislamia.Game.DbLoaders
 {
 
     public class MonsterLoader : RepositoryLoader

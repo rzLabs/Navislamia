@@ -13,7 +13,6 @@ using Navislamia.Database.Repositories;
 
 using Dapper;
 using System.Text;
-using Navislamia.Database.Loaders;
 
 namespace Database
 {
@@ -36,41 +35,11 @@ namespace Database
 
             worldDbContext = new WorldDbContext(configSVC);
             playerDbContext = new PlayerDbContext(configSVC);
-
-            setLoadTasks();
         }
 
-        void setLoadTasks()
-        {
-            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, worldDbContext.CreateConnection()).Init()));
-        }
+        public IDbConnection GetWorldConnection => worldDbContext.CreateConnection();
 
-        public bool Init()
-        {          
-            Task loadTask = Task.WhenAll(loadTasks);
-
-            try
-            {
-                loadTask.Wait();
-            }
-            catch (Exception ex) { }
-
-            if (!loadTask.IsCompletedSuccessfully)
-            {
-                foreach (Task<int> task in loadTasks)
-                {
-                    if (task.IsFaulted)
-                    {
-                        notificationSVC.WriteError($"{task.GetType().Name} task has failed!");
-                        notificationSVC.WriteException(task.Exception);
-                    }
-                }
-
-                return false;
-            }
-
-            return true;
-        }
+        public IDbConnection GetPlayerConnection => playerDbContext.CreateConnection();
 
         public async Task<int> ExecuteScalar(string command, DbContextType type = DbContextType.Player)
         {

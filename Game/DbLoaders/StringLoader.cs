@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Database.Loaders
+namespace Navislamia.Game.DbLoaders
 {
-    class StringLoader : RepositoryLoader, IRepositoryLoader
+    class StringLoader : RepositoryLoader
     {
         IDbConnection dbConnection;
 

@@ -8,7 +8,6 @@ using System.Reflection;
 
 using Configuration;
 using Database;
-using Navislamia.Data;
 using Maps;
 using Network;
 using Notification;
@@ -19,6 +18,7 @@ using System.Collections.Generic;
 using Spectre.Console;
 using Navislamia.World;
 using System.Threading;
+using Navislamia.Game.DbLoaders;
 
 namespace Navislamia.Game
 {
@@ -76,7 +76,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!dbSVC.Init())
+            if (!loadDbRepositories())
             {
                 // TODO: log this shit bruh
                 return 1;
@@ -107,6 +107,37 @@ namespace Navislamia.Game
             networkSVC.StartListener();
 
             return 0;
+        }
+
+        bool loadDbRepositories()
+        {
+            List<Task<int>> loadTasks = new List<Task<int>>();
+
+            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC.GetWorldConnection).Init()));
+
+            Task loadTask = Task.WhenAll(loadTasks);
+
+            try
+            {
+                loadTask.Wait();
+            }
+            catch (Exception ex) { }
+
+            if (!loadTask.IsCompletedSuccessfully)
+            {
+                foreach (Task<int> task in loadTasks)
+                {
+                    if (task.IsFaulted)
+                    {
+                        notificationSVC.WriteError($"{task.GetType().Name} task has failed!");
+                        notificationSVC.WriteException(task.Exception);
+                    }
+                }
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

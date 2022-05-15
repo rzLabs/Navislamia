@@ -4,7 +4,6 @@ using Maps;
 using Microsoft.Extensions.DependencyInjection;
 using Navislamia.Command;
 using Navislamia.Command.Commands;
-using Navislamia.Data;
 using Navislamia.Game;
 using Navislamia.World;
 

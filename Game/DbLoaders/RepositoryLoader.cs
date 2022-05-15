@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Database.Loaders
+namespace Navislamia.Game.DbLoaders
 {
     public interface IRepositoryLoader
     {
         public int Init() => 0;
     }
 
-    public class RepositoryLoader
+    public class RepositoryLoader : IRepositoryLoader
     {
         INotificationService notificationSVC;
 
