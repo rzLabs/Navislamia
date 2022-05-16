@@ -19,6 +19,8 @@ using Spectre.Console;
 using Navislamia.World;
 using System.Threading;
 using Navislamia.Game.DbLoaders;
+using Navislamia.Database.Interfaces;
+using System.Text;
 
 namespace Navislamia.Game
 {
@@ -32,6 +34,8 @@ namespace Navislamia.Game
         IMapService mapSVC;
         INetworkService networkSVC;
 
+        List<IRepository> worldRepositories;
+
         public GameModule() { }
 
         public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
@@ -44,6 +48,8 @@ namespace Navislamia.Game
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
+
+            worldRepositories = new List<IRepository>();
         }
 
         public async Task<int> Start(string ip, int port, int backlog)
@@ -76,7 +82,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!loadDbRepositories())
+            if (!await loadDbRepositories())
             {
                 // TODO: log this shit bruh
                 return 1;
@@ -98,10 +104,10 @@ namespace Navislamia.Game
                     return 1;
                 }
 
-                curTime += 500;
+                curTime += 250;
 
                 // Wait for the auth/upload servers to respond
-                Thread.Sleep(500);
+                Thread.Sleep(250);
             }
 
             networkSVC.StartListener();
@@ -109,33 +115,30 @@ namespace Navislamia.Game
             return 0;
         }
 
-        bool loadDbRepositories()
+        async Task<bool> loadDbRepositories()
         {
-            List<Task<int>> loadTasks = new List<Task<int>>();
+            List<Task<RepositoryLoader>> loadTasks = new List<Task<RepositoryLoader>>();
 
-            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC.GetWorldConnection).Init()));
-
-            Task loadTask = Task.WhenAll(loadTasks);
+            loadTasks.Add(Task.Run(() => new MonsterLoader(notificationSVC, dbSVC.WorldConnection).Init()));
+            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC.WorldConnection).Init()));
 
             try
             {
-                loadTask.Wait();
+                while (loadTasks.Any())
+                {
+                    var task = await Task.WhenAny(loadTasks);
+
+                    RepositoryLoader loader = task.Result;
+
+                    foreach (IRepository repo in loader.Repositories)
+                        worldRepositories.Add(repo);
+
+                    loadTasks.Remove(task);
+                }
             }
             catch (Exception ex) { }
 
-            if (!loadTask.IsCompletedSuccessfully)
-            {
-                foreach (Task<int> task in loadTasks)
-                {
-                    if (task.IsFaulted)
-                    {
-                        notificationSVC.WriteError($"{task.GetType().Name} task has failed!");
-                        notificationSVC.WriteException(task.Exception);
-                    }
-                }
-
-                return false;
-            }
+            //foreach (Task<int> task in loadTasks)
 
             return true;
         }

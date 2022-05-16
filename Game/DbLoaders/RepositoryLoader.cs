@@ -11,6 +11,8 @@ namespace Navislamia.Game.DbLoaders
     public interface IRepositoryLoader
     {
         public int Init() => 0;
+
+        public List<IRepository> Repositories { get; set; }
     }
 
     public class RepositoryLoader : IRepositoryLoader
@@ -19,46 +21,36 @@ namespace Navislamia.Game.DbLoaders
 
         public List<Task<IRepository>> Tasks = new List<Task<IRepository>>();
 
+        public List<IRepository> Repositories { get; set; } = new List<IRepository>();
+
         public RepositoryLoader(INotificationService notificationService)
         {
             notificationSVC = notificationService;
         }
 
-        public bool Execute()
+        public async Task<bool> Execute()
         {
-            Task loadTask = Task.WhenAll(Tasks);
-
             try
             {
-                loadTask.Wait();
+                StringBuilder sb = new StringBuilder($"[yellow]{GetType().Name}[/] [green]load completed successfully![/]\n");
+
+                while (Tasks.Any())
+                {
+                    var task = await Task.WhenAny(Tasks);
+
+                    IRepository repo = task.Result;
+
+                    Repositories.Add(repo);
+
+                    sb.AppendLine($"\t- " +
+                        $"[yellow]{repo.Count}[/] rows loaded from {repo.Name}");
+
+                    notificationSVC.WriteMarkup(sb.ToString());
+
+                    Tasks.Remove(task);
+                }
             }
             catch (Exception ex) { }
-
-            if (!loadTask.IsCompletedSuccessfully)
-            {
-                foreach (Task<IRepository> task in Tasks)
-                {
-                    if (task.IsFaulted)
-                    {
-                        notificationSVC.WriteError($"A load in the {GetType().Name} has encountered an exception!");
-                        notificationSVC.WriteException(task.Exception);
-                    }
-                }
-
-                return false;
-            }
-
-            StringBuilder sb = new StringBuilder($"[yellow]{GetType().Name}[/] [green]load completed successfully![/]\n");
-
-            foreach (Task<IRepository> task in Tasks) // Write success msgs
-            {
-                IRepository repo = task.Result;
-
-                sb.AppendLine($"\t- " +
-                    $"[yellow]{repo.Count}[/] rows loaded from {repo.Name}");
-            }
-
-            notificationSVC.WriteMarkup(sb.ToString());
 
             return true;
         }

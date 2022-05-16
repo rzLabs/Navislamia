@@ -1,4 +1,5 @@
-﻿using Navislamia.Database.Repositories;
+﻿using Navislamia.Database.Interfaces;
+using Navislamia.Database.Repositories;
 using Notification;
 using System;
 using System.Collections.Generic;
@@ -18,14 +19,14 @@ namespace Navislamia.Game.DbLoaders
             dbConnection = connection;
         }
 
-        public int Init()
+        public async Task<RepositoryLoader> Init()
         {
             Tasks.Add(Task.Run(() => new StringRepository(dbConnection).Load()));
 
-            if (!Execute())
-                return 1;
+            if (!await Execute())
+                return null;
 
-            return 0;
+            return this;
         }
     }
 }

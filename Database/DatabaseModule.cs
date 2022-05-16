@@ -8,8 +8,6 @@ using Notification;
 
 using Navislamia.Database.Contexts;
 using Navislamia.Database.Enums;
-using Navislamia.Database.Interfaces;
-using Navislamia.Database.Repositories;
 
 using Dapper;
 using System.Text;
@@ -37,9 +35,9 @@ namespace Database
             playerDbContext = new PlayerDbContext(configSVC);
         }
 
-        public IDbConnection GetWorldConnection => worldDbContext.CreateConnection();
+        public IDbConnection WorldConnection => worldDbContext.CreateConnection();
 
-        public IDbConnection GetPlayerConnection => playerDbContext.CreateConnection();
+        public IDbConnection PlayerConnection => playerDbContext.CreateConnection();
 
         public async Task<int> ExecuteScalar(string command, DbContextType type = DbContextType.Player)
         {

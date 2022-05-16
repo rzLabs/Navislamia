@@ -12,9 +12,9 @@ namespace Database
 {
     public interface IDatabaseService
     {
-        public IDbConnection GetWorldConnection { get;  }
+        public IDbConnection WorldConnection { get;  }
 
-        public IDbConnection GetPlayerConnection { get;  }
+        public IDbConnection PlayerConnection { get;  }
 
         public async Task<int> ExecuteScalar(string command, DbContextType type = DbContextType.Player) => 0;
 
