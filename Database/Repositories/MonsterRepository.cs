@@ -41,7 +41,6 @@ namespace Navislamia.Database.Repositories
                     monster.ID = sqlRdr.GetInt32(0);
                     monster.MonsterGroup = sqlRdr.GetInt32(1);
 
-
                 }
             }
             catch (Exception ex)

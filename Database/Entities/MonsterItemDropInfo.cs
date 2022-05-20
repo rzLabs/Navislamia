@@ -9,7 +9,7 @@ namespace Navislamia.Database.Entities
     public struct MonsterItemDropInfo
     {
         public int ItemID;
-        public int Percentage;
+        public float Percentage;
         public short MinCount, MaxCount;
         public short MinLevel, MaxLevel;
     }

@@ -22,7 +22,8 @@ namespace Navislamia.Game.DbLoaders
 
         public async Task<RepositoryLoader> Init()
         {
-            Tasks.Add(Task.Run(() => new MonsterSkillRepository(dbConnection).Load()));
+            IRepository skillRepo = await new MonsterSkillRepository(dbConnection).Load();
+            IRepository dropRepo = await new MonsterItemDropRepository(dbConnection).Load();
             //Tasks.Add(Task.Run(() => new MonsterRepository(dbConnection).Load()));
 
             if (!await Execute())

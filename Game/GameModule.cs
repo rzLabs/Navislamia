@@ -138,8 +138,6 @@ namespace Navislamia.Game
             }
             catch (Exception ex) { }
 
-            //foreach (Task<int> task in loadTasks)
-
             return true;
         }
     }
