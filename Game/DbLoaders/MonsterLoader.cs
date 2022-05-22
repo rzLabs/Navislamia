@@ -1,11 +1,8 @@
-﻿using Navislamia.Database.Interfaces;
+﻿using Database;
+using Navislamia.Database.Entities;
 using Navislamia.Database.Repositories;
 using Notification;
-using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Navislamia.Game.DbLoaders
@@ -13,30 +10,40 @@ namespace Navislamia.Game.DbLoaders
 
     public class MonsterLoader : RepositoryLoader
     {
-        IDbConnection dbConnection;
+        IDatabaseService dbSVC;
 
-        public MonsterLoader(INotificationService notificationService, IDbConnection connection) : base(notificationService) 
+        public MonsterLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService) 
         {
-            dbConnection = connection;
+            dbSVC = databaseService;
         }
 
         public async Task<RepositoryLoader> Init()
         {
-            IRepository skillRepo = await new MonsterSkillRepository(dbConnection).Load();
-            IRepository dropRepo = await new MonsterItemDropRepository(dbConnection).Load();
-            //Tasks.Add(Task.Run(() => new MonsterRepository(dbConnection).Load()));
+            Tasks.Add(new MonsterSkillRepository(dbSVC.WorldConnection).Load());
+            Tasks.Add(new MonsterItemDropRepository(dbSVC.WorldConnection).Load());
+            Tasks.Add(new MonsterRepository(dbSVC.WorldConnection).Load());
 
             if (!await Execute())
                 return null;
 
+            var monsterRepo = Repositories.Find(r=>r.Name == "MonsterResource").GetData<MonsterBase>();
+
+            if (monsterRepo != null)
+            {
+                var skills = new List<MonsterSkill>(Repositories.Find(r=>r.Name == "MonsterSkillResource").GetData<MonsterSkill>());
+                var drops = new List<MonsterItemDrop>(Repositories.Find(r=>r.Name == "MonsterDropTableResource").GetData<MonsterItemDrop>());
+
+                foreach (var monster in monsterRepo)
+                {
+                    if (monster.SkillLinkID > 0)
+                        monster.SkillInfoList = skills?.Find(s=>s.ID == monster.SkillLinkID);
+
+                    if (monster.DropLinkID > 0)
+                        monster.ItemDropList = drops?.Find(d=>d.ID == monster.DropLinkID);
+                }
+            }
+
             return this;
         }
-
-        // TODO:
-        //LoadMonsterData(); -> Monster, MonsterSkill, MonsterDrop
-        //LoadSummonData();
-        //LoadSummonLevelBonusData();
-        //LoadDropGroupData();
-        //LoadSummonNames();
     }
 }

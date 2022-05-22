@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
@@ -17,9 +16,9 @@ namespace Navislamia.Database.Repositories
 
         IDbConnection dbConnection;
 
-        IEnumerable<MonsterItemDropInfo> Data;
+        IEnumerable<MonsterItemDrop> Data;
 
-        public string Name => "MonsterItemDropInfo";
+        public string Name => "MonsterDropTableResource";
 
         public int Count => Data?.Count() ?? 0;
 
@@ -29,52 +28,49 @@ namespace Navislamia.Database.Repositories
 
         public async Task<IRepository> Load()
         {
-            int lastID = 0;
+            var monsterDrops = new List<MonsterItemDrop>();
 
+            using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
+
+            MonsterItemDropInfo itemDrop;
             List<MonsterItemDropInfo> itemDrops = new List<MonsterItemDropInfo>();
 
-            try
+            var lastID = 0;
+
+            while (sqlRdr.Read())
             {
-                using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
+                var id = Convert.ToInt32(sqlRdr["id"]);
 
-                var itemIdx = 1;
-                var itemDrop = new MonsterItemDropInfo();
-
-                while (sqlRdr.Read())
+                for (int i = 0; i < itemDropsPerRow; i++) // we must add every valid drop in this loop (up to 10)
                 {
-                    var itemID = Convert.ToInt32(sqlRdr[$"drop_item_id_{(itemIdx - 1):D2}"]);
+                    var itemID = Convert.ToInt32(sqlRdr[$"drop_item_id_{(i):D2}"]);
 
-                    if (itemID != lastID)
-                    {
-                        itemDrops.Add(itemDrop);
+                    if (itemID == 0)
+                        continue;
 
-                        itemDrop = new MonsterItemDropInfo();
+                    itemDrop = new MonsterItemDropInfo();
+                    
+                    itemDrop.ItemID = itemID;
+                    itemDrop.Percentage = Convert.ToSingle(sqlRdr[$"drop_percentage_{(i):D2}"]);
+                    itemDrop.MinCount = Convert.ToInt16(sqlRdr[$"drop_min_count_{(i):D2}"]);
+                    itemDrop.MaxCount = Convert.ToInt16(sqlRdr[$"drop_max_count_{(i):D2}"]);
+                    itemDrop.MinLevel = Convert.ToInt16(sqlRdr[$"drop_min_level_{(i):D2}"]);
+                    itemDrop.MaxLevel = Convert.ToInt16(sqlRdr[$"drop_max_level_{(i):D2}"]);
 
-                        lastID = itemID;
-                    }
+                    itemDrops.Add(itemDrop);
+                }
 
-                    for (int i = 0; i < itemDropsPerRow; i++) // we must add every valid drop in this loop (up to 10)
-                    {
-                        if (itemID == 0) // there is no valid skill here, proceed
-                            continue;
+                if (id != lastID)
+                {
+                    lastID = id;
 
-                        itemDrop.ItemID = itemID;
-                        itemDrop.Percentage = Convert.ToSingle(sqlRdr[$"drop_percentage_{(itemIdx - 1):D2}"]);
-                        itemDrop.MinCount = Convert.ToInt16(sqlRdr[$"drop_min_count_{(itemIdx - 1):D2}"]);
-                        itemDrop.MinCount = Convert.ToInt16(sqlRdr[$"drop_max_count_{(itemIdx - 1):D2}"]);
-                        itemDrop.MinLevel = Convert.ToInt16(sqlRdr[$"drop_min_level_{(itemIdx - 1):D2}"]);
-                        itemDrop.MinLevel = Convert.ToInt16(sqlRdr[$"drop_max_level_{(itemIdx - 1):D2}"]);
+                    monsterDrops.Add(new MonsterItemDrop(lastID, itemDrops));
 
-                        itemDrops.Add(itemDrop);
-                    }
+                    itemDrops.Clear();
                 }
             }
-            catch (Exception ex)
-            {
 
-            }
-
-            Data = itemDrops;
+            Data = monsterDrops;
 
             return this;
         }

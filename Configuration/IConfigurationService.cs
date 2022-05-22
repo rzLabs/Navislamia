@@ -20,6 +20,8 @@ namespace Configuration
 
         object Get(string key, string parent = null, object defaultValue = null);
 
+        string GetDirectory(string key, string parent = null, string defaultValue = null);
+
         void Set(string key, string parent = null, object value = null);
     }
 }

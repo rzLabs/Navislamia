@@ -1,27 +1,22 @@
-﻿using Navislamia.Database.Interfaces;
+﻿using Database;
 using Navislamia.Database.Repositories;
 using Notification;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Navislamia.Game.DbLoaders
 {
     class StringLoader : RepositoryLoader
     {
-        IDbConnection dbConnection;
+        IDatabaseService dbSVC;
 
-        public StringLoader(INotificationService notificationService, IDbConnection connection) : base(notificationService) 
+        public StringLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService) 
         {
-            dbConnection = connection;
+            dbSVC = databaseService;
         }
 
         public async Task<RepositoryLoader> Init()
         {
-            Tasks.Add(Task.Run(() => new StringRepository(dbConnection).Load()));
+            Tasks.Add(Task.Run(() => new StringRepository(dbSVC.WorldConnection).Load()));
 
             if (!await Execute())
                 return null;

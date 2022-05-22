@@ -23,9 +23,10 @@
       "auth.server_idx": 1,
       "io.upload.ip": "127.0.0.1",
       "io.upload.port": 4616,
-      "io.ip": "127.0.0.1",
+      "io.ip": "0.0.0.0",
       "io.port": 4515,
       "io.backlog": 100,
+      "io.max_connection": 2000,
       "io.buffer_size": 32768,
       "cipher.key": "}h79q~B%al;k'y $E"
     }
@@ -35,13 +36,13 @@
     "Collection": {
       "world.ip": "127.0.0.1",
       "world.port": 1433,
-      "world.trusted_connection": true,
-      "world.name": "Arcadia",
+      "world.trusted_connection": false,
+      "world.name": "Arcadia73",
       "world.user": "sa",
       "world.user.pass": "",
       "player.ip": "127.0.0.1",
       "player.port": 1433,
-      "player.trusted_connection": true,
+      "player.trusted_connection": false,
       "player.name": "Telecaster",
       "player.user": "sa",
       "player.user.pass": ""
@@ -51,7 +52,7 @@
     "Category": "Scripts",
     "Collection": {
       "directory": ".\\Scripts",
-	  "skip_loading": false
+	    "skip_loading": false
     }
   },
   {
@@ -61,9 +62,15 @@
       "width": 700000,
       "height": 1000000,
       "max_layer": 256,
-      "skip_loading": false,
+      "skip_loading": true,
       "skip_loading_nfa": false,
       "no_collision_check": false
+    }
+  },
+  {
+    "Category": "GameRule",
+    "Collection": {
+      "MaxAccountLength": 60
     }
   }
 ]

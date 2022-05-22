@@ -32,8 +32,6 @@ namespace Navislamia.Game.DbLoaders
         {
             try
             {
-                StringBuilder sb = new StringBuilder($"[yellow]{GetType().Name}[/] [green]load completed successfully![/]\n");
-
                 while (Tasks.Any())
                 {
                     var task = await Task.WhenAny(Tasks);
@@ -42,15 +40,18 @@ namespace Navislamia.Game.DbLoaders
 
                     Repositories.Add(repo);
 
-                    sb.AppendLine($"\t- " +
-                        $"[yellow]{repo.Count}[/] rows loaded from {repo.Name}");
-
-                    notificationSVC.WriteMarkup(sb.ToString());
+                    notificationSVC.WriteMarkup($"[yellow]{GetType().Name}[/] [orange3]{repo.Count}[/] rows loaded from {repo.Name}");
 
                     Tasks.Remove(task);
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex) 
+            {
+                notificationSVC.WriteError($"An exception occured trying to execute one more Tasks in the {this.GetType().Name}!");
+                notificationSVC.WriteException(ex);
+
+                return false;
+            }
 
             return true;
         }

@@ -24,7 +24,7 @@ namespace Navislamia.Command
 
         string _input;
 
-        public string Input 
+        public string Input
         {
             get => _input;
             set => _input = value;
@@ -49,7 +49,7 @@ namespace Navislamia.Command
             {
                 config.AddCommand<About>("about").WithDescription("Print information about the Navislamia Framework").WithExample(new string[] { "about" });
                 config.AddCommand<GetConfiguration>("get").WithAlias("GetConfig").WithDescription("Print configuration value").WithExample(new string[] { "get", "io.ip" });
-                config.AddCommand<CreateDefaultConfig>("create_default_config").WithDescription("Create a new or overwrite existing Configuration.json with option t").WithExample(new string[] { "create_default_config", ".\\" });         
+                config.AddCommand<CreateDefaultConfig>("create_default_config").WithDescription("Create a new or overwrite existing Configuration.json with option t").WithExample(new string[] { "create_default_config", ".\\" });
             });
 
             return 0;
@@ -73,7 +73,7 @@ namespace Navislamia.Command
 
                 ConsoleKeyInfo key = Console.ReadKey(true);
 
-                if (key.Key == ConsoleKey.Oem3)
+                if (key.KeyChar == '`')
                 {
                     string input = AnsiConsole.Ask<string>("~ Command: ");
 
