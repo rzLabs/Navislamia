@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Diagnostics;
-
 using System.IO;
-using System.Linq;
-using System.Reflection;
 
 using Configuration;
 using Database;
@@ -15,12 +11,10 @@ using Scripting;
 
 using Serilog.Events;
 using System.Collections.Generic;
-using Spectre.Console;
 using Navislamia.World;
 using System.Threading;
 using Navislamia.Game.DbLoaders;
 using Navislamia.Database.Interfaces;
-using System.Text;
 
 namespace Navislamia.Game
 {
@@ -63,7 +57,7 @@ namespace Navislamia.Game
                     return 1;
                 }
 
-                notificationSVC.WriteSuccess(new string[] { $"Successfully started the script service!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
+                notificationSVC.WriteSuccess(new string[] { $"Script service started successfully!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
             else
                 notificationSVC.WriteWarning("Script loading disabled!");
@@ -77,22 +71,16 @@ namespace Navislamia.Game
                     return 1;
                 }
 
-                notificationSVC.WriteSuccess(new string[] { $"Successfully started the map service!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
+                notificationSVC.WriteSuccess(new string[] { $"Map service started successfully!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
             if (!await loadDbRepositories())
-            {
-                // TODO: log this shit bruh
                 return 1;
-            }
 
             if (networkSVC.Initialize() > 0)
-            {
-                // TODO: log this shit bruh
                 return 1;
-            }
 
             int curTime = 0;
             int maxTime = 5000;
@@ -117,26 +105,32 @@ namespace Navislamia.Game
 
         async Task<bool> loadDbRepositories()
         {
-            List<Task<RepositoryLoader>> loadTasks = new List<Task<RepositoryLoader>>();
+            var loadTasks = new List<Task<RepositoryLoader>>();
 
-            loadTasks.Add(Task.Run(() => new MonsterLoader(notificationSVC, dbSVC.WorldConnection).Init()));
-            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC.WorldConnection).Init()));
+            loadTasks.Add(Task.Run(() => new MonsterLoader(notificationSVC, dbSVC).Init()));
+            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC).Init()));
+
+            var loadTask = Task.WhenAll(loadTasks);
 
             try
             {
-                while (loadTasks.Any())
+                loadTask.Wait();
+
+                if (loadTask.IsCompletedSuccessfully)
                 {
-                    var task = await Task.WhenAny(loadTasks);
+                    foreach (var task in loadTasks)
+                            worldRepositories.AddRange(task.Result.Repositories);
 
-                    RepositoryLoader loader = task.Result;
-
-                    foreach (IRepository repo in loader.Repositories)
-                        worldRepositories.Add(repo);
-
-                    loadTasks.Remove(task);
+                    notificationSVC.WriteSuccess("\nDatabase repositories loaded successfully!");
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex) 
+            {
+                notificationSVC.WriteError("Database repositories failed to load!");
+                notificationSVC.WriteException(ex);
+
+                return false;
+            }
 
             return true;
         }

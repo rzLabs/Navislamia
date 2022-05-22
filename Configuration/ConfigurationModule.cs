@@ -122,6 +122,16 @@ namespace Configuration
             return (category.Collection.ContainsKey(key)) ? category.Collection[key] : defaultValue ?? default;
         }
 
+        public string GetDirectory(string key, string parent, string defaultValue = null)
+        {
+            var category = Configurations.Find(c=>c.Category == parent);
+
+            if (category is null)
+                return default;
+
+                return (category.Collection.ContainsKey(key)) ? category.Collection[key].ToString() : defaultValue ?? default;
+        }
+
         public void Set(string key, string parent = null, object value = null)
         {
             var category = Configurations.Find(c => c.Category == parent);
@@ -134,7 +144,9 @@ namespace Configuration
 
         public bool Load(string path = null)
         {
-            string filename = path ?? $"{Directory.GetCurrentDirectory()}\\{configName}";
+            var workingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            
+            string filename = path ?? $"{workingDir}//{configName}";
 
             if (!File.Exists(filename))
                 return false;

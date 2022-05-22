@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Entities
 {
+    public class MonsterItemDrop
+    {
+        public int ID;
+
+        public List<MonsterItemDropInfo> Drops;
+
+        public MonsterItemDrop(int id, List<MonsterItemDropInfo> drops)
+        {
+            ID = id;
+            Drops = drops;
+        }
+    }
+
     public struct MonsterItemDropInfo
     {
         public int ItemID;

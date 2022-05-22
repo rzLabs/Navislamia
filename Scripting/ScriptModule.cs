@@ -40,7 +40,7 @@ namespace Scripting
 
         public int Init(string directory = null)
         {
-            string scriptDir = directory ?? $"{Directory.GetCurrentDirectory()}\\Scripts\\";
+            string scriptDir = directory ?? @$"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/Scripts/";
 
             if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
             {
