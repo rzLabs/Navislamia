@@ -6,14 +6,10 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Interfaces
 {
-    public interface IRepository
+    public interface IRepository<T>
     {
         public string Name { get; }
 
-        public int Count { get; }
-
-        public IEnumerable<T> GetData<T>();
-
-        public async Task<IRepository> Load() => null;
+        public List<T> Fetch() => new List<T>();
     }
 }

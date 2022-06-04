@@ -122,16 +122,6 @@ namespace Configuration
             return (category.Collection.ContainsKey(key)) ? category.Collection[key] : defaultValue ?? default;
         }
 
-        public string GetDirectory(string key, string parent, string defaultValue = null)
-        {
-            var category = Configurations.Find(c=>c.Category == parent);
-
-            if (category is null)
-                return default;
-
-                return (category.Collection.ContainsKey(key)) ? category.Collection[key].ToString() : defaultValue ?? default;
-        }
-
         public void Set(string key, string parent = null, object value = null)
         {
             var category = Configurations.Find(c => c.Category == parent);
@@ -142,15 +132,12 @@ namespace Configuration
             Configurations[parent].Collection.Add(key, value);
         }
 
-        public bool Load(string path = null)
+        public bool Load()
         {
-            var workingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            
-            string filename = path ?? $"{workingDir}//{configName}";
+            string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), configName);
 
             if (!File.Exists(filename))
                 return false;
-
 
             string jsonStr = File.ReadAllText(filename);
 
@@ -170,9 +157,9 @@ namespace Configuration
             return false;
         }
 
-        public void Save(string path = null)
+        public void Save()
         {
-            string filename = path ?? $"{Directory.GetCurrentDirectory()}\\Configuration.json";
+            string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Configuration.json");
 
             var serializer = new JsonSerializer();
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -28,8 +29,6 @@ namespace Navislamia.Game
         IMapService mapSVC;
         INetworkService networkSVC;
 
-        List<IRepository> worldRepositories;
-
         public GameModule() { }
 
         public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
@@ -42,15 +41,13 @@ namespace Navislamia.Game
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
-
-            worldRepositories = new List<IRepository>();
         }
 
-        public async Task<int> Start(string ip, int port, int backlog)
+        public int Start(string ip, int port, int backlog)
         {
             if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
             {
-                if (scriptSVC.Init() > 0)
+                if (!scriptSVC.Initialize())
                 {
                     notificationSVC.WriteError("Failed to start script service!");
 
@@ -64,7 +61,7 @@ namespace Navislamia.Game
 
             if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
-                if (!mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
+                if (!mapSVC.Initialize())
                 {
                     notificationSVC.WriteError("Failed to start the map service!");
 
@@ -76,7 +73,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!await loadDbRepositories())
+            if (!loadDbRepositories())
                 return 1;
 
             if (networkSVC.Initialize() > 0)
@@ -103,34 +100,27 @@ namespace Navislamia.Game
             return 0;
         }
 
-        async Task<bool> loadDbRepositories()
+        bool loadDbRepositories()
         {
-            var loadTasks = new List<Task<RepositoryLoader>>();
+            StringBuilder sb = new StringBuilder("Loading database repositories...\n");
 
-            loadTasks.Add(Task.Run(() => new MonsterLoader(notificationSVC, dbSVC).Init()));
-            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC).Init()));
+            GameContent.Strings = new StringLoader(dbSVC, notificationSVC).Strings;
 
-            var loadTask = Task.WhenAll(loadTasks);
+            sb.AppendLine($"- [orange3]{GameContent.Strings.Count}[/] strings loaded!");
 
-            try
-            {
-                loadTask.Wait();
+            var monsterLoader = new MonsterLoader(dbSVC, notificationSVC);
 
-                if (loadTask.IsCompletedSuccessfully)
-                {
-                    foreach (var task in loadTasks)
-                            worldRepositories.AddRange(task.Result.Repositories);
+            GameContent.MonsterInfo = monsterLoader.Monsters;
 
-                    notificationSVC.WriteSuccess("\nDatabase repositories loaded successfully!");
-                }
-            }
-            catch (Exception ex) 
-            {
-                notificationSVC.WriteError("Database repositories failed to load!");
-                notificationSVC.WriteException(ex);
+            sb.AppendLine($"- [orange3]{monsterLoader.Skills.Count}[/] monster skills loaded!");
+            sb.AppendLine($"- [orange3]{monsterLoader.Drops.Count}[/] monster drops loaded!");
+            sb.AppendLine($"- [orange3]{monsterLoader.Monsters.Count}[/] monsters loaded!");
 
-                return false;
-            }
+            GameContent.NpcInfo = new NpcLoader(dbSVC, notificationSVC).Npc;
+
+            sb.AppendLine($"- [orange3]{GameContent.NpcInfo.Count}[/] npc loaded!");
+
+            notificationSVC.WriteMarkup(sb.ToString());
 
             return true;
         }

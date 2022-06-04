@@ -12,9 +12,9 @@ namespace Configuration
 
         int TotalCount { get;  }
 
-        bool Load(string path = null);
+        bool Load();
 
-        void Save(string path = null);
+        void Save();
 
         T Get<T>(string key, string parent = null, object defaultValue = null);
 

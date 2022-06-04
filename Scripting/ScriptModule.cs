@@ -38,14 +38,14 @@ namespace Scripting
             notificationSVC = notificationService;
         }
 
-        public int Init(string directory = null)
+        public bool Initialize()
         {
-            string scriptDir = directory ?? @$"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/Scripts/";
+            string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
 
             if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
             {
                 notificationSVC.WriteMarkup("[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]", LogEventLevel.Error);
-                return 1;
+                return false;
             }
 
             ScriptsDirectory = scriptDir;
@@ -54,7 +54,7 @@ namespace Scripting
 
             loadScripts();
 
-            return 0;
+            return true;
         }
 
         public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;

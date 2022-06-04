@@ -1,27 +1,31 @@
 ﻿using Database;
+using Navislamia.Database.Entities;
 using Navislamia.Database.Repositories;
 using Notification;
+using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using System.Linq;
 
 namespace Navislamia.Game.DbLoaders
 {
     class StringLoader : RepositoryLoader
     {
-        IDatabaseService dbSVC;
+        public List<StringResource> Strings = new List<StringResource>();
 
-        public StringLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService) 
+        public StringLoader(IDatabaseService databaseService, INotificationService notificationService) : base(databaseService, notificationService) 
         {
-            dbSVC = databaseService;
-        }
+            try {
+                Strings = new StringRepository(DatabaseService.WorldConnection).Fetch();
+            }
+            catch (Exception ex)
+            {
+                notificationService.WriteError("An exception has occured when executing the StringLoader!");
+                notificationService.WriteException(ex);
 
-        public async Task<RepositoryLoader> Init()
-        {
-            Tasks.Add(Task.Run(() => new StringRepository(dbSVC.WorldConnection).Load()));
-
-            if (!await Execute())
-                return null;
-
-            return this;
+                return;
+            }
         }
     }
 }

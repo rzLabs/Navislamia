@@ -26,6 +26,7 @@ namespace Maps
         static int mapWidth = 700000;
         static int mapHeight = 1000000;
 
+        // No reason to move this to GameContent, would be a hassle
         public static QuadTree QtLocationInfo = new QuadTree(0, 0, mapWidth, mapHeight);
         public static QuadTree QtBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
         public static QuadTree QtAutoBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
@@ -57,8 +58,10 @@ namespace Maps
             registerMapLocationInfo(location_info);
         }
 
-        public bool Initialize(string directory)
+        public bool Initialize()
         {
+            var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Maps");
+            
             List<Task> tasks = new List<Task>();
             Task worker = null;
 
@@ -66,13 +69,13 @@ namespace Maps
 
             tasks.Add(Task.Run(() =>
             {
-                seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
+                seamlessWorldInfo.Initialize(Path.Combine(directory, "terrainseamlessworld.cfg"));
                 notificationSVC.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
             }));
 
             tasks.Add(Task.Run(() =>
             {
-                propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
+                propInfo.Initialize(Path.Combine(directory, "terrainpropinfo.cfg"));
                 notificationSVC.WriteSuccess("TerrainPropInfo.cfg loaded!");
             }));
 
@@ -115,7 +118,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
+                        LoadLocationFile(Path.Combine(directory, locationFileName), x, y, attrLen, mapLength);
                     }));
 
                     string scriptFileName = seamlessWorldInfo.GetScriptFileName(x, y);
@@ -125,7 +128,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
+                        LoadScriptFile(Path.Combine(directory, scriptFileName), x, y, attrLen, mapLength, propInfo);
                     }));
 
                     if (!skipNFA)
@@ -137,7 +140,7 @@ namespace Maps
 
                         tasks.Add(Task.Run(() =>
                         {
-                            LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
+                            LoadAttributeFile(Path.Combine(directory, attributeFileName), x, y, attrLen, mapLength);
                         }));
                     }
 
@@ -148,7 +151,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
+                        LoadEventAreaFile(Path.Combine(directory, eventAreaFileName), x, y, attrLen, mapLength);
                     }));
 
                     worker = Task.WhenAll(tasks);

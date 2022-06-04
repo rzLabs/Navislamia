@@ -10,27 +10,21 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
 {
-    public class MonsterRepository : IRepository
+    public class MonsterRepository : IRepository<MonsterBase>
     {
         const string query = "select * from dbo.MonsterResource with (nolock)";
 
         IDbConnection dbConnection;
 
-        IEnumerable<MonsterBase> Data;
-
         public string Name => "MonsterResource";
-
-        public int Count => Data?.Count() ?? 0;
-
-        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
         public MonsterRepository(IDbConnection connection) => dbConnection = connection;
 
-        public async Task<IRepository> Load()
+        public List<MonsterBase> Fetch()
         {
             List<MonsterBase> monsters = new List<MonsterBase>();
 
-            using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
+            using IDataReader sqlRdr = dbConnection.ExecuteReaderAsync(query).Result;
 
             while (sqlRdr.Read())
             {
@@ -91,10 +85,7 @@ namespace Navislamia.Database.Repositories
                 monsters.Add(monster);
             }
 
-            Data = monsters;
-
-            return this;
-        }
-
+            return monsters;
+        } 
     }
 }

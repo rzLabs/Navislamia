@@ -8,7 +8,7 @@ namespace Scripting
     {
         public int ScriptCount { get; set; }
 
-        public int Init(string path = null);
+        public bool Initialize();
 
         public int RunString(string script);
 

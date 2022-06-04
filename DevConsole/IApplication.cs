@@ -4,6 +4,6 @@ namespace DevConsole
 {
     public interface IApplication
     {
-        public async Task<int> Run() => 0;
+        public int Run() => 0;
     }
 }
