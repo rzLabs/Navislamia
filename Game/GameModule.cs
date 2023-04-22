@@ -1,51 +1,62 @@
 ﻿using System;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 
-using Configuration;
 using Database;
 using Maps;
 using Network;
 using Notification;
 using Scripting;
 
-using Serilog.Events;
-using System.Collections.Generic;
-using Navislamia.World;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Navislamia.Configuration.Options;
 using Navislamia.Game.DbLoaders;
-using Navislamia.Database.Interfaces;
 
 namespace Navislamia.Game
 {
     public class GameModule : IGameService
     {
-        IConfigurationService configSVC;
-        IWorldService worldSVC;
         IDatabaseService dbSVC;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
         IMapService mapSVC;
         INetworkService networkSVC;
-
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<GameModule> _logger;
+        private readonly ScriptOptions _scriptOptions;
+        private readonly MapOptions _mapOptions;
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
-            IScriptingService scriptingService, IMapService mapService, INetworkService networkService)
+        public GameModule(INotificationService notificationService, IDatabaseService databaseService, 
+            IScriptingService scriptingService, IMapService mapService, INetworkService networkService, 
+            IConfiguration configuration, ILogger<GameModule> logger)
         {
-            configSVC = configurationService;
-            worldSVC = contentService;
             notificationSVC = notificationService;
             dbSVC = databaseService;
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
+            _configuration = configuration;
+            _logger = logger;
+            
+            _scriptOptions = _configuration.GetSection("Script").Get<ScriptOptions>();
+            _mapOptions = _configuration.GetSection("Map").Get<MapOptions>();
+
+            if (_scriptOptions == null || _mapOptions == null)
+            {
+                throw new Exception("Script and/or Map options could not be loaded");
+            }
+
         }
 
         public int Start(string ip, int port, int backlog)
         {
-            if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
+            if (_scriptOptions.SkipLoading)
+            {
+                _logger.LogWarning("Script loading disabled!");
+            }
+            else
             {
                 if (!scriptSVC.Initialize())
                 {
@@ -56,10 +67,12 @@ namespace Navislamia.Game
 
                 notificationSVC.WriteSuccess(new string[] { $"Script service started successfully!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
+           
+            if (_mapOptions.SkipLoading)
+            {
+                _logger.LogWarning("Map loading disabled!");
+            }
             else
-                notificationSVC.WriteWarning("Script loading disabled!");
-
-            if (!configSVC.Get<bool>("skip_loading", "Maps", false))
             {
                 if (!mapSVC.Initialize())
                 {
@@ -70,10 +83,8 @@ namespace Navislamia.Game
 
                 notificationSVC.WriteSuccess(new string[] { $"Map service started successfully!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
-            else
-                notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!loadDbRepositories())
+            if (!LoadDbRepositories())
                 return 1;
 
             if (networkSVC.Initialize() > 0)
@@ -100,7 +111,7 @@ namespace Navislamia.Game
             return 0;
         }
 
-        bool loadDbRepositories()
+        bool LoadDbRepositories()
         {
             StringBuilder sb = new StringBuilder("Loading database repositories...\n");
 

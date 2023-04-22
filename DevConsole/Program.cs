@@ -1,29 +1,65 @@
-﻿using Navislamia.Command;
-using Spectre.Console;
-using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Configuration;
+using Configuration.Options;
+using Database;
+using Maps;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Navislamia.Command;
+using Navislamia.Configuration.Options;
+using Navislamia.Game;
+using Navislamia.World;
+using Network;
+using Scripting;
+
 
 namespace DevConsole
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        public static Task Main(string[] args)
         {
-            var container = ContainerConfig.Configure();
-            var resolver = container.Build();      
-            var app = resolver.Resolve(typeof(IApplication)) as IApplication;
+            var host = CreateHostBuilder(args).Build();
+            var app = ActivatorUtilities.CreateInstance<Application>(host.Services);
+            app.Run();
+            return Task.CompletedTask;
+        }
 
-            if (app.Run() == 0) // If the application has started without error, only then expose the command module
-            {
-                var cli = resolver.Resolve(typeof(ICommandService)) as ICommandService;
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
+                    .ConfigureAppConfiguration((context, configuration) =>
+                    {
+                        configuration.Sources.Clear();
+                        configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                        configuration.AddEnvironmentVariables();
+                        configuration.AddCommandLine(args);
+                    })
+                    .ConfigureServices((context, services) =>
+                    {
+                        // Options
+                        services.AddOptions<DatabaseOptions>();
+                        services.AddOptions<NetworkOptions>();
+                        services.AddOptions<ScriptOptions>();
+                        services.AddOptions<MapOptions>();
+                        services.AddOptions<WorldOptions>();
+                        services.AddOptions<PlayerOptions>();
 
-                if (cli.Init(container) > 0)
-                    return;
-
-                while (true)
-                    if (cli.Wait() == 0)
-                        break;
-            }
+                        // Services
+                        services.AddSingleton<ICommandService, CommandModule>();
+                        services.AddSingleton<IDatabaseService, DatabaseModule>();
+                        services.AddSingleton<IWorldService, WorldModule>();
+                        services.AddSingleton<IScriptingService, ScriptModule>();
+                        services.AddSingleton<IMapService, MapModule>();
+                        services.AddSingleton<INetworkService, NetworkModule>();
+                        services.AddSingleton<IGameService, GameModule>();
+                    })
+                    .ConfigureLogging((context, logging) => {
+                        logging.AddConfiguration(context.Configuration.GetSection("Logging"));
+                        logging.AddConsole();
+                    });
         }
     }
 }
