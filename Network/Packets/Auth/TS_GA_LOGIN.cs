@@ -27,7 +27,7 @@ namespace Navislamia.Network.Packets.Auth
 
         public int ServerPort { get; set; }
 
-        public TS_GA_LOGIN(ushort index, string ip, short port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) 
+        public TS_GA_LOGIN(ushort index, string ip, int port, string name, string screenshotUrl = "about:blank", bool isAdult = false) : base(id) 
         {
 
             ServerIndex = index;

@@ -41,12 +41,15 @@ namespace Network
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
 
+        private readonly NetworkOptions _networkOptions;
+
         public NetworkModule() { }
 
-        public NetworkModule(IOptions<>, INotificationService notificationService)
+        public NetworkModule(IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             notificationSVC = notificationService;
-
+            _networkOptions = networkOptions.Value;
+            
             authActionSVC = new AuthActions(configSVC, notificationSVC, this);
             gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
             uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
@@ -77,10 +80,10 @@ namespace Network
 
             notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
 
-            if (sendGSInfoToAuth() > 0)
+            if (SendGsInfoToAuth() > 0)
                 return 2;
 
-            if (connectToUpload() > 0)
+            if (ConnectToUpload() > 0)
                 return 3;
 
             notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
@@ -93,8 +96,8 @@ namespace Network
 
         int ConnectToAuth()
         {
-            string addrStr = configSVC.Get<string>("io.auth.ip", "Network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.auth.port", "Network", 4502);
+            string addrStr = _networkOptions.Ip;
+            int port = _networkOptions.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -114,7 +117,7 @@ namespace Network
 
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = _networkOptions.BufferSize;
 
             int status = 0;
 
@@ -140,13 +143,13 @@ namespace Network
             return 0;
         }
 
-        int sendGSInfoToAuth()
+        int SendGsInfoToAuth()
         {
             try
             {
                 var idx = configSVC.Get<ushort>("index", "Server", 0);
-                var ip = configSVC.Get<string>("io.ip", "Network", "127.0.0.1");
-                var port = configSVC.Get<short>("io.port", "Network", 4515);
+                var ip = _networkOptions.Ip;
+                var port = _networkOptions.Port;
                 var name = configSVC.Get<string>("name", "Server", "Navislamia");
                 var screenshot_url = configSVC.Get<string>("screenshort.url", "Server", "about:blank");
                 var adult_server = configSVC.Get<bool>("adult", "Server", false);
@@ -165,10 +168,10 @@ namespace Network
             return 0;
         }
         
-        int connectToUpload()
+        int ConnectToUpload()
         {
-            string addrStr = configSVC.Get<string>("io.upload.ip", "Network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.upload.port", "Network", 4616);
+            string addrStr = _networkOptions.UploadIp;
+            int port = _networkOptions.UploadPort;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -188,7 +191,7 @@ namespace Network
 
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = _networkOptions.BufferSize
 
             int status = 0;
 
@@ -234,11 +237,11 @@ namespace Network
             return 0;
         }
 
-        int startClientListener()
+        int StartClientListener()
         {
-            string addrStr = configSVC.Get<string>("io.ip", "Network", "0.0.0.0");
-            short port = configSVC.Get<short>("io.port", "Network", 4515);
-            int backlog = configSVC.Get<int>("io.backlog", "Network", 100);
+            string addrStr = _networkOptions.Ip;
+            int port = _networkOptions.Port;
+            int backlog = _networkOptions.Backlog;
 
             IPAddress addr;
 
@@ -275,7 +278,7 @@ namespace Network
 
         public int StartListener()
         {
-            if (startClientListener() > 0)
+            if (StartClientListener() > 0)
             {
                 notificationSVC.WriteError("Failed to start client listener!");
                 return 1;
