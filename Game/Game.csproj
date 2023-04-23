@@ -26,11 +26,4 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="..\DevConsole\appsettings.json">
-      <Link>appsettings.json</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>

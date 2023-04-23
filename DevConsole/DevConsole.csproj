@@ -20,6 +20,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Remove="ContainerConfig.cs" />
   </ItemGroup>
 
   <ItemGroup>
