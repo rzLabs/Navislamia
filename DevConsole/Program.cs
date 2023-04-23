@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Configuration;
 using Configuration.Options;
 using Database;
@@ -14,6 +12,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Game;
 using Navislamia.World;
 using Network;
+using Notification;
 using Scripting;
 
 
@@ -48,13 +47,15 @@ class Program
                 services.Configure<PlayerOptions>(context.Configuration.GetSection("Player"));
 
                 // Services
-                services.AddTransient<ICommandService, CommandModule>();
-                services.AddTransient<IDatabaseService, DatabaseModule>();
-                services.AddTransient<IWorldService, WorldModule>();
-                services.AddTransient<IScriptingService, ScriptModule>();
-                services.AddTransient<IMapService, MapModule>();
-                services.AddTransient<INetworkService, NetworkModule>();
-                services.AddTransient<IGameService, GameModule>();
+                services.AddSingleton<ICommandService, CommandModule>();
+                services.AddSingleton<IDatabaseService, DatabaseModule>();
+                services.AddSingleton<IWorldService, WorldModule>();
+                services.AddSingleton<IScriptingService, ScriptModule>();
+                services.AddSingleton<IMapService, MapModule>();
+                services.AddSingleton<INetworkService, NetworkModule>();
+                services.AddSingleton<IGameService, GameModule>();
+                services.AddSingleton<INotificationService, NotificationModule>();
+                services.AddSingleton<IConfigurationService, ConfigurationModule>();
             })
             .ConfigureLogging((context, logging) => {
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));

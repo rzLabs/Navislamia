@@ -8,32 +8,35 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
+using Navislamia.World;
 
 namespace Navislamia.Database.Contexts
 {
     public class WorldDbContext : IDbContext
     {
-        private IConfigurationService _configSVC;
+        private readonly WorldOptions _worldOptions;
         private string _connString;
         
-        public WorldDbContext(IConfigurationService configSVC)
+        public WorldDbContext(IOptions<WorldOptions> worldOptions)
         {
-            _configSVC = configSVC;
-            buildConnString();
+            _worldOptions = worldOptions.Value;
+            BuildConnString();
         }
 
         public IDbConnection CreateConnection() => new SqlConnection(_connString);
 
-        private void buildConnString()
+        private void BuildConnString()
         {
-            string ip = _configSVC.Get<string>("world.ip", "Database", "127.0.0.1");
-            string name = _configSVC.Get<string>("world.name", "Database", "Arcadia");
-            string user = _configSVC.Get<string>("world.user", "Database", "sa");
-            string pass = _configSVC.Get<string>("world.user.pass", "Database", "");
-            bool trusted = _configSVC.Get<bool>("world.trusted_connection", "Database", false);
+            string ip = _worldOptions.Ip;
+            string dbName = _worldOptions.DbName;
+            string user = _worldOptions.User;
+            string pass = _worldOptions.Password;
+            bool trusted = _worldOptions.IsTrustedConnection;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("Server={0};Database={1};", ip, name);
+            sb.AppendFormat("Server={0};Database={1};", ip, dbName);
             if (trusted)
                 sb.Append("Trusted_Connection=true;");
             else

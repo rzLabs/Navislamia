@@ -11,14 +11,16 @@ using Navislamia.Database.Enums;
 
 using Dapper;
 using System.Text;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 
 namespace Database
 {
     public class DatabaseModule : IDatabaseService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
-
+        private readonly WorldOptions _worldOptions;
+        private readonly PlayerOptions _playerOptions;
         WorldDbContext worldDbContext;
         PlayerDbContext playerDbContext;
 
@@ -26,13 +28,12 @@ namespace Database
 
         public DatabaseModule() { }
 
-        public DatabaseModule(IConfigurationService configurationService, INotificationService notificationService)
+        public DatabaseModule(IOptions<WorldOptions> worldOptions, IOptions<PlayerOptions> playerOptions, INotificationService notificationService)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
 
-            worldDbContext = new WorldDbContext(configSVC);
-            playerDbContext = new PlayerDbContext(configSVC);
+            worldDbContext = new WorldDbContext(worldOptions);
+            playerDbContext = new PlayerDbContext(playerOptions);
         }
 
         public IDbConnection WorldConnection => worldDbContext.CreateConnection();

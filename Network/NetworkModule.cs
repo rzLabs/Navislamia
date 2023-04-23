@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 
 using Configuration;
+using Microsoft.Extensions.Options;
 using Notification;
 using Serilog.Events;
 
@@ -25,7 +26,6 @@ namespace Network
 {
     public class NetworkModule : INetworkService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
 
         TcpListener listener = null;
@@ -41,6 +41,16 @@ namespace Network
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
 
+        public NetworkModule() { }
+
+        public NetworkModule(IOptions<>, INotificationService notificationService)
+        {
+            notificationSVC = notificationService;
+
+            authActionSVC = new AuthActions(configSVC, notificationSVC, this);
+            gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
+            uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
+        }
         /// <summary>
         /// Game clients that have not been authorized yet
         /// </summary>
@@ -59,21 +69,10 @@ namespace Network
 
         public UploadClient UploadClient => upload;
 
-        public NetworkModule() { }
-
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
-        {
-            configSVC = configurationService;
-            notificationSVC = notificationService;
-
-            authActionSVC = new AuthActions(configSVC, notificationSVC, this);
-            gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
-            uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
-        }
 
         public int Initialize()
         {
-            if (connectToAuth() > 0)
+            if (ConnectToAuth() > 0)
                 return 1;
 
             notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
@@ -92,7 +91,7 @@ namespace Network
             return 0;
         }
 
-        int connectToAuth()
+        int ConnectToAuth()
         {
             string addrStr = configSVC.Get<string>("io.auth.ip", "Network", "127.0.0.1");
             short port = configSVC.Get<short>("io.auth.port", "Network", 4502);

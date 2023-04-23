@@ -10,6 +10,7 @@ using Scripting;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.DbLoaders;
 
@@ -17,37 +18,36 @@ namespace Navislamia.Game
 {
     public class GameModule : IGameService
     {
-        IDatabaseService dbSVC;
-        IScriptingService scriptSVC;
-        INotificationService notificationSVC;
-        IMapService mapSVC;
-        INetworkService networkSVC;
+        private readonly IDatabaseService dbSVC;
+        private readonly IScriptingService scriptSVC;
+        private readonly INotificationService notificationSVC;
+        private readonly IMapService mapSVC;
+        private readonly INetworkService networkSVC;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GameModule> _logger;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
-        public GameModule() { }
 
-        public GameModule(INotificationService notificationService, IDatabaseService databaseService, 
-            IScriptingService scriptingService, IMapService mapService, INetworkService networkService, 
-            IConfiguration configuration, ILogger<GameModule> logger)
+        public GameModule(INotificationService notificationService, IDatabaseService databaseService,
+            IScriptingService scriptingService, IMapService mapService, INetworkService networkService,
+            IConfiguration configuration, ILogger<GameModule> logger, IOptions<ScriptOptions> scriptOptions,
+            IOptions<MapOptions> mapOptions)
         {
             notificationSVC = notificationService;
             dbSVC = databaseService;
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
+            
             _configuration = configuration;
             _logger = logger;
-            
-            _scriptOptions = _configuration.GetSection("Script").Get<ScriptOptions>();
-            _mapOptions = _configuration.GetSection("Map").Get<MapOptions>();
+            _scriptOptions = scriptOptions.Value;
+            _mapOptions = mapOptions.Value;
 
             if (_scriptOptions == null || _mapOptions == null)
             {
                 throw new Exception("Script and/or Map options could not be loaded");
             }
-
         }
 
         public int Start(string ip, int port, int backlog)
