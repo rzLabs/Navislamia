@@ -1,18 +1,18 @@
 ﻿using System;
-using System.Text;
-
-using Database;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.IO;
+using Navislamia.Database;
 using Maps;
 using Network;
-using Notification;
+using Navislamia.Notification;
 using Scripting;
-
 using System.Threading;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.Game.DbLoaders;
+using Navislamia.Database.Loaders;
+using Navislamia.Database.Interfaces;
 
 namespace Navislamia.Game
 {
@@ -23,24 +23,20 @@ namespace Navislamia.Game
         private readonly INotificationService notificationSVC;
         private readonly IMapService mapSVC;
         private readonly INetworkService networkSVC;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<GameModule> _logger;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
+        private readonly List<IRepository> worldRepositories;
 
         public GameModule(INotificationService notificationService, IDatabaseService databaseService,
-            IScriptingService scriptingService, IMapService mapService, INetworkService networkService,
-            IConfiguration configuration, ILogger<GameModule> logger, IOptions<ScriptOptions> scriptOptions,
-            IOptions<MapOptions> mapOptions)
+            IScriptingService scriptingService, IMapService mapService, INetworkService networkService, 
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
             notificationSVC = notificationService;
             dbSVC = databaseService;
             scriptSVC = scriptingService;
             mapSVC = mapService;
             networkSVC = networkService;
-            
-            _configuration = configuration;
-            _logger = logger;
+            worldRepositories = new List<IRepository>();
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
 
@@ -50,15 +46,15 @@ namespace Navislamia.Game
             }
         }
 
-        public int Start(string ip, int port, int backlog)
+        public async Task<int> Start(string ip, int port, int backlog)
         {
             if (_scriptOptions.SkipLoading)
             {
-                _logger.LogWarning("Script loading disabled!");
+                notificationSVC.WriteWarning("Script loading disabled!");
             }
             else
             {
-                if (!scriptSVC.Initialize())
+                if (scriptSVC.Init() > 0)
                 {
                     notificationSVC.WriteError("Failed to start script service!");
 
@@ -70,11 +66,11 @@ namespace Navislamia.Game
            
             if (_mapOptions.SkipLoading)
             {
-                _logger.LogWarning("Map loading disabled!");
+                notificationSVC.WriteWarning("Map loading disabled!");
             }
             else
             {
-                if (!mapSVC.Initialize())
+                if (!mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
                 {
                     notificationSVC.WriteError("Failed to start the map service!");
 
@@ -113,25 +109,26 @@ namespace Navislamia.Game
 
         bool LoadDbRepositories()
         {
-            StringBuilder sb = new StringBuilder("Loading database repositories...\n");
+            var loaders = new List<IRepositoryLoader>();
 
-            GameContent.Strings = new StringLoader(dbSVC, notificationSVC).Strings;
+            loaders.Add(new MonsterLoader(notificationSVC, dbSVC));
+            loaders.Add(new PetLoader(notificationSVC, dbSVC));
+            loaders.Add(new ItemLoader(notificationSVC, dbSVC));
+            loaders.Add(new NPCLoader(notificationSVC, dbSVC));
+            loaders.Add(new StringLoader(notificationSVC, dbSVC));
 
-            sb.AppendLine($"- [orange3]{GameContent.Strings.Count}[/] strings loaded!");
+            for (int i = 0; i < loaders.Count; i++)
+            {
+                if (loaders[i].Init() is null)
+                {
+                    notificationSVC.WriteError($"{loaders[i].GetType().Name} failed to load!");
+                    return false;
+                }
 
-            var monsterLoader = new MonsterLoader(dbSVC, notificationSVC);
+                worldRepositories.AddRange(loaders[i].Repositories);
+            }
 
-            GameContent.MonsterInfo = monsterLoader.Monsters;
-
-            sb.AppendLine($"- [orange3]{monsterLoader.Skills.Count}[/] monster skills loaded!");
-            sb.AppendLine($"- [orange3]{monsterLoader.Drops.Count}[/] monster drops loaded!");
-            sb.AppendLine($"- [orange3]{monsterLoader.Monsters.Count}[/] monsters loaded!");
-
-            GameContent.NpcInfo = new NpcLoader(dbSVC, notificationSVC).Npc;
-
-            sb.AppendLine($"- [orange3]{GameContent.NpcInfo.Count}[/] npc loaded!");
-
-            notificationSVC.WriteMarkup(sb.ToString());
+            notificationSVC.WriteNewLine(); // Write a blank line that will have a newline appended
 
             return true;
         }

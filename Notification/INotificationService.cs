@@ -9,11 +9,13 @@ using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace Notification
+namespace Navislamia.Notification
 {
     public interface INotificationService
     {
         public void Write(IRenderable renderable, LogEventLevel level = LogEventLevel.Verbose);
+
+        public void WriteNewLine() => AnsiConsole.Write("\n");
 
         public void WriteString(string message, LogEventLevel level = LogEventLevel.Verbose);
 

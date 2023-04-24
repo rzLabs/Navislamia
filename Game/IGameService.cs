@@ -8,6 +8,6 @@ namespace Navislamia.Game
 {
     public interface IGameService
     {
-        public int Start(string ip, int port, int backlog) => 0;
+        public async Task<int> Start(string ip, int port, int backlog) => 0;
     }
 }

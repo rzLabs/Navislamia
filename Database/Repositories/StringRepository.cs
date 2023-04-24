@@ -10,16 +10,27 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
 {
-    public class StringRepository : IRepository<StringResource>
+    public class StringRepository : IRepository
     {
         const string query = "select [code],[name],[value] from dbo.StringResource with (nolock)";
 
         IDbConnection dbConnection;
 
+        IEnumerable<StringResource> Data;
+
         public string Name => "StringResoure";
+
+        public int Count => Data?.Count() ?? 0;
 
         public StringRepository(IDbConnection connection) => dbConnection = connection;
 
-        public List<StringResource> Fetch() => dbConnection.QueryAsync<StringResource>(query).Result.ToList();
+        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
+
+        public async Task<IRepository> Load()
+        {
+            Data = await dbConnection.QueryAsync<StringResource>(query);
+
+            return this;
+        }
     }
 }

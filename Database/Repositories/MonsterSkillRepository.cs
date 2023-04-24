@@ -10,21 +10,27 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
 {
-    public class MonsterSkillRepository : IRepository<MonsterSkill>
+    public class MonsterSkillRepository : IRepository
     {
         const string query = "select * from dbo.MonsterSkillResource order by id, sub_id";
 
         IDbConnection dbConnection;
 
+        IEnumerable<MonsterSkill> Data;
+
         public string Name => "MonsterSkillResource";
+
+        public int Count => Data?.Count() ?? 0;
+
+        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
         public MonsterSkillRepository(IDbConnection connection) => dbConnection = connection;
 
-       public List<MonsterSkill> Fetch()
+        public async Task<IRepository> Load()
         {
             List<MonsterSkill> skills = new List<MonsterSkill>();
 
-            using IDataReader sqlRdr = dbConnection.ExecuteReaderAsync(query).Result;
+            using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
 
             while (sqlRdr.Read())
             {
@@ -49,7 +55,9 @@ namespace Navislamia.Database.Repositories
                 skills.Add(skill);
             }
             
-            return skills;
-        } 
+            Data = skills;
+
+            return this;
+        }
     }
 }

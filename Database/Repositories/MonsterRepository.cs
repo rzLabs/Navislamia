@@ -10,27 +10,33 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
 {
-    public class MonsterRepository : IRepository<MonsterBase>
+    public class MonsterRepository : IRepository
     {
         const string query = "select * from dbo.MonsterResource with (nolock)";
 
         IDbConnection dbConnection;
 
+        IEnumerable<MonsterBase> Data;
+
         public string Name => "MonsterResource";
+
+        public int Count => Data?.Count() ?? 0;
+
+        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
         public MonsterRepository(IDbConnection connection) => dbConnection = connection;
 
-        public List<MonsterBase> Fetch()
+        public async Task<IRepository> Load()
         {
             List<MonsterBase> monsters = new List<MonsterBase>();
 
-            using IDataReader sqlRdr = dbConnection.ExecuteReader(query);
+            using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
 
             while (sqlRdr.Read())
             {
                 MonsterBase monster = new MonsterBase();
 
-                monster.ID = sqlRdr.GetInt32(0);
+                monster.ID = sqlRdr.GetInt32(0);  //TODO: does this need to be encrypted?
                 monster.MonsterGroup = sqlRdr.GetInt32(1);
                 monster.TransformLevel = sqlRdr.GetInt32(6);
                 monster.WalkType = sqlRdr.GetByte(7);
@@ -43,8 +49,8 @@ namespace Navislamia.Database.Repositories
                 monster.VisibleRange = sqlRdr.GetInt32(22);
                 monster.ChaseRange = sqlRdr.GetInt32(23);
                 monster.MonsterType = sqlRdr.GetByte(29);
-                monster.StatID = sqlRdr.GetByte(30); // previously GetInt32
-                monster.FightType = sqlRdr.GetByte(31); // previously GetInt32
+                monster.StatID = sqlRdr.GetInt32(30);
+                monster.FightType = sqlRdr.GetInt32(31);
                 monster.SkillLinkID = sqlRdr.GetInt32(32);
                 monster.Ability = sqlRdr.GetInt32(36);
                 monster.WalkSpeed = sqlRdr.GetInt32(39);
@@ -52,8 +58,8 @@ namespace Navislamia.Database.Repositories
                 monster.AttackRange = Convert.ToSingle(sqlRdr[41]);
                 monster.HidesenseRange = Convert.ToSingle(sqlRdr[42]);
                 monster.HP = sqlRdr.GetInt32(43);
-                monster.MP = sqlRdr.GetDecimal(44); // previously GetInt32
-                monster.AttackPoint = sqlRdr.GetDecimal(45); // previously GetInt32
+                monster.MP = sqlRdr.GetInt32(44);
+                monster.AttackPoint = sqlRdr.GetInt32(45);
                 monster.MagicPoint = sqlRdr.GetInt32(46);
                 monster.Defense = sqlRdr.GetInt32(47);
                 monster.MagicDefense = sqlRdr.GetInt32(48);
@@ -67,9 +73,9 @@ namespace Navislamia.Database.Repositories
                 monster.TamingPercentage = Convert.ToSingle(sqlRdr[56]);
                 monster.Exp = sqlRdr.GetInt32(58);
                 monster.JP = sqlRdr.GetInt32(59);
-                monster.GoldDropPercentage = sqlRdr.GetDecimal(60); // previously GetInt32
-                monster.GoldMin = sqlRdr.GetDecimal(61); // previously GetInt32
-                monster.GoldMax = sqlRdr.GetInt32(62); 
+                monster.GoldDropPercentage = sqlRdr.GetInt32(60);
+                monster.GoldMin = sqlRdr.GetInt32(61);
+                monster.GoldMax = sqlRdr.GetInt32(62);
                 monster.ChaosDropPercentage = sqlRdr.GetInt32(63);
                 monster.ChaosMin = sqlRdr.GetInt32(64);
                 monster.ChaosMax = sqlRdr.GetInt32(65);
@@ -80,12 +86,15 @@ namespace Navislamia.Database.Repositories
                 monster.ChaosMin2 = sqlRdr.GetInt32(70);
                 monster.ChaosMax2 = sqlRdr.GetInt32(71);
                 monster.DropLinkID = sqlRdr.GetInt32(72);
-                monster.ScriptOnDead = sqlRdr.GetInt32(75);
+                monster.ScriptOnDead = sqlRdr.GetString(75);
 
                 monsters.Add(monster);
             }
 
-            return monsters;
-        } 
+            Data = monsters;
+
+            return this;
+        }
+
     }
 }

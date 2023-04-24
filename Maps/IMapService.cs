@@ -4,14 +4,14 @@ using System.Text;
 
 using Configuration;
 using Scripting;
-using Notification;
+using Navislamia.Notification;
 using Objects;
 
 namespace Maps
 {
     public interface IMapService
     {
-        public bool Initialize();
+        public bool Initialize(string directory);
 
         public KSize MapCount { get; set; }
     }

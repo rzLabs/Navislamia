@@ -1,17 +1,14 @@
-﻿using Configuration;
+using Configuration;
 using Navislamia.Network.Enums;
 using Network;
-using Notification;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Auth;
+using Navislamia.Notification;
 
 namespace Navislamia.Network.Packets.Actions
 {

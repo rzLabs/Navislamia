@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Configuration;
 using Scripting.Functions;
 using Utilities;
-using Notification;
+using Navislamia.Notification;
 
 using MoonSharp.Interpreter;
 using Serilog.Events;
@@ -36,23 +36,24 @@ namespace Scripting
             notificationSVC = notificationService;
         }
 
-        public bool Initialize()
+        public int Init(string directory = null)
         {
+            //string scriptDir = directory ?? $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}//Scripts//";
             string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
 
             if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
             {
                 notificationSVC.WriteMarkup("[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]", LogEventLevel.Error);
-                return false;
+                return 1;
             }
 
             ScriptsDirectory = scriptDir;
 
-            registerFunctions();
+            RegisterFunctions();
 
-            loadScripts();
+            LoadScripts();
 
-            return true;
+            return 0;
         }
 
         public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
@@ -91,7 +92,7 @@ namespace Scripting
 
 
         // TODO: Sandro, this is where you register your lua functions
-        void registerFunctions()
+        void RegisterFunctions()
         {
             RegisterFunction("call_lc_In", MiscFunc.SetCurrentLocationID);
             RegisterFunction("get_monster_id", MonsterFunc.get_monster_id);
@@ -99,7 +100,7 @@ namespace Scripting
             //RegisterFunction("get_local", MiscFunc.GetLocal);
         }
 
-        void loadScripts()
+        void LoadScripts()
         {
             string[] scriptPaths;
 

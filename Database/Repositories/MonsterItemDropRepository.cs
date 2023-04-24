@@ -9,23 +9,28 @@ using System.Threading.Tasks;
 
 namespace Navislamia.Database.Repositories
 {
-    public class MonsterItemDropRepository : IRepository<MonsterItemDrop>
+    public class MonsterItemDropRepository : IRepository
     {
         const int itemDropsPerRow = 10;
-
         const string query = "select * from dbo.MonsterDropTableResource order by id, sub_id";
 
         IDbConnection dbConnection;
 
+        IEnumerable<MonsterItemDrop> Data;
+
         public string Name => "MonsterDropTableResource";
+
+        public int Count => Data?.Count() ?? 0;
+
+        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
         public MonsterItemDropRepository(IDbConnection connection) => dbConnection = connection;
 
-        public List<MonsterItemDrop> Fetch()
+        public async Task<IRepository> Load()
         {
             var monsterDrops = new List<MonsterItemDrop>();
 
-            using IDataReader sqlRdr = dbConnection.ExecuteReaderAsync(query).Result;
+            using IDataReader sqlRdr = await dbConnection.ExecuteReaderAsync(query);
 
             MonsterItemDropInfo itemDrop;
             List<MonsterItemDropInfo> itemDrops = new List<MonsterItemDropInfo>();
@@ -65,7 +70,9 @@ namespace Navislamia.Database.Repositories
                 }
             }
 
-            return monsterDrops;
-        } 
+            Data = monsterDrops;
+
+            return this;
+        }
     }
 }

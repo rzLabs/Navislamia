@@ -1,16 +1,9 @@
-﻿using Configuration;
 using Navislamia.Database.Interfaces;
-using Notification;
-using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.World;
 
 namespace Navislamia.Database.Contexts
 {

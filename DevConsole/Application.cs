@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Configuration;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Navislamia.Game;
+using Navislamia.Notification;
 
 namespace DevConsole
 {
@@ -17,8 +18,9 @@ namespace DevConsole
         private readonly IHostEnvironment _environment;
         private readonly IGameService _gameService;
         private readonly NetworkOptions _networkOptions;
+        private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, ILogger<Application> logger, IGameService gameService, IOptions<NetworkOptions> networkOptions)
+        public Application(IHostEnvironment environment, ILogger<Application> logger, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             _logger = logger;
             _environment = environment;
@@ -48,7 +50,8 @@ namespace DevConsole
             catch (Exception e)
             {
                 StopAsync(cancellationToken);
-                throw new Exception($"Could not start Gameserver {e.InnerException}");
+                _notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
+
             }
 
             Console.ReadLine();

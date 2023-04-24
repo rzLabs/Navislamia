@@ -1,10 +1,10 @@
-﻿using Configuration;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using Network;
-using Notification;
 using System.Net.Sockets;
+using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
+using Navislamia.Notification;
 
 namespace Navislamia.Network.Entities
 {

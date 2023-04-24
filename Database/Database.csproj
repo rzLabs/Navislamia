@@ -20,4 +20,10 @@
     <ProjectReference Include="..\World\World.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Modules.Configuration">
+      <HintPath>..\DevConsole\bin\Debug\net7.0\Modules.Configuration.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

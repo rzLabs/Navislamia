@@ -1,20 +1,14 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
-
-using Configuration;
-using Notification;
-
 using Navislamia.Database.Contexts;
 using Navislamia.Database.Enums;
-
 using Dapper;
-using System.Text;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
+using Navislamia.Notification;
 
-namespace Database
+namespace Navislamia.Database
 {
     public class DatabaseModule : IDatabaseService
     {
@@ -24,7 +18,7 @@ namespace Database
         WorldDbContext worldDbContext;
         PlayerDbContext playerDbContext;
 
-        List<Task<int>> loadTasks = new List<Task<int>>();
+        List<Task<int>> loadTasks = new();
 
         public DatabaseModule() { }
 

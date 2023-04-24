@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Configuration;
-using Notification;
-
+using System;
 using Spectre.Console;
 using Spectre.Console.Cli;
-
-
 using Navislamia.Command.Commands;
-using Navislamia.Command.Interfaces;
+using Navislamia.Notification;
 
 namespace Navislamia.Command
 {
@@ -22,7 +13,7 @@ namespace Navislamia.Command
 
         string _input;
 
-        public string Input 
+        public string Input
         {
             get => _input;
             set => _input = value;
@@ -66,7 +57,7 @@ namespace Navislamia.Command
 
                 ConsoleKeyInfo key = Console.ReadKey(true);
 
-                if (key.Key == ConsoleKey.Oem3)
+                if (key.KeyChar == '`')
                 {
                     string input = AnsiConsole.Ask<string>("~ Command: ");
 

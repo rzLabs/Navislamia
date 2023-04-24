@@ -1,22 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
 using System.Net;
 using System.Net.Sockets;
-
 using Configuration;
+using Navislamia.Notification;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Notification;
-using Serilog.Events;
-
-using Network.Security;
-
-using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Actions;
@@ -33,7 +22,7 @@ namespace Network
 
         int BufferLength = 1024;
 
-        List<GameClient> connections = new List<GameClient>();
+        List<GameClient> connections = new ();
 
         AuthClient auth = null;
         UploadClient upload = null;

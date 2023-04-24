@@ -8,7 +8,7 @@ using Configuration;
 using Scripting;
 using Navislamia.Maps.Entities;
 using Maps.X2D;
-using Notification;
+using Navislamia.Notification;
 using Objects;
 
 using Serilog.Events;
@@ -28,7 +28,6 @@ namespace Maps
         static int mapWidth = 700000;
         static int mapHeight = 1000000;
 
-        // No reason to move this to GameContent, would be a hassle
         public static QuadTree QtLocationInfo = new QuadTree(0, 0, mapWidth, mapHeight);
         public static QuadTree QtBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
         public static QuadTree QtAutoBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
@@ -60,10 +59,8 @@ namespace Maps
             registerMapLocationInfo(location_info);
         }
 
-        public bool Initialize()
+        public bool Initialize(string directory)
         {
-            var directory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Maps");
-            
             List<Task> tasks = new List<Task>();
             Task worker = null;
 
@@ -71,13 +68,13 @@ namespace Maps
 
             tasks.Add(Task.Run(() =>
             {
-                seamlessWorldInfo.Initialize(Path.Combine(directory, "terrainseamlessworld.cfg"));
+                seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
                 notificationSVC.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
             }));
 
             tasks.Add(Task.Run(() =>
             {
-                propInfo.Initialize(Path.Combine(directory, "terrainpropinfo.cfg"));
+                propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
                 notificationSVC.WriteSuccess("TerrainPropInfo.cfg loaded!");
             }));
 
@@ -120,7 +117,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadLocationFile(Path.Combine(directory, locationFileName), x, y, attrLen, mapLength);
+                        LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
                     }));
 
                     string scriptFileName = seamlessWorldInfo.GetScriptFileName(x, y);
@@ -130,7 +127,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadScriptFile(Path.Combine(directory, scriptFileName), x, y, attrLen, mapLength, propInfo);
+                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
                     }));
 
                     if (!skipNFA)
@@ -142,7 +139,7 @@ namespace Maps
 
                         tasks.Add(Task.Run(() =>
                         {
-                            LoadAttributeFile(Path.Combine(directory, attributeFileName), x, y, attrLen, mapLength);
+                            LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
                         }));
                     }
 
@@ -153,7 +150,7 @@ namespace Maps
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadEventAreaFile(Path.Combine(directory, eventAreaFileName), x, y, attrLen, mapLength);
+                        LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
                     }));
 
                     worker = Task.WhenAll(tasks);

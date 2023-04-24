@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Configuration;
 using Configuration.Options;
-using Database;
 using Maps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,10 +8,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Navislamia.Command;
 using Navislamia.Configuration.Options;
+using Navislamia.Database;
 using Navislamia.Game;
+using Navislamia.Notification;
 using Navislamia.World;
 using Network;
-using Notification;
 using Scripting;
 
 

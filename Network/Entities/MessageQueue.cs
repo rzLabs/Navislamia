@@ -1,4 +1,4 @@
-﻿using Configuration;
+using Configuration;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions.Interfaces;
@@ -6,7 +6,7 @@ using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
 using Network.Security;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
