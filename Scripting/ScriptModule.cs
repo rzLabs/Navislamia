@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Configuration;
 using Scripting.Functions;
 using Utilities;
-using Notification;
+using Navislamia.Notification;
 
 using MoonSharp.Interpreter;
 using Serilog.Events;
@@ -40,7 +40,8 @@ namespace Scripting
 
         public int Init(string directory = null)
         {
-            string scriptDir = directory ?? $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}//Scripts//";
+            //string scriptDir = directory ?? $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}//Scripts//";
+            string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
 
             if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
             {

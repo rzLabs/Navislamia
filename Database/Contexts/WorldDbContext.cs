@@ -1,6 +1,6 @@
 ﻿using Configuration;
 using Navislamia.Database.Interfaces;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -26,11 +26,11 @@ namespace Navislamia.Database.Contexts
 
         private void buildConnString()
         {
-            string ip = _configSVC.Get<string>("world.ip", "Database", "127.0.0.1");
-            string name = _configSVC.Get<string>("world.name", "Database", "Arcadia");
-            string user = _configSVC.Get<string>("world.user", "Database", "sa");
-            string pass = _configSVC.Get<string>("world.user.pass", "Database", "");
-            bool trusted = _configSVC.Get<bool>("world.trusted_connection", "Database", false);
+            string ip = _configSVC.Get<string>("world.ip", "database", "127.0.0.1");
+            string name = _configSVC.Get<string>("world.name", "database", "Arcadia");
+            string user = _configSVC.Get<string>("world.user", "database", "sa");
+            string pass = _configSVC.Get<string>("world.user.pass", "database", "");
+            bool trusted = _configSVC.Get<bool>("world.trusted_connection", "database", false);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Server={0};Database={1};", ip, name);

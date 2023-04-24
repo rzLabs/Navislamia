@@ -5,7 +5,7 @@ using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Upload;
 using Network;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
 using System.Linq;

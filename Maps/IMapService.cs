@@ -4,7 +4,7 @@ using System.Text;
 
 using Configuration;
 using Scripting;
-using Notification;
+using Navislamia.Notification;
 using Objects;
 
 namespace Maps

@@ -1,7 +1,7 @@
 ﻿using Configuration;
 using Navislamia.Network.Enums;
 using Network;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +70,7 @@ namespace Navislamia.Network.Packets.Actions
             var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
             var _loginInfo = new TS_GA_CLIENT_LOGIN(_msg.Account, _msg.OneTimePassword);
 
-            var connMax = configSVC.Get<int>("io.max_connection", "Network", 2000);
+            var connMax = configSVC.Get<int>("io.max_connection", "network", 2000);
 
             if (networkSVC.PlayerCount > connMax)
             {

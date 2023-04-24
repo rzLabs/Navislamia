@@ -1,7 +1,7 @@
 ﻿using Configuration;
 using Navislamia.Network.Enums;
 using Network;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
 using System.Linq;

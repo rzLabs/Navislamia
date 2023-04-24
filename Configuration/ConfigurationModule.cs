@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Configuration
 {
@@ -27,7 +28,7 @@ namespace Configuration
 
             // server
 
-            Configurations.AddParent("Server");
+            Configurations.AddParent("server");
 
 
             Configurations.AddChild("name", "Navislamia");
@@ -36,16 +37,16 @@ namespace Configuration
             Configurations.AddChild("adult", false);
 
 
-            Configurations.AddParent("Logs");
+            Configurations.AddParent("logs");
 
             // logs
 
             Configurations.AddChild("minimum-level", 0);
-            Configurations.AddChild("packet.debug", true); // TODO: this should be false in production
+            Configurations.AddChild("packet.debug", false); 
 
             // network
 
-            Configurations.AddParent("Network");
+            Configurations.AddParent("network");
 
             Configurations.AddChild("io.auth.ip", "127.0.0.1");
             Configurations.AddChild("io.auth.port", 4502);
@@ -61,7 +62,7 @@ namespace Configuration
 
             // database
 
-            Configurations.AddParent("Database");
+            Configurations.AddParent("database");
 
             Configurations.AddChild("world.ip", "127.0.0.1");
             Configurations.AddChild("world.port", 1433);
@@ -78,14 +79,14 @@ namespace Configuration
 
             // scripts
 
-            Configurations.AddParent("Scripts");
+            Configurations.AddParent("scripts");
 
             Configurations.AddChild("directory", ".\\Scripts");
 
 
             // maps
 
-            Configurations.AddParent("Maps");
+            Configurations.AddParent("maps");
 
             Configurations.AddChild("directory", ".\\Maps");
             Configurations.AddChild("width", 700000);
@@ -150,7 +151,6 @@ namespace Configuration
 
             if (!File.Exists(filename))
                 return false;
-
 
             string jsonStr = File.ReadAllText(filename);
 

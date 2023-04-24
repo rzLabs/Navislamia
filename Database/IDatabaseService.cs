@@ -8,7 +8,7 @@ using Configuration;
 using System.Data;
 using Navislamia.Database.Enums;
 
-namespace Database
+namespace Navislamia.Database
 {
     public interface IDatabaseService
     {

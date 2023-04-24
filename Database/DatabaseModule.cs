@@ -4,7 +4,7 @@ using System.Data;
 using System.Threading.Tasks;
 
 using Configuration;
-using Notification;
+using Navislamia.Notification;
 
 using Navislamia.Database.Contexts;
 using Navislamia.Database.Enums;
@@ -12,7 +12,7 @@ using Navislamia.Database.Enums;
 using Dapper;
 using System.Text;
 
-namespace Database
+namespace Navislamia.Database
 {
     public class DatabaseModule : IDatabaseService
     {

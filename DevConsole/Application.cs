@@ -2,7 +2,7 @@
 using DevConsole.Properties;
 using Navislamia.Command;
 using Navislamia.Game;
-using Notification;
+using Navislamia.Notification;
 using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -34,9 +34,9 @@ namespace DevConsole
         {
             notificationService.WriteString($"{Resources.arcadia}\n\nNavislamia starting...\n");
 
-            string ip = configurationService.Get<string>("io.ip", "Network", "127.0.0.1");
-            short port = configurationService.Get<short>("io.port", "Network", 4502);
-            int backlog = configurationService.Get<int>("io.backlog", "Network", 100);
+            string ip = configurationService.Get<string>("io.ip", "network", "127.0.0.1");
+            short port = configurationService.Get<short>("io.port", "network", 4502);
+            int backlog = configurationService.Get<int>("io.backlog", "network", 100);
 
             if (await gameService.Start(ip, port, backlog) >= 1)
             {

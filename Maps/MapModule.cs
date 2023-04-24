@@ -8,7 +8,7 @@ using Configuration;
 using Scripting;
 using Navislamia.Maps.Entities;
 using Maps.X2D;
-using Notification;
+using Navislamia.Notification;
 using Objects;
 
 using Serilog.Events;
@@ -62,7 +62,7 @@ namespace Maps
             List<Task> tasks = new List<Task>();
             Task worker = null;
 
-            bool skipNFA = configSVC.Get<bool>("skip_loading_nfa", "Maps", false);
+            bool skipNFA = configSVC.Get<bool>("skip_loading_nfa", "maps", false);
 
             tasks.Add(Task.Run(() =>
             {

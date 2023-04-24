@@ -58,25 +58,4 @@ namespace Navislamia.World
 
         public static implicit operator VNumber(long value) => new (value);
     }
-
-    public class FOO
-    {
-        public void TestFoo()
-        {
-            VNumber dex = new VNumber();
-            VNumber add = new VNumber(1);
-
-            dex = 1245;
-
-            var  da = dex + add;
-
-            var a = dex + 1;
-            var m = dex * 1;
-
-            dex += 1;
-
-            dex++;
-            dex--;
-        }
-    }
 }

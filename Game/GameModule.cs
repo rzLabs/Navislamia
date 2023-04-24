@@ -3,17 +3,17 @@ using System.Threading.Tasks;
 using System.IO;
 
 using Configuration;
-using Database;
+using Navislamia.Database;
 using Maps;
 using Network;
-using Notification;
+using Navislamia.Notification;
 using Scripting;
 
 using Serilog.Events;
 using System.Collections.Generic;
 using Navislamia.World;
 using System.Threading;
-using Navislamia.Game.DbLoaders;
+using Navislamia.Database.Loaders;
 using Navislamia.Database.Interfaces;
 
 namespace Navislamia.Game
@@ -48,7 +48,7 @@ namespace Navislamia.Game
 
         public async Task<int> Start(string ip, int port, int backlog)
         {
-            if (!configSVC.Get<bool>("skip_loading", "Scripts", false))
+            if (!configSVC.Get<bool>("skip_loading", "scripts", false))
             {
                 if (scriptSVC.Init() > 0)
                 {
@@ -62,7 +62,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Script loading disabled!");
 
-            if (!configSVC.Get<bool>("skip_loading", "Maps", false))
+            if (!configSVC.Get<bool>("skip_loading", "maps", false))
             {
                 if (!mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
                 {
@@ -76,7 +76,7 @@ namespace Navislamia.Game
             else
                 notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!await loadDbRepositories())
+            if (!loadDbRepositories())
                 return 1;
 
             if (networkSVC.Initialize() > 0)
@@ -103,34 +103,28 @@ namespace Navislamia.Game
             return 0;
         }
 
-        async Task<bool> loadDbRepositories()
+        bool loadDbRepositories()
         {
-            var loadTasks = new List<Task<RepositoryLoader>>();
+            var loaders = new List<IRepositoryLoader>();
 
-            loadTasks.Add(Task.Run(() => new MonsterLoader(notificationSVC, dbSVC).Init()));
-            loadTasks.Add(Task.Run(() => new StringLoader(notificationSVC, dbSVC).Init()));
+            loaders.Add(new MonsterLoader(notificationSVC, dbSVC));
+            loaders.Add(new PetLoader(notificationSVC, dbSVC));
+            loaders.Add(new ItemLoader(notificationSVC, dbSVC));
+            loaders.Add(new NPCLoader(notificationSVC, dbSVC));
+            loaders.Add(new StringLoader(notificationSVC, dbSVC));
 
-            var loadTask = Task.WhenAll(loadTasks);
-
-            try
+            for (int i = 0; i < loaders.Count; i++)
             {
-                loadTask.Wait();
-
-                if (loadTask.IsCompletedSuccessfully)
+               if (loaders[i].Init() is null)
                 {
-                    foreach (var task in loadTasks)
-                            worldRepositories.AddRange(task.Result.Repositories);
-
-                    notificationSVC.WriteSuccess("\nDatabase repositories loaded successfully!");
+                    notificationSVC.WriteError($"{loaders[i].GetType().Name} failed to load!");
+                    return false;
                 }
-            }
-            catch (Exception ex) 
-            {
-                notificationSVC.WriteError("Database repositories failed to load!");
-                notificationSVC.WriteException(ex);
 
-                return false;
+                worldRepositories.AddRange(loaders[i].Repositories);
             }
+
+            notificationSVC.WriteNewLine(); // Write a blank line that will have a newline appended
 
             return true;
         }

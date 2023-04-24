@@ -8,7 +8,7 @@ using System.IO;
 
 using System.Net;
 using System.Net.Sockets;
-using Notification;
+using Navislamia.Notification;
 using Configuration;
 using Network;
 using Navislamia.Network.Packets;

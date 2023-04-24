@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Configuration;
 using Navislamia.Command.Interfaces;
-using Notification;
+using Navislamia.Notification;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -50,9 +50,9 @@ namespace Navislamia.Command.Commands
             var config = _getter.Get(settings.Key, settings.Category);
 
             if (config is null)
-                return 1;
-
-            notificationSVC.WriteMarkup($"\n[bold orange3]{settings.Key}[/] : [bold yellow]{config}[/]\n");
+                notificationSVC.WriteMarkup($"\n[red]Could not locate configuration[/] [bold yellow]{settings.Key}[/] [red]in category:[/] [bold yellow]{settings.Category}[/]\n\n[italic red]!!!Remember configuration names and categories are case sensitive!!![/]\n\n");
+            else
+                notificationSVC.WriteMarkup($"\n[bold orange3]{settings.Key}[/] : [bold yellow]{config}[/]\n");
 
             return 0;
         }

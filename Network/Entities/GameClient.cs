@@ -5,7 +5,7 @@ using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Game;
 using Network;
 using Network.Security;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

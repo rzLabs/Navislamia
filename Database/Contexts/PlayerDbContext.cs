@@ -25,11 +25,11 @@ namespace Navislamia.Database.Contexts
 
         private void buildConnString()
         {
-            string ip = _configSVC.Get<string>("player.ip", "Database", "127.0.0.1");
-            string name = _configSVC.Get<string>("player.name", "Database", "Telecaster");
-            string user = _configSVC.Get<string>("player.user", "Database", "sa");
-            string pass = _configSVC.Get<string>("player.user.pass", "Database", "");
-            bool trusted = _configSVC.Get<bool>("player.trusted_connection", "Database", false);
+            string ip = _configSVC.Get<string>("player.ip", "database", "127.0.0.1");
+            string name = _configSVC.Get<string>("player.name", "database", "Telecaster");
+            string user = _configSVC.Get<string>("player.user", "database", "sa");
+            string pass = _configSVC.Get<string>("player.user.pass", "database", "");
+            bool trusted = _configSVC.Get<bool>("player.trusted_connection", "database", false);
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Server={0};Database={1};", ip, name);

@@ -6,7 +6,7 @@ using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
 using Network.Security;
-using Notification;
+using Navislamia.Notification;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -43,9 +43,9 @@ namespace Navislamia.Network.Entities
 
         public MessageQueue(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
         {
-            var cipherKey = configurationService.Get<string>("cipher.key", "Network");
+            var cipherKey = configurationService.Get<string>("cipher.key", "network");
 
-            debugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
+            debugPackets = configurationService.Get<bool>("packet.debug", "logs", false);
 
             configSVC = configurationService;
             notificationSVC = notificationService;

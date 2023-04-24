@@ -9,7 +9,7 @@ using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace Notification
+namespace Navislamia.Notification
 {
     public class NotificationModule : INotificationService
     {

@@ -1,5 +1,5 @@
 ﻿using Configuration;
-using Database;
+using Navislamia.Database;
 using Maps;
 using Microsoft.Extensions.DependencyInjection;
 using Navislamia.Command;
@@ -7,7 +7,7 @@ using Navislamia.Command.Commands;
 using Navislamia.Game;
 using Navislamia.World;
 
-using Notification;
+using Navislamia.Notification;
 using Scripting;
 using Spectre.Console.Cli;
 using System;

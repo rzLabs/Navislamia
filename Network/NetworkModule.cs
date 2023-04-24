@@ -9,7 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 
 using Configuration;
-using Notification;
+using Navislamia.Notification;
 using Serilog.Events;
 
 using Network.Security;
@@ -94,8 +94,8 @@ namespace Network
 
         int connectToAuth()
         {
-            string addrStr = configSVC.Get<string>("io.auth.ip", "Network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.auth.port", "Network", 4502);
+            string addrStr = configSVC.Get<string>("io.auth.ip", "network", "127.0.0.1");
+            short port = configSVC.Get<short>("io.auth.port", "network", 4502);
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -115,7 +115,7 @@ namespace Network
 
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = configSVC.Get<int>("io.buffer_size", "network", 32768);
 
             int status = 0;
 
@@ -145,12 +145,12 @@ namespace Network
         {
             try
             {
-                var idx = configSVC.Get<ushort>("index", "Server", 0);
-                var ip = configSVC.Get<string>("io.ip", "Network", "127.0.0.1");
-                var port = configSVC.Get<short>("io.port", "Network", 4515);
-                var name = configSVC.Get<string>("name", "Server", "Navislamia");
-                var screenshot_url = configSVC.Get<string>("screenshort.url", "Server", "about:blank");
-                var adult_server = configSVC.Get<bool>("adult", "Server", false);
+                var idx = configSVC.Get<ushort>("index", "server", 0);
+                var ip = configSVC.Get<string>("io.ip", "network", "127.0.0.1");
+                var port = configSVC.Get<short>("io.port", "network", 4515);
+                var name = configSVC.Get<string>("name", "server", "Navislamia");
+                var screenshot_url = configSVC.Get<string>("screenshort.url", "server", "about:blank");
+                var adult_server = configSVC.Get<bool>("adult", "server", false);
 
                 var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
 
@@ -168,8 +168,8 @@ namespace Network
         
         int connectToUpload()
         {
-            string addrStr = configSVC.Get<string>("io.upload.ip", "Network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.upload.port", "Network", 4616);
+            string addrStr = configSVC.Get<string>("io.upload.ip", "network", "127.0.0.1");
+            short port = configSVC.Get<short>("io.upload.port", "network", 4616);
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -189,7 +189,7 @@ namespace Network
 
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "Network", 32768);
+            BufferLength = configSVC.Get<int>("io.buffer_size", "network", 32768);
 
             int status = 0;
 
@@ -219,7 +219,7 @@ namespace Network
         {
             try
             {
-                var serverName = configSVC.Get<string>("name", "Server", "Navislamia");
+                var serverName = configSVC.Get<string>("name", "server", "Navislamia");
 
                 var msg = new TS_SU_LOGIN(serverName);
 
@@ -237,9 +237,9 @@ namespace Network
 
         int startClientListener()
         {
-            string addrStr = configSVC.Get<string>("io.ip", "Network", "0.0.0.0");
-            short port = configSVC.Get<short>("io.port", "Network", 4515);
-            int backlog = configSVC.Get<int>("io.backlog", "Network", 100);
+            string addrStr = configSVC.Get<string>("io.ip", "network", "0.0.0.0");
+            short port = configSVC.Get<short>("io.port", "network", 4515);
+            int backlog = configSVC.Get<int>("io.backlog", "network", 100);
 
             IPAddress addr;
 

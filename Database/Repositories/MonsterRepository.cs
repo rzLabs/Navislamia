@@ -36,7 +36,7 @@ namespace Navislamia.Database.Repositories
             {
                 MonsterBase monster = new MonsterBase();
 
-                monster.ID = sqlRdr.GetInt32(0);
+                monster.ID = sqlRdr.GetInt32(0);  //TODO: does this need to be encrypted?
                 monster.MonsterGroup = sqlRdr.GetInt32(1);
                 monster.TransformLevel = sqlRdr.GetInt32(6);
                 monster.WalkType = sqlRdr.GetByte(7);

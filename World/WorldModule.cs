@@ -1,5 +1,5 @@
 ﻿using Configuration;
-using Notification;
+using Navislamia.Notification;
 using System;
 
 namespace Navislamia.World

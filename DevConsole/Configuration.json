@@ -1,6 +1,6 @@
 [
   {
-    "Category": "Server",
+    "Category": "server",
     "Collection": {
       "name": "Navislamia",
       "index": "0",
@@ -9,14 +9,14 @@
     }
   },
   {
-    "Category": "Logs",
+    "Category": "logs",
     "Collection": {
       "minimum-level": 0,
-      "packet.debug": true
+      "packet.debug": false
     }
   },
   {
-    "Category": "Network",
+    "Category": "network",
     "Collection": {
       "io.auth.ip": "127.0.0.1",
       "io.auth.port": 4502,
@@ -32,31 +32,31 @@
     }
   },
   {
-    "Category": "Database",
+    "Category": "database",
     "Collection": {
       "world.ip": "127.0.0.1",
       "world.port": 1433,
-      "world.trusted_connection": false,
+      "world.trusted_connection": true,
       "world.name": "Arcadia73",
       "world.user": "sa",
       "world.user.pass": "",
       "player.ip": "127.0.0.1",
       "player.port": 1433,
-      "player.trusted_connection": false,
+      "player.trusted_connection": true,
       "player.name": "Telecaster",
       "player.user": "sa",
       "player.user.pass": ""
     }
   },
   {
-    "Category": "Scripts",
+    "Category": "scripts",
     "Collection": {
       "directory": ".\\Scripts",
 	    "skip_loading": false
     }
   },
   {
-    "Category": "Maps",
+    "Category": "maps",
     "Collection": {
       "directory": ".\\Maps",
       "width": 700000,
@@ -68,7 +68,7 @@
     }
   },
   {
-    "Category": "GameRule",
+    "Category": "gamerule",
     "Collection": {
       "MaxAccountLength": 60
     }
