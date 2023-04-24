@@ -264,7 +264,7 @@ namespace Network
 
             socket.NoDelay = true;
             
-            //TODO passed null for network and log options. Since this should be refactored to use DI, ill lave it like this for now
+            //TODO passed null for network and log options. Since this should be refactored to use DI, ill leave it like this for now
             GameClient client = new GameClient(socket, BufferLength, notificationSVC, this, gameActionSVC, null, null);
 
             notificationSVC.WriteDebug($"Game client connected from: {client.IP}");

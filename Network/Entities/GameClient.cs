@@ -9,8 +9,6 @@ using Navislamia.Notification;
 
 namespace Navislamia.Network.Entities
 {
-    using static Navislamia.Network.Packets.Extensions;
-
     public class GameClient : Client
     {
 

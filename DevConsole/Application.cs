@@ -14,25 +14,24 @@ namespace DevConsole
 {
     public class Application : IHostedService
     {
-        private readonly ILogger<Application> _logger;
         private readonly IHostEnvironment _environment;
         private readonly IGameService _gameService;
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, ILogger<Application> logger, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
-            _logger = logger;
             _environment = environment;
             _gameService = gameService;
+            _notificationService = notificationService;
             _networkOptions = networkOptions.Value;
         }
         
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Arcadia}", Resources.arcadia);
-            _logger.LogInformation("Navislamia starting...");
-            _logger.LogInformation("Environment: {EnvironmentName}", _environment.EnvironmentName);
+            _notificationService.WriteString(Resources.arcadia);
+            _notificationService.WriteString("Navislamia starting...");
+            _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
 
             var ip = _networkOptions.Ip;
             var port = _networkOptions.Port;
