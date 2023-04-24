@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Options;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Entities;
@@ -17,30 +17,30 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class GameActions : IGameActionService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
         INetworkService networkSVC;
+        private readonly NetworkOptions _networkOptions;
 
-        Dictionary<ushort, Func<Client, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<Client, ISerializablePacket, int>>();
+        private Dictionary<ushort, Func<Client, ISerializablePacket, int>> _actions = new();
 
-        public GameActions(IConfigurationService configService, INotificationService notificationService, INetworkService networkService)
+        public GameActions(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, INetworkService networkService)
         {
-            configSVC = configService;
             notificationSVC = notificationService;
             networkSVC = networkService;
+            _networkOptions = networkOptions.Value;
 
-            actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
-            actions.Add((ushort)ClientPackets.TS_CS_REPORT, onReport);
-            actions.Add((ushort)ClientPackets.TS_CS_CHARACTER_LIST, onCharacterList);
-            actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
+            _actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
+            _actions.Add((ushort)ClientPackets.TS_CS_REPORT, onReport);
+            _actions.Add((ushort)ClientPackets.TS_CS_CHARACTER_LIST, onCharacterList);
+            _actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
         public int Execute(Client client, ISerializablePacket msg)
         {
-            if (!actions.ContainsKey(msg.ID))
+            if (!_actions.ContainsKey(msg.ID))
                 return 1;
 
-            return actions[msg.ID]?.Invoke(client, msg) ?? 2;
+            return _actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
         private int OnVersion(Client client, ISerializablePacket arg)
@@ -70,7 +70,7 @@ namespace Navislamia.Network.Packets.Actions
             var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
             var _loginInfo = new TS_GA_CLIENT_LOGIN(_msg.Account, _msg.OneTimePassword);
 
-            var connMax = configSVC.Get<int>("io.max_connection", "Network", 2000);
+            var connMax = _networkOptions.MaxConnections;
 
             if (networkSVC.PlayerCount > connMax)
             {

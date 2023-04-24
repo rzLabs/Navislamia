@@ -14,25 +14,23 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class UploadActions : IUploadActionService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<Client, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<Client, ISerializablePacket, int>>();
+        Dictionary<ushort, Func<Client, ISerializablePacket, int>> _actions = new();
 
-        public UploadActions(IConfigurationService configService, INotificationService notificationService)
+        public UploadActions(INotificationService notificationService)
         {
-            configSVC = configService;
             notificationSVC = notificationService;
 
-            actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
+            _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 
         public int Execute(Client client, ISerializablePacket msg)
         {
-            if (!actions.ContainsKey(msg.ID))
+            if (!_actions.ContainsKey(msg.ID))
                 return 1;
 
-            return actions[msg.ID]?.Invoke(client, msg) ?? 2;
+            return _actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
         public int OnLoginResult(Client client, ISerializablePacket msg)

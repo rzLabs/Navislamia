@@ -17,15 +17,13 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class AuthActions : IAuthActionService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
         INetworkService networkSVC;
 
         Dictionary<ushort, Func<Client, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<Client, ISerializablePacket, int>>();
 
-        public AuthActions(IConfigurationService configService, INotificationService notificationService, INetworkService networkService)
+        public AuthActions(INotificationService notificationService, INetworkService networkService)
         {
-            configSVC = configService;
             notificationSVC = notificationService;
             networkSVC = networkService;
 

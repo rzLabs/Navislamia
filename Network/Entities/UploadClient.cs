@@ -1,24 +1,23 @@
 ﻿using Configuration;
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets;
-using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
-using Navislamia.Network.Packets.Upload;
 using Network;
 using Notification;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 
 namespace Navislamia.Network.Entities
 {
     public class UploadClient : Client
     {
-        public UploadClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IUploadActionService uploadActionService) : base(socket, length, configurationService, notificationService, networkService, null, uploadActionService, null)
+        private readonly NetworkOptions _networkOptions;
+        private readonly LogOptions _logOptions;
+        
+        public UploadClient(Socket socket, int length, INotificationService notificationService,
+            INetworkService networkService, IUploadActionService uploadActionService,
+            IOptions<NetworkOptions> networkOptions, IOptions<LogOptions> logOptions) : base(socket, length, 
+            notificationService, networkService, null, uploadActionService, null, 
+            networkOptions, logOptions)
         {
             Data = new byte[BufferLen];
         }

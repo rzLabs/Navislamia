@@ -9,49 +9,47 @@ using Network.Security;
 using Notification;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 
 namespace Navislamia.Network.Entities
 {
     public class MessageQueue
     {
-        bool debugPackets = false;
-
         bool sendProcessing = false;
         bool recvProcessing = false;
 
-        XRC4Cipher RecvCipher = new XRC4Cipher();
-        XRC4Cipher SendCipher = new XRC4Cipher();
+        XRC4Cipher RecvCipher = new();
+        XRC4Cipher SendCipher = new();
 
-        ConcurrentQueue<QueuedMessage> sendQueue= new ConcurrentQueue<QueuedMessage>();
+        ConcurrentQueue<QueuedMessage> sendQueue= new();
         BlockingCollection<QueuedMessage> sendCollection;
 
-        ConcurrentQueue<QueuedMessage> recvQueue = new ConcurrentQueue<QueuedMessage>();
+        ConcurrentQueue<QueuedMessage> recvQueue = new();
         BlockingCollection<QueuedMessage> recvCollection;
-
-        IConfigurationService configSVC;
+        
         INotificationService notificationSVC;
 
         IAuthActionService authActionSVC;
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
 
-        public MessageQueue(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
+        private readonly NetworkOptions _networkOptions;
+        private readonly LogOptions _logOptions;
+
+        public MessageQueue(INotificationService notificationService, IAuthActionService authActionService,
+            IGameActionService gameActionService, IUploadActionService uploadActionService,
+            IOptions<NetworkOptions> networkOptions, IOptions<LogOptions> logOptions)
         {
-            var cipherKey = configurationService.Get<string>("cipher.key", "Network");
-
-            debugPackets = configurationService.Get<bool>("packet.debug", "Logs", false);
-
-            configSVC = configurationService;
+            _networkOptions = networkOptions.Value;
+            _logOptions = logOptions.Value;
+            
             notificationSVC = notificationService;
 
-            RecvCipher.SetKey(cipherKey);
-            SendCipher.SetKey(cipherKey);
+            RecvCipher.SetKey(_networkOptions.CipherKey);
+            SendCipher.SetKey(_networkOptions.CipherKey);
 
             sendCollection = new BlockingCollection<QueuedMessage>(sendQueue);
             recvCollection = new BlockingCollection<QueuedMessage>(recvQueue);
@@ -59,7 +57,7 @@ namespace Navislamia.Network.Entities
             authActionSVC = authActionService;
             uploadActionSVC = uploadActionService;
             gameActionSVC = gameActionService;
-
+            
             Task.Run(() =>
             {
                 while (true)
@@ -192,7 +190,7 @@ namespace Navislamia.Network.Entities
                     // add message to the queue
                     if (msg is not null)
                     {
-                        if (debugPackets)
+                        if (_logOptions.PacketDebug)
                         {
                             string packetDmp = ((Packet)msg).DumpToString();
 
@@ -283,7 +281,7 @@ namespace Navislamia.Network.Entities
                     {
                         PendReceive(client, msg);
 
-                        if (debugPackets)
+                        if (_logOptions.PacketDebug)
                         {
                             string packetDmp = ((Packet)msg).DumpToString();
 
@@ -333,7 +331,7 @@ namespace Navislamia.Network.Entities
                     if (queuedMsg.Client is GameClient)
                         SendCipher.Encode(queuedMsg.Message.Data, sendBuffer, sendBuffer.Length);
 
-                    if (debugPackets)
+                    if (_logOptions.PacketDebug)
                     {
                         string packetDmp = ((Packet)queuedMsg.Message).DumpToString();
 

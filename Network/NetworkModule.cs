@@ -10,6 +10,7 @@ using System.Net.Sockets;
 
 using Configuration;
 using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Notification;
 using Serilog.Events;
 
@@ -42,17 +43,19 @@ namespace Network
         IUploadActionService uploadActionSVC;
 
         private readonly NetworkOptions _networkOptions;
+        private readonly ServerOptions _serverOptions;
 
         public NetworkModule() { }
 
-        public NetworkModule(IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public NetworkModule(IOptions<NetworkOptions> networkOptions, IOptions<ServerOptions> serverOptions, INotificationService notificationService)
         {
             notificationSVC = notificationService;
             _networkOptions = networkOptions.Value;
+            _serverOptions = serverOptions.Value;
             
-            authActionSVC = new AuthActions(configSVC, notificationSVC, this);
-            gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
-            uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
+            authActionSVC = new AuthActions(notificationSVC, this);
+            gameActionSVC = new GameActions(networkOptions, notificationSVC, this); ;
+            uploadActionSVC = new UploadActions(notificationSVC); ;
         }
         /// <summary>
         /// Game clients that have not been authorized yet
@@ -88,7 +91,7 @@ namespace Network
 
             notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
 
-            if (sendInfoToUpload() > 0)
+            if (SendInfoToUpload() > 0)
                 return 4;
 
             return 0;
@@ -123,7 +126,8 @@ namespace Network
 
             try
             {
-                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this, authActionSVC);
+                //TODO passed null for network and log options. Since this should be refactored to use DI, ill lave it like this for now
+                auth = new AuthClient(authSock, BufferLength, notificationSVC, this, authActionSVC, null, null);
                 status = auth.Connect(authEP);
             }
             catch (Exception ex)
@@ -147,14 +151,14 @@ namespace Network
         {
             try
             {
-                var idx = configSVC.Get<ushort>("index", "Server", 0);
+                var index = _serverOptions.Index;
                 var ip = _networkOptions.Ip;
                 var port = _networkOptions.Port;
-                var name = configSVC.Get<string>("name", "Server", "Navislamia");
-                var screenshot_url = configSVC.Get<string>("screenshort.url", "Server", "about:blank");
-                var adult_server = configSVC.Get<bool>("adult", "Server", false);
+                var name = _serverOptions.Name;
+                var screenshotUrl = _serverOptions.ScreenshotUrl;
+                var isAdultServer = _serverOptions.IsAdultServer;
 
-                var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
+                var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
                 auth.PendMessage(msg);
             }
@@ -191,13 +195,15 @@ namespace Network
 
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = _networkOptions.BufferSize
+            BufferLength = _networkOptions.BufferSize;
 
             int status = 0;
 
             try
             {
-                upload = new UploadClient(uploadSock, BufferLength, configSVC, notificationSVC, this, uploadActionSVC);
+                //TODO passed null for network and log options. Since this should be refactored to use DI, ill lave it like this for now
+                //If its needed before than inject IConfigurations and get the section via _configuration.GetSection("ConfigName").Value;
+                upload = new UploadClient(uploadSock, BufferLength, notificationSVC, this, uploadActionSVC, null, null);
                 status = upload.Connect(uploadEP);
             }
             catch (Exception ex)
@@ -217,11 +223,11 @@ namespace Network
             return 0;
         }
 
-        int sendInfoToUpload()
+        int SendInfoToUpload()
         {
             try
             {
-                var serverName = configSVC.Get<string>("name", "Server", "Navislamia");
+                var serverName = _serverOptions.Name;
 
                 var msg = new TS_SU_LOGIN(serverName);
 
@@ -268,8 +274,9 @@ namespace Network
             Socket socket = listener.EndAcceptSocket(ar);
 
             socket.NoDelay = true;
-
-            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionSVC);
+            
+            //TODO passed null for network and log options. Since this should be refactored to use DI, ill lave it like this for now
+            GameClient client = new GameClient(socket, BufferLength, notificationSVC, this, gameActionSVC, null, null);
 
             notificationSVC.WriteDebug($"Game client connected from: {client.IP}");
 

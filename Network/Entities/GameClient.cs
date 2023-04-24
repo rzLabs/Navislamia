@@ -13,6 +13,8 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 
 namespace Navislamia.Network.Entities
 {
@@ -22,8 +24,12 @@ namespace Navislamia.Network.Entities
     {
 
         protected IGameActionService gameActionsSVC;
-
-        public GameClient(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IGameActionService actionService) : base(socket, length, configurationService, notificationService, networkService, null, null, actionService)
+        private readonly NetworkOptions _networkOptions;
+        private readonly LogOptions _logOptions;
+        public GameClient(Socket socket, int length, INotificationService notificationService,
+            INetworkService networkService, IGameActionService actionService, IOptions<NetworkOptions> networkOptions, 
+            IOptions<LogOptions> logOptions) : base(socket, length, notificationService, networkService, null,
+            null, actionService, networkOptions, logOptions)
         {
             Data = new byte[BufferLen];
 

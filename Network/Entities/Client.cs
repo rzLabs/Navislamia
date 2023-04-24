@@ -17,6 +17,8 @@ using Network.Security;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using System.Threading;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Network.Enums;
 
 namespace Navislamia.Network.Entities
@@ -27,7 +29,6 @@ namespace Navislamia.Network.Entities
 
         public bool Ready = false;
 
-        public IConfigurationService configSVC;
         public INotificationService notificationSVC;
         public INetworkService networkSVC;
 
@@ -37,17 +38,25 @@ namespace Navislamia.Network.Entities
 
         public Tag ClientInfo = new Tag();
 
-        public Client(Socket socket, int length, IConfigurationService configurationService, INotificationService notificationService, INetworkService networkService, IAuthActionService authActionService, IUploadActionService uploadActionService, IGameActionService gameActionService)
+        private readonly NetworkOptions _networkOptions;
+        private readonly LogOptions _logOptions;
+
+        public Client(Socket socket, int length, INotificationService notificationService,
+            INetworkService networkService, IAuthActionService authActionService,
+            IUploadActionService uploadActionService, IGameActionService gameActionService,
+            IOptions<NetworkOptions> networkOptions, IOptions<LogOptions> logOptions)
         {
             Socket = socket;
             BufferLen = length;
-            configSVC = configurationService;
             notificationSVC = notificationService;
             networkSVC = networkService;
+            _networkOptions = networkOptions.Value;
+            _logOptions = logOptions.Value;
 
             messageBuffer = new byte[BufferLen];
 
-            MessageQueue = new MessageQueue(this.configSVC, this.notificationSVC, authActionService, gameActionService, uploadActionService);
+            MessageQueue = new MessageQueue(notificationSVC, authActionService, gameActionService, uploadActionService,
+                networkOptions, logOptions);
         }
 
         public int DataLength => Data?.Length ?? -1;

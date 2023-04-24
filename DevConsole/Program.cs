@@ -55,7 +55,6 @@ class Program
                 services.AddSingleton<INetworkService, NetworkModule>();
                 services.AddSingleton<IGameService, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
-                services.AddSingleton<IConfigurationService, ConfigurationModule>();
             })
             .ConfigureLogging((context, logging) => {
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));

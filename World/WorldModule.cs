@@ -6,12 +6,10 @@ namespace Navislamia.World
 {
     public class WorldModule : IWorldService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        public WorldModule(IConfigurationService configurationService, INotificationService notificationService)
+        public WorldModule( INotificationService notificationService)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
         }
 
