@@ -24,7 +24,7 @@ namespace Navislamia.Database.Repositories
         {
             List<MonsterBase> monsters = new List<MonsterBase>();
 
-            using IDataReader sqlRdr = dbConnection.ExecuteReaderAsync(query).Result;
+            using IDataReader sqlRdr = dbConnection.ExecuteReader(query);
 
             while (sqlRdr.Read())
             {
@@ -43,8 +43,8 @@ namespace Navislamia.Database.Repositories
                 monster.VisibleRange = sqlRdr.GetInt32(22);
                 monster.ChaseRange = sqlRdr.GetInt32(23);
                 monster.MonsterType = sqlRdr.GetByte(29);
-                monster.StatID = sqlRdr.GetInt32(30);
-                monster.FightType = sqlRdr.GetInt32(31);
+                monster.StatID = sqlRdr.GetByte(30); // previously GetInt32
+                monster.FightType = sqlRdr.GetByte(31); // previously GetInt32
                 monster.SkillLinkID = sqlRdr.GetInt32(32);
                 monster.Ability = sqlRdr.GetInt32(36);
                 monster.WalkSpeed = sqlRdr.GetInt32(39);
@@ -52,8 +52,8 @@ namespace Navislamia.Database.Repositories
                 monster.AttackRange = Convert.ToSingle(sqlRdr[41]);
                 monster.HidesenseRange = Convert.ToSingle(sqlRdr[42]);
                 monster.HP = sqlRdr.GetInt32(43);
-                monster.MP = sqlRdr.GetInt32(44);
-                monster.AttackPoint = sqlRdr.GetInt32(45);
+                monster.MP = sqlRdr.GetDecimal(44); // previously GetInt32
+                monster.AttackPoint = sqlRdr.GetDecimal(45); // previously GetInt32
                 monster.MagicPoint = sqlRdr.GetInt32(46);
                 monster.Defense = sqlRdr.GetInt32(47);
                 monster.MagicDefense = sqlRdr.GetInt32(48);
@@ -67,9 +67,9 @@ namespace Navislamia.Database.Repositories
                 monster.TamingPercentage = Convert.ToSingle(sqlRdr[56]);
                 monster.Exp = sqlRdr.GetInt32(58);
                 monster.JP = sqlRdr.GetInt32(59);
-                monster.GoldDropPercentage = sqlRdr.GetInt32(60);
-                monster.GoldMin = sqlRdr.GetInt32(61);
-                monster.GoldMax = sqlRdr.GetInt32(62);
+                monster.GoldDropPercentage = sqlRdr.GetDecimal(60); // previously GetInt32
+                monster.GoldMin = sqlRdr.GetDecimal(61); // previously GetInt32
+                monster.GoldMax = sqlRdr.GetInt32(62); 
                 monster.ChaosDropPercentage = sqlRdr.GetInt32(63);
                 monster.ChaosMin = sqlRdr.GetInt32(64);
                 monster.ChaosMax = sqlRdr.GetInt32(65);
@@ -80,7 +80,7 @@ namespace Navislamia.Database.Repositories
                 monster.ChaosMin2 = sqlRdr.GetInt32(70);
                 monster.ChaosMax2 = sqlRdr.GetInt32(71);
                 monster.DropLinkID = sqlRdr.GetInt32(72);
-                monster.ScriptOnDead = sqlRdr.GetString(75);
+                monster.ScriptOnDead = sqlRdr.GetInt32(75);
 
                 monsters.Add(monster);
             }

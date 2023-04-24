@@ -38,11 +38,11 @@ namespace Navislamia.Database.Entities
 
         public int HP;
 
-        public int MP;
+        public decimal MP; // previously GetInt32
 
-        public int AttackPoint;
+        public decimal AttackPoint; // previously GetInt32
 
-        public int MagicPoint;
+        public decimal MagicPoint;
 
         public int Defense;
 
@@ -85,9 +85,13 @@ namespace Navislamia.Database.Entities
         public int FightType;
 
         public List<MonsterSkillTrigger> TriggerList;
-        public int GoldDropPercentage;
+        public decimal GoldDropPercentage; // previously GetInt32
 
-        public int GoldMin, GoldMax, GoldMin2, GoldMax2;
+        public decimal GoldMin; // previously GetInt32
+        public int GoldMax;
+        public int GoldMin2;
+        public int GoldMax2;
+        
         public int ChaosDropPercentage;
 
         public int ChaosMin, ChaosMax, ChaosMin2, ChaosMax2;
@@ -100,6 +104,6 @@ namespace Navislamia.Database.Entities
 
         public MonsterSkill SkillInfoList;
 
-        public string ScriptOnDead;
+        public int ScriptOnDead; // previously string
     }
 }

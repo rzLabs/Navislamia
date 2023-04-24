@@ -43,8 +43,11 @@ class Program
                 services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
                 services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
                 services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
-                services.Configure<WorldOptions>(context.Configuration.GetSection("World"));
-                services.Configure<PlayerOptions>(context.Configuration.GetSection("Player"));
+                services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
+                services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));
+                services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
+                services.Configure<LogOptions>(context.Configuration.GetSection("Log"));
+
 
                 // Services
                 services.AddSingleton<ICommandService, CommandModule>();

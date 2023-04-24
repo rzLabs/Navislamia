@@ -3,7 +3,7 @@ using Configuration.Options;
 
 namespace Navislamia.Configuration.Options
 {
-    public abstract class WorldOptions : IDbCredentials
+    public class WorldOptions : IDbCredentials
     {
         [Required] 
         public string Ip { get; set; }
