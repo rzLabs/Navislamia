@@ -14,6 +14,7 @@ using Serilog.Events;
 
 using Network.Security;
 
+using Navislamia.Network.Interfaces;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Network.Packets.Auth;
@@ -44,16 +45,16 @@ namespace Network
         /// <summary>
         /// Game clients that have not been authorized yet
         /// </summary>
-        public Dictionary<string, Client> AuthAccounts { get; set; } = new Dictionary<string, Client>();
+        public Dictionary<string, IClient> AuthAccounts { get; set; } = new Dictionary<string, IClient>();
 
         /// <summary>
         /// Game clients that have been authorized and are now only the gameserver
         /// </summary>
-        public Dictionary<string, Client> GameClients { get; set; } = new Dictionary<string, Client>();
+        public Dictionary<string, IClient> GameClients { get; set; } = new Dictionary<string, IClient>();
 
         public int PlayerCount => GameClients.Count;
 
-        public bool Ready => auth.Ready && upload.Ready;
+        public bool Ready => ((AuthClientEntity)auth.Entity).Ready && ((UploadClientEntity)upload.Entity).Ready;
 
         public AuthClient AuthClient => auth;
 
@@ -67,8 +68,8 @@ namespace Network
             notificationSVC = notificationService;
 
             authActionSVC = new AuthActions(configSVC, notificationSVC, this);
-            gameActionSVC = new GameActions(configSVC, notificationSVC, this); ;
-            uploadActionSVC = new UploadActions(configSVC, notificationSVC); ;
+            gameActionSVC = new GameActions(configSVC, notificationSVC, this);
+            uploadActionSVC = new UploadActions(configSVC, notificationSVC);
         }
 
         public int Initialize()
@@ -115,13 +116,13 @@ namespace Network
 
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "network", 32768);
-
             int status = 0;
 
             try
             {
-                auth = new AuthClient(authSock, BufferLength, configSVC, notificationSVC, this, authActionSVC);
+                auth = new AuthClient(configSVC, notificationSVC, authActionSVC, null, null);
+                auth.Create(authSock);
+
                 status = auth.Connect(authEP);
             }
             catch (Exception ex)
@@ -189,13 +190,13 @@ namespace Network
 
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            BufferLength = configSVC.Get<int>("io.buffer_size", "network", 32768);
-
             int status = 0;
 
             try
             {
-                upload = new UploadClient(uploadSock, BufferLength, configSVC, notificationSVC, this, uploadActionSVC);
+                upload = new UploadClient(configSVC, notificationSVC, null, null, uploadActionSVC);
+                upload.Create(uploadSock);
+
                 status = upload.Connect(uploadEP);
             }
             catch (Exception ex)
@@ -267,9 +268,10 @@ namespace Network
 
             socket.NoDelay = true;
 
-            GameClient client = new GameClient(socket, BufferLength, configSVC, notificationSVC, this, gameActionSVC);
+            GameClient client = new GameClient(configSVC, notificationSVC, null, gameActionSVC, null);
+            client.Create(socket);
 
-            notificationSVC.WriteDebug($"Game client connected from: {client.IP}");
+            notificationSVC.WriteDebug($"Game client connected from: {client.Entity.IP}");
 
             client.Listen();
         }
@@ -285,7 +287,7 @@ namespace Network
             return 0;
         }
 
-        public bool RegisterAccount(Client client, string accountName)
+        public bool RegisterAccount(IClient client, string accountName)
         {
             if (GameClients.ContainsKey(accountName))
                 return false;

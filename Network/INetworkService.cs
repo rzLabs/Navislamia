@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Navislamia.Network.Interfaces;
+
 namespace Network
 {
     public interface INetworkService
@@ -13,9 +15,9 @@ namespace Network
 
         public UploadClient UploadClient { get; }
 
-        public Dictionary<string, Client> AuthAccounts { get; set; }
+        public Dictionary<string, IClient> AuthAccounts { get; set; }
 
-        public Dictionary<string, Client> GameClients { get; set; }
+        public Dictionary<string, IClient> GameClients { get; set; }
 
         public int PlayerCount { get; }
 
@@ -23,6 +25,6 @@ namespace Network
 
         public int StartListener();
 
-        public bool RegisterAccount(Client client, string accountName);
+        public bool RegisterAccount(IClient client, string accountName);
     }
 }

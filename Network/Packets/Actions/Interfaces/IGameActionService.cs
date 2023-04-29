@@ -1,4 +1,5 @@
 ﻿using Navislamia.Network.Entities;
+using Navislamia.Network.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace Navislamia.Network.Packets.Actions.Interfaces
 {
     public interface IGameActionService
     {
-        public int Execute(Client client, ISerializablePacket msg);
+        public int Execute(IClient client, ISerializablePacket msg);
     }
 }
