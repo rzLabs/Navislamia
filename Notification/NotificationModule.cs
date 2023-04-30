@@ -9,6 +9,9 @@ using Serilog.Events;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
+using static Navislamia.Notification.StringUtilities;
+
+
 namespace Navislamia.Notification
 {
     public class NotificationModule : INotificationService
@@ -30,15 +33,16 @@ namespace Navislamia.Notification
 
         public void WriteMarkup(string message, LogEventLevel level = LogEventLevel.Verbose)
         {
-            AnsiConsole.Write(new Markup($"{message}\n"));
-            Log.Write(level, message);
+            var markup = new Markup($"{message}\n");
+
+            AnsiConsole.Write(markup);
+            Log.Write(level, message.RemoveFormatting());
         }
 
         public void WriteDebug(string message)
         {
 #if DEBUG
             WriteMarkup($"[bold orange3]{message}[/]\n");
-            Log.Debug(message);
 #endif
         }
 
@@ -62,13 +66,11 @@ namespace Navislamia.Notification
         public void WriteWarning(string message)
         {
             WriteMarkup($"[bold yellow]{message}[/]\n");
-            Log.Warning(message);
         }
 
         public void WriteError(string message)
         {
             WriteMarkup($"[bold red]{message}[/]\n");
-            Log.Error(message);
         }
 
         public void WriteSuccess(string message) => WriteSuccess(new string[] { message }, false);
@@ -98,7 +100,7 @@ namespace Navislamia.Notification
         public void Write(IRenderable renderable, LogEventLevel level = LogEventLevel.Verbose)
         {
             AnsiConsole.Write(renderable);
-            Log.Write(level, renderable.ToString());
+            Log.Write(level, renderable.ToString().RemoveFormatting());
         }
     }
 }
