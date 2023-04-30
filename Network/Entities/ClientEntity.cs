@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Navislamia.Network.Enums;
 
 namespace Navislamia.Network.Entities
 {
@@ -53,20 +54,11 @@ namespace Navislamia.Network.Entities
         public int DataOffset;
 
         public byte[] MessageBuffer;
-    }
+        
+        public bool Ready { get; set; }
+        
+        public ClientType Type { get; set; }
 
-    public class AuthClientEntity : ClientEntity
-    {
-        public bool Ready { get; set; } = false;
     }
-
-    public class UploadClientEntity : ClientEntity
-    {
-        public bool Ready { get; set; } = false;
-    }
-
-    public class GameClientEntity : ClientEntity
-    {
-        public Tag Info { get; set; } = new Tag();
-    }
+    
 }

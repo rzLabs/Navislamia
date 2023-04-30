@@ -12,6 +12,8 @@ using Navislamia.Database;
 using Navislamia.Game;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
+using Navislamia.Network.Packets.Actions;
+using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Notification;
 using Navislamia.World;
 using Network;
@@ -38,8 +40,9 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
-                //Options
                 services.AddHostedService<Application>();
+                
+                //Options
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
                 services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
                 services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
@@ -57,11 +60,13 @@ public class Program
                 services.AddSingleton<IScriptingService, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
                 services.AddSingleton<INetworkService, NetworkModule>();
-                services.AddSingleton<IGameService, GameModule>();
+                services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
-                services.AddSingleton<IMessageQueue, MessageQueue>();
-
-
+                services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
+                services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+                services.AddSingleton<IAuthActionService, AuthActions>();
+                services.AddSingleton<IGameActionService, GameActions>();
+                services.AddSingleton<IUploadActionService, UploadActions>();
 
             })
             .ConfigureLogging((context, logging) => {

@@ -11,6 +11,6 @@ namespace Navislamia.Network.Packets.Actions.Interfaces
 {
     public interface IUploadActionService
     {
-        public int Execute(IClient client, ISerializablePacket msg);
+        public int Execute(ClientService<UploadClientEntity> client, ISerializablePacket msg);
     }
 }

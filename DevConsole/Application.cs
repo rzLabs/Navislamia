@@ -14,14 +14,14 @@ namespace DevConsole
     public class Application : IHostedService
     {
         private readonly IHostEnvironment _environment;
-        private readonly IGameService _gameService;
+        private readonly IGameModule _gameModule;
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameModule gameModule, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             _environment = environment;
-            _gameService = gameService;
+            _gameModule = gameModule;
             _notificationService = notificationService;
             _networkOptions = networkOptions.Value;
         }
@@ -43,7 +43,7 @@ namespace DevConsole
 
             try
             {
-                _gameService.Start(ip, port, backlog);
+                _gameModule.Start(ip, port, backlog);
             }
             catch (Exception e)
             {

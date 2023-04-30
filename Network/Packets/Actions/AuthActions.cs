@@ -1,18 +1,11 @@
-﻿using Configuration;
-using Navislamia.Network.Enums;
+﻿using Navislamia.Network.Enums;
 using Network;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Packets;
 using Navislamia.Network.Entities;
+using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Actions.Interfaces;
-using Navislamia.Network.Interfaces;
 
 namespace Navislamia.Network.Packets.Actions
 {
@@ -21,7 +14,7 @@ namespace Navislamia.Network.Packets.Actions
         INotificationService notificationSVC;
         INetworkService networkSVC;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
+        Dictionary<ushort, Func<ClientService<AuthClientEntity>, ISerializablePacket, int>> actions = new();
 
         public AuthActions(INotificationService notificationService, INetworkService networkService)
         {
@@ -32,7 +25,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
         }
 
-        public int Execute(IClient client, ISerializablePacket msg)
+        public int Execute(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return 1;
@@ -40,7 +33,7 @@ namespace Navislamia.Network.Packets.Actions
             return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
-        public int OnLoginResult(IClient client, ISerializablePacket msg)
+        private int OnLoginResult(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {
             var _msg = msg as TS_AG_LOGIN_RESULT;
 
@@ -51,21 +44,21 @@ namespace Navislamia.Network.Packets.Actions
                 return 1;
             }
 
-            ((AuthClient)client).GetEntity().Ready = true;
+            client.GetEntity().Ready = true;
 
             notificationSVC.WriteSuccess("Successfully registered to the Auth Server!");
 
             return 0;
         }
 
-        public int OnAuthClientLoginResult(IClient client, ISerializablePacket msg)
+        private int OnAuthClientLoginResult(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {
             var _msg = msg as TS_AG_CLIENT_LOGIN;
 
-            GameClient gameClient = null;
+            ClientService<GameClientEntity> gameClient = null;
 
             // Check if the game client connection is queued in AuthAccounts
-            if (!networkSVC.AuthAccounts.ContainsKey(_msg.Account.String))
+            if (!networkSVC.UnauthorizedGameClients.ContainsKey(_msg.Account.String))
             {
                 notificationSVC.WriteError($"Account register failed for: {_msg.Account.String}");
 
@@ -73,15 +66,15 @@ namespace Navislamia.Network.Packets.Actions
             }
             else
             {
-                gameClient = networkSVC.AuthAccounts[_msg.Account.String] as GameClient;
+                gameClient = networkSVC.UnauthorizedGameClients[_msg.Account.String];
 
-                networkSVC.AuthAccounts.Remove(_msg.Account.String);
+                networkSVC.UnauthorizedGameClients.Remove(_msg.Account.String);
 
                 if (_msg.Result == (ushort)ResultCode.Success)
                 {
-                    var info = gameClient.GetEntity()?.Info;
+                    var info = gameClient.GetEntity().Info;
 
-                    if (!networkSVC.RegisterAccount(client, _msg.Account.String))
+                    if (!networkSVC.RegisterAccount(gameClient, _msg.Account.String))
                     {
                         // TODO: SendLogoutToAuth
                         info.AuthVerified = false;

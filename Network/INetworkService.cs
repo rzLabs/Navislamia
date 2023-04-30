@@ -11,13 +11,9 @@ namespace Network
     {
         public bool Ready { get; }
 
-        public AuthClient AuthClient { get; }
+        public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; }
 
-        public UploadClient UploadClient { get; }
-
-        public Dictionary<string, IClient> AuthAccounts { get; set; }
-
-        public Dictionary<string, IClient> GameClients { get; set; }
+        public Dictionary<string, ClientService<GameClientEntity>> AuthorizedGameClients { get; set; }
 
         public int PlayerCount { get; }
 
@@ -25,6 +21,10 @@ namespace Network
 
         public int StartListener();
 
-        public bool RegisterAccount(IClient client, string accountName);
+        public bool RegisterAccount(ClientService<GameClientEntity> client, string accountName);
+
+        public IClientService<AuthClientEntity> GetAuthClient();
+        
+        public IClientService<UploadClientEntity> GetUploadClient();
     }
 }

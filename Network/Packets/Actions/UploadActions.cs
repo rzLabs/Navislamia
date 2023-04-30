@@ -17,7 +17,7 @@ namespace Navislamia.Network.Packets.Actions
     {
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
+        Dictionary<ushort, Func<ClientService<UploadClientEntity>, ISerializablePacket, int>> actions = new();
 
         public UploadActions(INotificationService notificationService)
         {
@@ -25,7 +25,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 
-        public int Execute(IClient client, ISerializablePacket msg)
+        public int Execute(ClientService<UploadClientEntity> client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return 1;
@@ -33,7 +33,7 @@ namespace Navislamia.Network.Packets.Actions
             return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
-        public int OnLoginResult(IClient client, ISerializablePacket msg)
+        public int OnLoginResult(ClientService<UploadClientEntity> client, ISerializablePacket msg)
         {
             var _msg = msg as TS_US_LOGIN_RESULT;
 
@@ -44,7 +44,7 @@ namespace Navislamia.Network.Packets.Actions
                 return 1;
             }
 
-            ((UploadClient)client).GetEntity().Ready = true;
+            client.GetEntity().Ready = true;
 
             notificationSVC.WriteSuccess("Successfully registered to the Upload Server!");
 

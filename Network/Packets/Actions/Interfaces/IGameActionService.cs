@@ -10,6 +10,6 @@ namespace Navislamia.Network.Packets.Actions.Interfaces
 {
     public interface IGameActionService
     {
-        public int Execute(IClient client, ISerializablePacket msg);
+        public int Execute(ClientService<GameClientEntity> client, ISerializablePacket msg);
     }
 }

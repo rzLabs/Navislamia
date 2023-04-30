@@ -20,7 +20,7 @@ using Navislamia.Database.Interfaces;
 
 namespace Navislamia.Game
 {
-    public class GameModule : IGameService
+    public class GameModule : IGameModule
     {
         IWorldService worldSVC;
         IDatabaseService dbSVC;
