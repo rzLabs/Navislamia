@@ -12,24 +12,14 @@ using Navislamia.Command.Interfaces;
 
 namespace Navislamia.Command.Commands
 {
-    public class ConfigurationCreator : IConfigurationCreator
-    {
-        IConfigurationService configSVC;
-
-        public ConfigurationCreator(IConfigurationService configurationService) => configSVC = configurationService;
-
-        public void Create(string path = null) => configSVC.CreateDefault(path);
-    }
 
     public class CreateDefaultConfig : Command<CreateDefaultConfig.Settings>
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
         IConfigurationCreator _creator;
 
-        public CreateDefaultConfig(IConfigurationService configurationService, INotificationService notificationService, IConfigurationCreator creator)
+        public CreateDefaultConfig(INotificationService notificationService, IConfigurationCreator creator)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
             _creator = creator;
         }

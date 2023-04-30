@@ -6,24 +6,27 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 using Configuration;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Network.Packets.Actions.Interfaces;
+using Serilog;
 
 namespace Navislamia.Network.Entities
 {
     public abstract class ClientBase<T> where T : ClientEntity
     {
-        internal readonly IConfigurationService configSVC;
         internal readonly INotificationService notificationSVC;
-
+        internal readonly IOptions<NetworkOptions> _networkTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
+        internal readonly IOptions<LogOptions> _logTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
         internal readonly MessageQueue messageQueue;
 
         public ClientEntity Entity;
 
-        public ClientBase(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
+        public ClientBase(INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
-            messageQueue = new MessageQueue(configSVC, notificationSVC, authActionService, gameActionService, uploadActionService);
+            //TODO make messagequeue injectable
+            messageQueue = new MessageQueue(notificationSVC, authActionService, gameActionService, uploadActionService, _networkTmpOptions, _logTmpOptions);
         }
 
         public virtual ClientEntity GetEntity()

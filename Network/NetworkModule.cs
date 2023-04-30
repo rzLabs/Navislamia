@@ -1,47 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-
 using System.Net;
 using System.Net.Sockets;
-
 using Configuration;
-using Navislamia.Notification;
-using Serilog.Events;
-
-using Network.Security;
-
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
+using Navislamia.Network.Entities;
 using Navislamia.Network.Interfaces;
-using Navislamia.Network.Packets;
-using Navislamia.Network.Packets.Upload;
-using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Actions.Interfaces;
-using Navislamia.Network.Entities;
+using Navislamia.Network.Packets.Auth;
+using Navislamia.Network.Packets.Upload;
+using Navislamia.Notification;
+using Network;
 
-namespace Network
+namespace Navislamia.Network
 {
     public class NetworkModule : INetworkService
     {
-        IConfigurationService configSVC;
-        INotificationService notificationSVC;
+        private readonly INotificationService _notificationSvc;
 
-        TcpListener listener = null;
+        private TcpListener _listener = null;
 
-        int BufferLength = 1024;
+        private int _bufferLength = 1024;
 
-        List<GameClient> connections = new List<GameClient>();
+        private List<GameClient> _connections = new();
 
-        AuthClient auth = null;
-        UploadClient upload = null;
+        private AuthClient _auth;
+        private UploadClient _upload;
 
-        IAuthActionService authActionSVC;
-        IGameActionService gameActionSVC;
-        IUploadActionService uploadActionSVC;
-
+        private readonly IAuthActionService _authActionSvc;
+        private readonly IGameActionService _gameActionSvc;
+        private readonly IUploadActionService _uploadActionSvc;
+        private readonly NetworkOptions _networkOptions;
+        private readonly IOptions<NetworkOptions> _networkTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
+        private readonly ServerOptions _serverOptions;
         /// <summary>
         /// Game clients that have not been authorized yet
         /// </summary>
@@ -54,53 +47,55 @@ namespace Network
 
         public int PlayerCount => GameClients.Count;
 
-        public bool Ready => ((AuthClientEntity)auth.Entity).Ready && ((UploadClientEntity)upload.Entity).Ready;
+        public bool Ready => ((AuthClientEntity)_auth.Entity).Ready && ((UploadClientEntity)_upload.Entity).Ready;
 
-        public AuthClient AuthClient => auth;
+        public AuthClient AuthClient => _auth;
 
-        public UploadClient UploadClient => upload;
+        public UploadClient UploadClient => _upload;
 
         public NetworkModule() { }
 
-        public NetworkModule(IConfigurationService configurationService, INotificationService notificationService)
+        public NetworkModule(IOptions<NetworkOptions> networkOptions, IOptions<ServerOptions> serverOptions, INotificationService notificationService)
         {
-            configSVC = configurationService;
-            notificationSVC = notificationService;
+            _notificationSvc = notificationService;
+            _networkOptions = networkOptions.Value;
+            _networkTmpOptions = networkOptions;
+            
 
-            authActionSVC = new AuthActions(configSVC, notificationSVC, this);
-            gameActionSVC = new GameActions(configSVC, notificationSVC, this);
-            uploadActionSVC = new UploadActions(configSVC, notificationSVC);
+            _authActionSvc = new AuthActions(_notificationSvc, this);
+            _gameActionSvc = new GameActions(networkOptions, _notificationSvc, this);
+            _uploadActionSvc = new UploadActions(_notificationSvc);
         }
 
         public int Initialize()
         {
-            if (connectToAuth() > 0)
+            if (ConnectToAuth() > 0)
                 return 1;
 
-            notificationSVC.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
+            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
 
-            if (sendGSInfoToAuth() > 0)
+            if (SendGsInfoToAuth() > 0)
                 return 2;
 
-            if (connectToUpload() > 0)
+            if (ConnectToUpload() > 0)
                 return 3;
 
-            notificationSVC.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
+            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
 
-            if (sendInfoToUpload() > 0)
+            if (SendInfoToUpload() > 0)
                 return 4;
 
             return 0;
         }
 
-        int connectToAuth()
+        private int ConnectToAuth()
         {
-            string addrStr = configSVC.Get<string>("io.auth.ip", "network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.auth.port", "network", 4502);
+            string addrStr = _networkOptions.Ip;
+            int port = _networkOptions.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                notificationSVC.WriteError("Invalid network auth.io.ip configuration! Review your Configuration.json!");
+                _notificationSvc.WriteError("Invalid network auth.io.ip configuration! Review your Configuration.json!");
                 return 1;
             }
 
@@ -108,11 +103,11 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteError($"Failed to parse auth.io.ip: {addrStr}");
+                _notificationSvc.WriteError($"Failed to parse auth.io.ip: {addrStr}");
                 return 1;
             }
 
-            IPEndPoint authEP = new IPEndPoint(addr, port);
+            IPEndPoint authEp = new IPEndPoint(addr, port);
 
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -120,21 +115,21 @@ namespace Network
 
             try
             {
-                auth = new AuthClient(configSVC, notificationSVC, authActionSVC, null, null);
-                auth.Create(authSock);
+                _auth = new AuthClient(_networkTmpOptions, _notificationSvc, _authActionSvc, null, null);
+                _auth.Create(authSock);
 
-                status = auth.Connect(authEP);
+                status = _auth.Connect(authEp);
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteException(ex);
+                _notificationSvc.WriteException(ex);
 
                 status = 1;
             }
 
             if (status == 1)
             {
-                notificationSVC.WriteError("Failed to connect to the auth server!");
+                _notificationSvc.WriteError("Failed to connect to the auth server!");
 
                 return status;
             }
@@ -142,39 +137,39 @@ namespace Network
             return 0;
         }
 
-        int sendGSInfoToAuth()
+        private int SendGsInfoToAuth()
         {
             try
             {
-                var idx = configSVC.Get<ushort>("index", "server", 0);
-                var ip = configSVC.Get<string>("io.ip", "network", "127.0.0.1");
-                var port = configSVC.Get<short>("io.port", "network", 4515);
-                var name = configSVC.Get<string>("name", "server", "Navislamia");
-                var screenshot_url = configSVC.Get<string>("screenshort.url", "server", "about:blank");
-                var adult_server = configSVC.Get<bool>("adult", "server", false);
+                var index = _serverOptions.Index;
+                var ip = _networkOptions.Ip;
+                var port = _networkOptions.Port;
+                var name = _serverOptions.Name;
+                var screenshotUrl = _serverOptions.ScreenshotUrl;
+                var isAdultServer = _serverOptions.IsAdultServer;
 
-                var msg = new TS_GA_LOGIN(idx, ip, port, name, screenshot_url, adult_server);
+                var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
-                auth.PendMessage(msg);
+                _auth.PendMessage(msg);
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteException(ex);
+                _notificationSvc.WriteException(ex);
 
                 return 1;
             }
 
             return 0;
         }
-        
-        int connectToUpload()
+
+        private int ConnectToUpload()
         {
-            string addrStr = configSVC.Get<string>("io.upload.ip", "network", "127.0.0.1");
-            short port = configSVC.Get<short>("io.upload.port", "network", 4616);
+            string addrStr = _networkOptions.UploadIp;
+            int port = _networkOptions.UploadPort;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                notificationSVC.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
+                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
                 return 1;
             }
 
@@ -182,11 +177,11 @@ namespace Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteError($"Failed to parse io.upload.ip: {addrStr}");
+                _notificationSvc.WriteError($"Failed to parse io.upload.ip: {addrStr}");
                 return 1;
             }
 
-            IPEndPoint uploadEP = new IPEndPoint(addr, port);
+            IPEndPoint uploadEp = new IPEndPoint(addr, port);
 
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -194,21 +189,21 @@ namespace Network
 
             try
             {
-                upload = new UploadClient(configSVC, notificationSVC, null, null, uploadActionSVC);
-                upload.Create(uploadSock);
+                _upload = new UploadClient(_networkTmpOptions, _notificationSvc, null, null, _uploadActionSvc);
+                _upload.Create(uploadSock);
 
-                status = upload.Connect(uploadEP);
+                status = _upload.Connect(uploadEp);
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteException(ex);
+                _notificationSvc.WriteException(ex);
 
                 status = 1;
             }
 
             if (status == 1)
             {
-                notificationSVC.WriteError("Failed to connect to the upload server!");
+                _notificationSvc.WriteError("Failed to connect to the upload server!");
 
                 return 1;
             }
@@ -216,19 +211,18 @@ namespace Network
             return 0;
         }
 
-        int sendInfoToUpload()
+        private int SendInfoToUpload()
         {
             try
             {
-                var serverName = configSVC.Get<string>("name", "server", "Navislamia");
-
+                var serverName = _serverOptions.Name;
                 var msg = new TS_SU_LOGIN(serverName);
 
-                upload.PendMessage(msg);
+                _upload.PendMessage(msg);
             }
             catch (Exception ex)
             {
-                notificationSVC.WriteException(ex);
+                _notificationSvc.WriteException(ex);
 
                 return 1;
             }
@@ -236,26 +230,26 @@ namespace Network
             return 0;
         }
 
-        int startClientListener()
+        private int StartClientListener()
         {
-            string addrStr = configSVC.Get<string>("io.ip", "network", "0.0.0.0");
-            short port = configSVC.Get<short>("io.port", "network", 4515);
-            int backlog = configSVC.Get<int>("io.backlog", "network", 100);
+            string addrStr = _networkOptions.Ip;
+            ushort port = _networkOptions.Port;
+            int backlog = _networkOptions.Backlog;
 
             IPAddress addr;
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                notificationSVC.WriteError($"Failed to parse io.ip: {addrStr}");
+                _notificationSvc.WriteError($"Failed to parse io.ip: {addrStr}");
                 return 1;
             }
 
 
-            listener = new TcpListener(addr, port);
-            listener.Start(backlog);
-            listener.BeginAcceptSocket(AttemptAcceptScoket, listener);
+            _listener = new TcpListener(addr, port);
+            _listener.Start(backlog);
+            _listener.BeginAcceptSocket(AttemptAcceptScoket, _listener);
 
-            notificationSVC.WriteSuccess(new string[] { "Game network started!", $"- [yellow]Listening at: {addrStr} : {port} with backlog of: {backlog}[/]\n" }, true);
+            _notificationSvc.WriteSuccess(new string[] { "Game network started!", $"- [yellow]Listening at: {addrStr} : {port} with backlog of: {backlog}[/]\n" }, true);
 
             return 0;
         }
@@ -268,19 +262,19 @@ namespace Network
 
             socket.NoDelay = true;
 
-            GameClient client = new GameClient(configSVC, notificationSVC, null, gameActionSVC, null);
+            GameClient client = new GameClient(_networkTmpOptions, _notificationSvc, null, _gameActionSvc, null);
             client.Create(socket);
 
-            notificationSVC.WriteDebug($"Game client connected from: {client.Entity.IP}");
+            _notificationSvc.WriteDebug($"Game client connected from: {client.Entity.IP}");
 
             client.Listen();
         }
 
         public int StartListener()
         {
-            if (startClientListener() > 0)
+            if (StartClientListener() > 0)
             {
-                notificationSVC.WriteError("Failed to start client listener!");
+                _notificationSvc.WriteError("Failed to start client listener!");
                 return 1;
             }
 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>Modules.Command</AssemblyName>
     <RootNamespace>Navislamia.Command</RootNamespace>
   </PropertyGroup>

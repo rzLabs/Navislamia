@@ -19,7 +19,7 @@ using static Navislamia.Network.Packets.Extensions;
 using Navislamia.Notification;
 using Network;
 using Configuration;
-
+using Microsoft.Extensions.Options;
 using Navislamia.Network.Interfaces;
 using Navislamia.Network.Packets.Actions.Interfaces;
 
@@ -27,14 +27,17 @@ namespace Navislamia.Network.Entities
 {
     public class AuthClient : ClientBase<AuthClientEntity>, IClient
     {
-        public AuthClient(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService) :
-        base(configurationService, notificationService, authActionService, gameActionService, uploadActionService)
+        private readonly NetworkOptions _networkOptions;
+        
+        public AuthClient(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService) :
+        base(notificationService, authActionService, gameActionService, uploadActionService)
         {
+            _networkOptions = networkOptions.Value;
         }
 
         public override void Create(Socket socket)
         {
-            var bufferLen = configSVC.Get<int>("io.buffer_size", "network", 32768);
+            var bufferLen = _networkOptions.BufferSize;
 
             AuthClientEntity gameClient = new AuthClientEntity()
             {

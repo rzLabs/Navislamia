@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Options;
 using Navislamia.Network.Interfaces;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Actions.Interfaces;
@@ -18,15 +18,15 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class GameActions : IGameActionService
     {
-        IConfigurationService configSVC;
+        private readonly NetworkOptions _networkOptions;
         INotificationService notificationSVC;
         INetworkService networkSVC;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<IClient, ISerializablePacket, int>>();
+        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
 
-        public GameActions(IConfigurationService configService, INotificationService notificationService, INetworkService networkService)
+        public GameActions(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, INetworkService networkService)
         {
-            configSVC = configService;
+            _networkOptions = networkOptions.Value;
             notificationSVC = notificationService;
             networkSVC = networkService;
 
@@ -71,7 +71,7 @@ namespace Navislamia.Network.Packets.Actions
             var _msg = msg as TM_CS_ACCOUNT_WITH_AUTH;
             var _loginInfo = new TS_GA_CLIENT_LOGIN(_msg.Account, _msg.OneTimePassword);
 
-            var connMax = configSVC.Get<int>("io.max_connection", "network", 2000);
+            var connMax = _networkOptions.MaxConnections;
 
             if (networkSVC.PlayerCount > connMax)
             {

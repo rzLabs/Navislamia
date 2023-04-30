@@ -27,14 +27,12 @@ namespace Scripting
         public int ScriptCount { get; set; }
 
         Script luaVM = new Script();
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
 
         public ScriptModule() { }
 
-        public ScriptModule(IConfigurationService configurationService, INotificationService notificationService)
+        public ScriptModule(INotificationService notificationService)
         {
-            configSVC = configurationService;
             notificationSVC = notificationService;
         }
 

@@ -15,16 +15,13 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class UploadActions : IUploadActionService
     {
-        IConfigurationService configSVC;
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new Dictionary<ushort, Func<IClient, ISerializablePacket, int>>();
+        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
 
-        public UploadActions(IConfigurationService configService, INotificationService notificationService)
+        public UploadActions(INotificationService notificationService)
         {
-            configSVC = configService;
             notificationSVC = notificationService;
-
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 

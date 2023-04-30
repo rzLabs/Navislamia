@@ -1,51 +1,63 @@
-﻿using Configuration;
+﻿using System;
+using System.Threading;
+using Configuration;
 using DevConsole.Properties;
-using Navislamia.Command;
 using Navislamia.Game;
 using Navislamia.Notification;
-using Serilog.Events;
-using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using DevConsole.Exceptions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace DevConsole
 {
-    public class Application : IApplication
+    public class Application : IHostedService
     {
-        private IConfigurationService configurationService;
-        private INotificationService notificationService;
-        private IGameService gameService;
-        private ICommandService commandService;
+        private readonly IHostEnvironment _environment;
+        private readonly IGameService _gameService;
+        private readonly NetworkOptions _networkOptions;
+        private readonly INotificationService _notificationService;
 
-        public Application(IConfigurationService configurationService, INotificationService notificationService, IGameService gameService, ICommandService commandService)
+        public Application(IHostEnvironment environment, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
-            this.configurationService = configurationService;
-            this.notificationService = notificationService;
-            this.gameService = gameService;
-            this.commandService = commandService;
+            _environment = environment;
+            _gameService = gameService;
+            _notificationService = notificationService;
+            _networkOptions = networkOptions.Value;
         }
 
-        public async Task<int> Run()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            notificationService.WriteString($"{Resources.arcadia}\n\nNavislamia starting...\n");
+            _notificationService.WriteString(Resources.arcadia);
+            _notificationService.WriteString("Navislamia starting...");
+            _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
 
-            string ip = configurationService.Get<string>("io.ip", "network", "127.0.0.1");
-            short port = configurationService.Get<short>("io.port", "network", 4502);
-            int backlog = configurationService.Get<int>("io.backlog", "network", 100);
-
-            if (await gameService.Start(ip, port, backlog) >= 1)
+            var ip = _networkOptions.Ip;
+            var port = _networkOptions.Port;
+            var backlog = _networkOptions.Backlog;
+            
+            if (string.IsNullOrWhiteSpace(ip) || port == null)
             {
-                notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
-
-                return 1;
+                throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }
 
-            return 0;
+            try
+            {
+                _gameService.Start(ip, port, backlog);
+            }
+            catch (Exception e)
+            {
+                StopAsync(cancellationToken);
+                _notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
+            }
+
+            Console.ReadLine();
+            return null;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return null;
         }
     }
 }

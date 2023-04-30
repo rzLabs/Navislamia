@@ -14,16 +14,20 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Navislamia.Network.Entities
 {
-    using static Navislamia.Network.Packets.Extensions;
 
     public class GameClient : ClientBase<GameClientEntity>, IClient
     {
-        public GameClient(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService) :
-            base(configurationService, notificationService, authActionService, gameActionService, uploadActionService)
+        private readonly NetworkOptions _networkOptions;
+
+        public GameClient(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IAuthActionService authActionService,
+            IGameActionService gameActionService, IUploadActionService uploadActionService) : base(notificationService,
+            authActionService, gameActionService, uploadActionService)
         {
+            _networkOptions = networkOptions.Value;
         }
 
         public Tag Info
@@ -34,7 +38,7 @@ namespace Navislamia.Network.Entities
 
         public override void Create(Socket socket)
         {
-            var bufferLen = configSVC.Get<int>("io.buffer_size", "network", 32768);
+            var bufferLen = _networkOptions.BufferSize;
 
             GameClientEntity gameClient = new GameClientEntity()
             {
