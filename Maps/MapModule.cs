@@ -13,13 +13,15 @@ using Objects;
 
 using Serilog.Events;
 using System;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using static Navislamia.Maps.Entities.ScriptDefine;
 
 namespace Maps
 {
     public class MapModule : IMapService
     {
-        IConfigurationService configSVC;
+        private readonly MapOptions _mapOptions;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
 
@@ -32,9 +34,9 @@ namespace Maps
         public static Dictionary<int, PropContactScriptInfo> PropScriptInfo = new Dictionary<int, PropContactScriptInfo>();
         public static Dictionary<int, EventAreaInfo> EventAreaInfo = new Dictionary<int, EventAreaInfo>();
 
-        public MapModule(IConfigurationService configurationService, INotificationService notificationService, IScriptingService scriptService)
+        public MapModule(IOptions<MapOptions> mapOptions, INotificationService notificationService, IScriptingService scriptService)
         {
-            configSVC = configurationService;
+            _mapOptions = mapOptions.Value;
             notificationSVC = notificationService;
             scriptSVC = scriptService;
         }
@@ -62,7 +64,7 @@ namespace Maps
             List<Task> tasks = new List<Task>();
             Task worker = null;
 
-            bool skipNFA = configSVC.Get<bool>("skip_loading_nfa", "maps", false);
+            bool skipLoadingNfa = _mapOptions.SkipLoadingNfa;
 
             tasks.Add(Task.Run(() =>
             {
@@ -128,7 +130,7 @@ namespace Maps
                         LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
                     }));
 
-                    if (!skipNFA)
+                    if (!skipLoadingNfa)
                     {
                         string attributeFileName = seamlessWorldInfo.GetAttributePolygonFileName(x, y);
 

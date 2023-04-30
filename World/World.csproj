@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <AssemblyName>Module.World</AssemblyName>
     <RootNamespace>Navislamia.World</RootNamespace>
+    <LangVersion>11</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

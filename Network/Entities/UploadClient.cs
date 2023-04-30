@@ -14,19 +14,23 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Navislamia.Network.Entities
 {
     public class UploadClient : ClientBase<UploadClientEntity>, IClient
     {
-        public UploadClient(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService) :
-    base(configurationService, notificationService, authActionService, gameActionService, uploadActionService)
+        private readonly NetworkOptions _networkOptions;
+
+        public UploadClient(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService) :
+    base(notificationService, authActionService, gameActionService, uploadActionService)
         {
+            _networkOptions = networkOptions.Value;
         }
 
         public override void Create(Socket socket)
         {
-            var bufferLen = configSVC.Get<int>("io.buffer_size", "network", 32768);
+            var bufferLen = _networkOptions.BufferSize;
 
             UploadClientEntity gameClient = new UploadClientEntity()
             {

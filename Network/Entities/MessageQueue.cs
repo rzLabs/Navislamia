@@ -15,6 +15,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Network.Interfaces;
 
 namespace Navislamia.Network.Entities
@@ -34,25 +36,28 @@ namespace Navislamia.Network.Entities
 
         ConcurrentQueue<QueuedMessage> recvQueue = new ConcurrentQueue<QueuedMessage>();
         BlockingCollection<QueuedMessage> recvCollection;
-
-        IConfigurationService configSVC;
+        
         INotificationService notificationSVC;
 
         IAuthActionService authActionSVC;
         IGameActionService gameActionSVC;
         IUploadActionService uploadActionSVC;
+        
+        private readonly NetworkOptions _networkOptions;
+        private readonly LogOptions _logOptions;
 
-        public MessageQueue(IConfigurationService configurationService, INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
+        public MessageQueue(INotificationService notificationService, IAuthActionService authActionService,
+            IGameActionService gameActionService, IUploadActionService uploadActionService,
+            IOptions<NetworkOptions> networkOptions, IOptions<LogOptions> logOptions)
         {
-            var cipherKey = configurationService.Get<string>("cipher.key", "network");
-
-            debugPackets = configurationService.Get<bool>("packet.debug", "logs", false);
-
-            configSVC = configurationService;
+            _networkOptions = networkOptions.Value;
+            _logOptions = logOptions.Value;
+            
+            debugPackets = _logOptions.PacketDebug;
             notificationSVC = notificationService;
 
-            RecvCipher.SetKey(cipherKey);
-            SendCipher.SetKey(cipherKey);
+            RecvCipher.SetKey(_networkOptions.CipherKey);
+            SendCipher.SetKey(_networkOptions.CipherKey);
 
             sendCollection = new BlockingCollection<QueuedMessage>(sendQueue);
             recvCollection = new BlockingCollection<QueuedMessage>(recvQueue);

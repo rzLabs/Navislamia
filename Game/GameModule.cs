@@ -13,6 +13,8 @@ using Serilog.Events;
 using System.Collections.Generic;
 using Navislamia.World;
 using System.Threading;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Database.Loaders;
 using Navislamia.Database.Interfaces;
 
@@ -20,22 +22,22 @@ namespace Navislamia.Game
 {
     public class GameModule : IGameService
     {
-        IConfigurationService configSVC;
         IWorldService worldSVC;
         IDatabaseService dbSVC;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
         IMapService mapSVC;
         INetworkService networkSVC;
-
+        private readonly ScriptOptions _scriptOptions;
+        private readonly MapOptions _mapOptions;
+        
         List<IRepository> worldRepositories;
 
         public GameModule() { }
 
-        public GameModule(IConfigurationService configurationService, IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
-            IScriptingService scriptingService, IMapService mapService, INetworkService networkService)
+        public GameModule(IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
+            IScriptingService scriptingService, IMapService mapService, INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
-            configSVC = configurationService;
             worldSVC = contentService;
             notificationSVC = notificationService;
             dbSVC = databaseService;
@@ -46,50 +48,56 @@ namespace Navislamia.Game
             worldRepositories = new List<IRepository>();
         }
 
-        public async Task<int> Start(string ip, int port, int backlog)
+        public void Start(string ip, int port, int backlog)
         {
-            if (!configSVC.Get<bool>("skip_loading", "scripts", false))
+            if (_scriptOptions.SkipLoading)
+            {
+                notificationSVC.WriteWarning("Script loading disabled!");
+            }
+            else
             {
                 if (scriptSVC.Init() > 0)
                 {
                     notificationSVC.WriteError("Failed to start script service!");
-
-                    return 1;
+                    return;
                 }
-
+                
                 notificationSVC.WriteSuccess(new string[] { $"Script service started successfully!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
+           
+            if (_mapOptions.SkipLoading)
+            {
+                notificationSVC.WriteWarning("Map loading disabled!");
+            }
             else
-                notificationSVC.WriteWarning("Script loading disabled!");
-
-            if (!configSVC.Get<bool>("skip_loading", "maps", false))
             {
                 if (!mapSVC.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
                 {
                     notificationSVC.WriteError("Failed to start the map service!");
-
-                    return 1;
                 }
 
                 notificationSVC.WriteSuccess(new string[] { $"Map service started successfully!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
-            else
-                notificationSVC.WriteWarning("Map loading disabled!");
 
-            if (!loadDbRepositories())
-                return 1;
+            if (!LoadDbRepositories())
+            {
+                return;
+            }
 
             if (networkSVC.Initialize() > 0)
-                return 1;
+            {
+                return;
+            }
 
             int curTime = 0;
             int maxTime = 5000;
+            
             while (!networkSVC.Ready)
             {
                 if (curTime >= maxTime)
                 {
                     notificationSVC.WriteError("Network service timed out!");
-                    return 1;
+                    return;
                 }
 
                 curTime += 250;
@@ -100,10 +108,10 @@ namespace Navislamia.Game
 
             networkSVC.StartListener();
 
-            return 0;
+            return;
         }
 
-        bool loadDbRepositories()
+        private bool LoadDbRepositories()
         {
             var loaders = new List<IRepositoryLoader>();
 

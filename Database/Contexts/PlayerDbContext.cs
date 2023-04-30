@@ -1,35 +1,32 @@
-﻿using Configuration;
-using Navislamia.Database.Interfaces;
-using System;
-using System.Collections.Generic;
+﻿using Navislamia.Database.Interfaces;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 
 namespace Navislamia.Database.Contexts
 {
     public class PlayerDbContext : IDbContext
     {
-        private IConfigurationService _configSVC;
+        private readonly PlayerOptions _playerOptions;
         private string _connString;
 
-        public PlayerDbContext(IConfigurationService configSVC)
+        public PlayerDbContext(IOptions<PlayerOptions> playerOptions)
         {
-            _configSVC = configSVC;
-            buildConnString();
+            _playerOptions = playerOptions.Value;
+            BuildConnString();
         }
 
         public IDbConnection CreateConnection() => new SqlConnection(_connString);
 
-        private void buildConnString()
+        private void BuildConnString()
         {
-            string ip = _configSVC.Get<string>("player.ip", "database", "127.0.0.1");
-            string name = _configSVC.Get<string>("player.name", "database", "Telecaster");
-            string user = _configSVC.Get<string>("player.user", "database", "sa");
-            string pass = _configSVC.Get<string>("player.user.pass", "database", "");
-            bool trusted = _configSVC.Get<bool>("player.trusted_connection", "database", false);
+            string ip = _playerOptions.Ip;
+            string name = _playerOptions.DbName;
+            string user = _playerOptions.User;
+            string pass = _playerOptions.Password;
+            bool trusted = _playerOptions.IsTrustedConnection;
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Server={0};Database={1};", ip, name);
