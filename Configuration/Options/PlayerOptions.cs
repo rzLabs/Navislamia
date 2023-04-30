@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Configuration.Options;
 
 namespace Navislamia.Configuration.Options
 {

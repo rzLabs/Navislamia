@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Configuration;
-using Configuration.Options;
 using Maps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,11 +9,11 @@ using Navislamia.Command;
 using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
+using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Notification;
+using Navislamia.Scripting;
 using Navislamia.World;
-using Network;
-using Scripting;
 
 
 namespace DevConsole;
@@ -37,8 +36,9 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
-                //Options
                 services.AddHostedService<Application>();
+                
+                //Options
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
                 services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
                 services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
@@ -48,19 +48,15 @@ public class Program
                 services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
                 services.Configure<LogOptions>(context.Configuration.GetSection("Log"));
 
-
                 // Services
                 services.AddSingleton<ICommandService, CommandModule>();
                 services.AddSingleton<IDatabaseService, DatabaseModule>();
                 services.AddSingleton<IWorldService, WorldModule>();
-                services.AddSingleton<IScriptingService, ScriptModule>();
+                services.AddSingleton<IScriptingModule, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
                 services.AddSingleton<INetworkService, NetworkModule>();
-                services.AddSingleton<IGameService, GameModule>();
+                services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
-
-
-
             })
             .ConfigureLogging((context, logging) => {
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));

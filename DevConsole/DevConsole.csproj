@@ -21,6 +21,8 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Remove="TypeRegistrar.cs" />
+    <Compile Remove="TypeResolver.cs" />
   </ItemGroup>
 
   <ItemGroup>

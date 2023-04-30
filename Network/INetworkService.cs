@@ -1,11 +1,8 @@
-﻿using Navislamia.Network.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿using System.Collections.Generic;
+using Navislamia.Network.Entities;
 using Navislamia.Network.Interfaces;
 
-namespace Network
+namespace Navislamia.Network
 {
     public interface INetworkService
     {
@@ -21,7 +18,7 @@ namespace Network
 
         public int PlayerCount { get; }
 
-        public int Initialize();
+        public void Initialize();
 
         public int StartListener();
 

@@ -12,7 +12,6 @@ using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
-using Network;
 
 namespace Navislamia.Network
 {
@@ -61,83 +60,60 @@ namespace Navislamia.Network
             _networkOptions = networkOptions.Value;
             _networkTmpOptions = networkOptions;
             
-
             _authActionSvc = new AuthActions(_notificationSvc, this);
             _gameActionSvc = new GameActions(networkOptions, _notificationSvc, this);
             _uploadActionSvc = new UploadActions(_notificationSvc);
         }
 
-        public int Initialize()
+        public void Initialize()
         {
-            if (ConnectToAuth() > 0)
-                return 1;
-
-            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
-
-            if (SendGsInfoToAuth() > 0)
-                return 2;
-
-            if (ConnectToUpload() > 0)
-                return 3;
-
-            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
-
-            if (SendInfoToUpload() > 0)
-                return 4;
-
-            return 0;
+            ConnectToAuth();
+            SendGsInfoToAuth();
+            ConnectToUpload();
+            SendInfoToUpload();
         }
 
-        private int ConnectToAuth()
+        private void ConnectToAuth()
         {
             string addrStr = _networkOptions.Ip;
             int port = _networkOptions.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network auth.io.ip configuration! Review your Configuration.json!");
-                return 1;
+                _notificationSvc.WriteError("Invalid network auth ip! Review your configuration!");
+                throw new Exception();
             }
 
             IPAddress addr;
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                _notificationSvc.WriteError($"Failed to parse auth.io.ip: {addrStr}");
-                return 1;
+                _notificationSvc.WriteError($"Failed to parse auth ip: {addrStr}");
+                throw new Exception();
+
             }
 
             IPEndPoint authEp = new IPEndPoint(addr, port);
-
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            int status = 0;
 
             try
             {
                 _auth = new AuthClient(_networkTmpOptions, _notificationSvc, _authActionSvc, null, null);
                 _auth.Create(authSock);
-
-                status = _auth.Connect(authEp);
+                _auth.Connect(authEp);
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                status = 1;
-            }
-
-            if (status == 1)
-            {
                 _notificationSvc.WriteError("Failed to connect to the auth server!");
+                throw new Exception();
 
-                return status;
             }
-
-            return 0;
+            
+            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
         }
 
-        private int SendGsInfoToAuth()
+        private void SendGsInfoToAuth()
         {
             try
             {
@@ -147,22 +123,17 @@ namespace Navislamia.Network
                 var name = _serverOptions.Name;
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
-
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
-
                 _auth.PendMessage(msg);
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                return 1;
+                throw new Exception("Failed sending message to Authservice");
             }
-
-            return 0;
         }
 
-        private int ConnectToUpload()
+        private void ConnectToUpload()
         {
             string addrStr = _networkOptions.UploadIp;
             int port = _networkOptions.UploadPort;
@@ -170,7 +141,6 @@ namespace Navislamia.Network
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
-                return 1;
             }
 
             IPAddress addr;
@@ -178,11 +148,10 @@ namespace Navislamia.Network
             if (!IPAddress.TryParse(addrStr, out addr))
             {
                 _notificationSvc.WriteError($"Failed to parse io.upload.ip: {addrStr}");
-                return 1;
+                throw new Exception("Could not read upload ip");
             }
 
             IPEndPoint uploadEp = new IPEndPoint(addr, port);
-
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             int status = 0;
@@ -191,27 +160,19 @@ namespace Navislamia.Network
             {
                 _upload = new UploadClient(_networkTmpOptions, _notificationSvc, null, null, _uploadActionSvc);
                 _upload.Create(uploadSock);
-
-                status = _upload.Connect(uploadEp);
+                _upload.Connect(uploadEp);
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                status = 1;
-            }
-
-            if (status == 1)
-            {
                 _notificationSvc.WriteError("Failed to connect to the upload server!");
-
-                return 1;
+                throw new Exception();
             }
 
-            return 0;
+            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" });
         }
 
-        private int SendInfoToUpload()
+        private void SendInfoToUpload()
         {
             try
             {
@@ -223,11 +184,8 @@ namespace Navislamia.Network
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                return 1;
+                throw new Exception();
             }
-
-            return 0;
         }
 
         private int StartClientListener()

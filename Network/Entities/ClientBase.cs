@@ -1,6 +1,4 @@
-﻿
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets;
+﻿using Navislamia.Network.Packets;
 using Navislamia.Notification;
 using System.Net.Sockets;
 using System.Net;
@@ -9,7 +7,6 @@ using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Packets.Actions.Interfaces;
-using Serilog;
 
 namespace Navislamia.Network.Entities
 {
@@ -36,7 +33,7 @@ namespace Navislamia.Network.Entities
 
         public virtual void Create(Socket socket) { }
 
-        public int Connect(IPEndPoint ep)
+        public void Connect(IPEndPoint ep)
         {
             try
             {
@@ -46,11 +43,8 @@ namespace Navislamia.Network.Entities
             {
                 notificationSVC.WriteError($"An error occured while attempting to connect to remote endpoint!");
                 notificationSVC.WriteException(ex);
-
-                return 1;
+                throw new Exception();
             }
-
-            return 0;
         }
 
         public virtual void Send(byte[] data)
