@@ -21,7 +21,7 @@ using Navislamia.Network.Interfaces;
 
 namespace Navislamia.Network.Entities
 {
-    public class MessageQueue
+    public class MessageQueue : IMessageQueue
     {
         bool debugPackets = false;
 
@@ -71,7 +71,7 @@ namespace Navislamia.Network.Entities
                 while (true)
                 {
                     if (sendCollection.IsAddingCompleted && !sendProcessing)
-                        processQueue(QueueType.Send);
+                        ProcessQueue(QueueType.Send);
 
                     if (sendCollection.IsCompleted)
                         sendCollection = new BlockingCollection<QueuedMessage>(sendQueue);
@@ -85,7 +85,7 @@ namespace Navislamia.Network.Entities
                 while (true)
                 {
                     if (recvCollection.IsAddingCompleted && !recvProcessing)
-                        processQueue(QueueType.Receive);
+                        ProcessQueue(QueueType.Receive);
 
                     if (recvCollection.IsCompleted)
                         recvCollection = new BlockingCollection<QueuedMessage>(recvQueue);
@@ -255,7 +255,7 @@ namespace Navislamia.Network.Entities
             Finalize(QueueType.Receive);
         }
 
-        void processQueue(QueueType type)
+        private void ProcessQueue(QueueType type)
         {
             BlockingCollection<QueuedMessage> queue = (type == QueueType.Send) ? sendCollection : recvCollection;
 

@@ -18,15 +18,14 @@ namespace Navislamia.Network.Entities
         internal readonly INotificationService notificationSVC;
         internal readonly IOptions<NetworkOptions> _networkTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
         internal readonly IOptions<LogOptions> _logTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
-        internal readonly MessageQueue messageQueue;
+        internal readonly IMessageQueue _messageQueue;
 
         public ClientEntity Entity;
 
-        public ClientBase(INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService)
+        public ClientBase(INotificationService notificationService, IAuthActionService authActionService, IGameActionService gameActionService, IUploadActionService uploadActionService, IMessageQueue messageQueue)
         {
             notificationSVC = notificationService;
-            //TODO make messagequeue injectable
-            messageQueue = new MessageQueue(notificationSVC, authActionService, gameActionService, uploadActionService, _networkTmpOptions, _logTmpOptions);
+            _messageQueue = messageQueue;
         }
 
         public virtual ClientEntity GetEntity()

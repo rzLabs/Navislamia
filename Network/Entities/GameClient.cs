@@ -22,11 +22,12 @@ namespace Navislamia.Network.Entities
     public class GameClient : ClientBase<GameClientEntity>, IClient
     {
         private readonly NetworkOptions _networkOptions;
-
+        private readonly IMessageQueue _messageQueue;
         public GameClient(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IAuthActionService authActionService,
-            IGameActionService gameActionService, IUploadActionService uploadActionService) : base(notificationService,
-            authActionService, gameActionService, uploadActionService)
+            IGameActionService gameActionService, IUploadActionService uploadActionService, IMessageQueue messageQueue) : base(notificationService,
+            authActionService, gameActionService, uploadActionService, messageQueue)
         {
+            _messageQueue = messageQueue;
             _networkOptions = networkOptions.Value;
         }
 
@@ -54,9 +55,8 @@ namespace Navislamia.Network.Entities
 
         public override void PendMessage(ISerializablePacket msg)
         {
-            messageQueue.PendSend(this, msg);
-
-            messageQueue.Finalize(QueueType.Send);
+            _messageQueue.PendSend(this, msg);
+            _messageQueue.Finalize(QueueType.Send);
         }
 
         public void SendResult(ushort id, ushort result, int value = 0)
@@ -97,7 +97,7 @@ namespace Navislamia.Network.Entities
                 if (availableBytes == 0)
                     Listen();
 
-                messageQueue.ProcessClientData(this, entity.MessageBuffer, availableBytes);
+                _messageQueue.ProcessClientData(this, entity.MessageBuffer, availableBytes);
             }
             catch (Exception ex)
             {

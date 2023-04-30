@@ -11,6 +11,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
 using Navislamia.Network;
+using Navislamia.Network.Entities;
 using Navislamia.Notification;
 using Navislamia.World;
 using Network;
@@ -58,6 +59,7 @@ public class Program
                 services.AddSingleton<INetworkService, NetworkModule>();
                 services.AddSingleton<IGameService, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
+                services.AddSingleton<IMessageQueue, MessageQueue>();
 
 
 
