@@ -35,9 +35,12 @@ namespace Navislamia.Game
 
         public GameModule() { }
 
-        public GameModule(IWorldService contentService, INotificationService notificationService, IDatabaseService databaseService, 
-            IScriptingService scriptingService, IMapService mapService, INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
+        public GameModule(IWorldService contentService, INotificationService notificationService,
+            IDatabaseService databaseService, IScriptingService scriptingService, IMapService mapService,
+            INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
+            _scriptOptions = scriptOptions.Value;
+            _mapOptions = mapOptions.Value;
             worldSVC = contentService;
             notificationSVC = notificationService;
             dbSVC = databaseService;
@@ -48,7 +51,7 @@ namespace Navislamia.Game
             worldRepositories = new List<IRepository>();
         }
 
-        public void Start(string ip, int port, int backlog)
+        public async Task Start(string ip, int port, int backlog)
         {
             if (_scriptOptions.SkipLoading)
             {
@@ -62,7 +65,7 @@ namespace Navislamia.Game
                     return;
                 }
                 
-                notificationSVC.WriteSuccess(new string[] { $"Script service started successfully!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
+                notificationSVC.WriteSuccess(new [] { "Script service started successfully!", $"[green]{scriptSVC.ScriptCount}[/] scripts loaded!" }, true);
             }
            
             if (_mapOptions.SkipLoading)
@@ -76,7 +79,7 @@ namespace Navislamia.Game
                     notificationSVC.WriteError("Failed to start the map service!");
                 }
 
-                notificationSVC.WriteSuccess(new string[] { $"Map service started successfully!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
+                notificationSVC.WriteSuccess(new [] { "Map service started successfully!", $"[green]{mapSVC.MapCount.CX + mapSVC.MapCount.CY}[/] files loaded!" }, true);
             }
 
             if (!LoadDbRepositories())
@@ -107,8 +110,6 @@ namespace Navislamia.Game
             }
 
             networkSVC.StartListener();
-
-            return;
         }
 
         private bool LoadDbRepositories()
