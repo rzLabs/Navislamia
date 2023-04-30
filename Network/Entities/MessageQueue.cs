@@ -129,55 +129,77 @@ namespace Navislamia.Network.Entities
             }
         }
 
-        public void LoadEncryptedBuffer(GameClient client, byte[] encryptedBuffer, int count)
+        public void ProcessClientData(IClient client, byte[] data, int count)
         {
             var clientEntity = client.GetEntity();
 
-            byte[] decodedBuffer = new byte[count];
+            string clientName = (client is GameClient) ? ((GameClient)client).Info.AccountName.String : clientEntity.IP;
 
-            // decode what data we have received
-            RecvCipher.Decode(encryptedBuffer, decodedBuffer, count);
+            string clientType = "Auth";
 
-            // move the decoded data into the client data at the current DataOffset
-            Buffer.BlockCopy(decodedBuffer, 0, clientEntity.Data, clientEntity.DataOffset, count);
+            if (client is GameClient)
+                clientType = "Game";
+            else if (client is UploadClient)
+                clientType = "Upload";
+
+            if (client is GameClient)
+            {
+                byte[] buffer = new byte[count];
+
+                RecvCipher.Decode(data, buffer, count);
+
+                Buffer.BlockCopy(buffer, 0, clientEntity.Data, clientEntity.DataOffset, count);
+            }
+            else
+                Buffer.BlockCopy(data, 0, clientEntity.Data, clientEntity.DataOffset, count);
 
             // increase the offset by the amount of bytes we wrote to the client data
-            clientEntity.DataOffset += decodedBuffer.Length;
+            clientEntity.DataOffset += count;
 
             // Process and queue messages to be read from the data
             while (clientEntity.DataOffset >= 4)
             {
                 // Get a pointer to the client data
-                Span<byte> data = clientEntity.Data;
+                Span<byte> clientData = clientEntity.Data;
 
                 // Read the message length
-                int msgLength = BitConverter.ToInt32(data.Slice(0, 4));
+                int msgLength = BitConverter.ToInt32(clientData.Slice(0, 4));
 
                 // If the message length is invalid ignore this message and advance the buffer by 4 bytes
                 if (msgLength < 0 || msgLength > clientEntity.DataOffset)
                 {
-                    // Consider this could be auth/upload server client
-                    notificationSVC.WriteWarning($"Invalid message received from client @ {clientEntity.IP}!!! Packet Length: {msgLength} @ DataOffset: {clientEntity.DataOffset}");
-                    notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)decodedBuffer).Slice(0, decodedBuffer.Length).ToArray()));
+                    notificationSVC.WriteWarning($"Invalid message received from {clientType} client @ {clientEntity.IP}!!! Packet Length: {msgLength} @ DataOffset: {clientEntity.DataOffset}");
+                    notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)data).Slice(0, count).ToArray()));
 
                     // if msgLength is below 0, set it to 4, if it above offset, set to 4
                     msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, clientEntity.DataOffset)));
                 }
                 else // process and queue the message data
-                {
-                    string clientName = client.Info?.AccountName.String ?? client.Entity.IP;
-
-                    // buffer the message
-                    byte[] msgBuffer = data.Slice(0, msgLength).ToArray();
+                {                
+                    byte[] msgBuffer = clientData.Slice(0, msgLength).ToArray();
 
                     PacketHeader header = Header.GetPacketHeader(msgBuffer);
                     ISerializablePacket msg = null;
 
                     if (!Enum.IsDefined(typeof(ClientPackets), header.ID))
-                        notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from game client {clientEntity.IP} [{clientEntity.Port}]@{client.Info.AccountName.String}");
+                        notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {clientType} client {clientEntity.IP} [{clientEntity.Port}]@{clientName}");
 
                     switch (header.ID)
                     {
+                        #region Auth Packets
+
+                        case (int)AuthPackets.TS_AG_LOGIN_RESULT:
+                            msg = new TS_AG_LOGIN_RESULT(msgBuffer);
+                            break;
+
+                        case (int)AuthPackets.TS_AG_CLIENT_LOGIN:
+                            msg = new TS_AG_CLIENT_LOGIN(msgBuffer);
+                            break;
+
+                        #endregion
+
+                        #region Game Packets
+
                         case (int)ClientPackets.TM_NONE:
                             notificationSVC.WriteWarning($"TM_NONE of {header.Length} received from client {clientEntity.IP}:{clientEntity.Port}@{clientName}");
                             break;
@@ -197,86 +219,8 @@ namespace Navislamia.Network.Entities
                         case (int)ClientPackets.TS_CS_REPORT:
                             msg = new TS_CS_REPORT(msgBuffer);
                             break;
-                    }
 
-                    // add message to the queue
-                    if (msg is not null)
-                    {
-                        if (debugPackets)
-                        {
-                            string packetDmp = ((Packet)msg).DumpToString();
-
-                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {clientEntity.IP}:{clientEntity.Port}@{clientName}[/]\n\n{packetDmp}");
-                        }
-
-                        PendReceive(client, msg);
-                    }
-                }
-
-                // move the remaining bytes to the front of client data
-                Buffer.BlockCopy(clientEntity.Data, msgLength, clientEntity.Data, 0, clientEntity.Data.Length - msgLength);
-
-                // Reduce the data offset by the amount of bytes we have dropped from client data
-                clientEntity.DataOffset -= msgLength;
-            }
-
-            Finalize(QueueType.Receive);
-        }
-
-        public void LoadPlainBuffer(IClient client, byte[] messageBuffer, int count)
-        {
-            var clientEntity = client.GetEntity();
-
-            string clientTag = "Auth Server Client";
-
-            if (clientEntity is UploadClientEntity)
-                clientTag = "Upload Server Client";
-        
-            // move the decoded data into the client data at the current client.DataOffset
-            Buffer.BlockCopy(messageBuffer, 0, clientEntity.Data, clientEntity.DataOffset, count);
-
-            // increase the offset by the amount of bytes we wrote to the client data
-            clientEntity.DataOffset += count;
-
-            // Process and queue messages to be read from the data
-            while (clientEntity.DataOffset >= 4)
-            {
-                // Get a pointer to the client data
-                Span<byte> data = clientEntity.Data;
-
-                // Read the message length
-                int msgLength = BitConverter.ToInt32(data.Slice(0, 4));
-
-                // If the message length is invalid ignore this message and advance the buffer by 4 bytes
-                if (msgLength < 0 || msgLength > clientEntity.DataOffset)
-                {
-                    notificationSVC.WriteWarning($"Invalid message received from {((clientEntity is AuthClientEntity) ? "Auth" : "Upload")} server!");
-                    notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)messageBuffer).Slice(0, count).ToArray()));
-
-                    // if msgLength is below 0, set it to 4, if it above offset, set to 4
-                    msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, clientEntity.DataOffset)));
-                }
-                else // process and queue the message data
-                {
-                    // buffer the message
-                    byte[] msgBuffer = data.Slice(0, msgLength).ToArray();
-
-                    PacketHeader header = Header.GetPacketHeader(msgBuffer);
-                    ISerializablePacket msg = null;
-
-                    if (!Enum.IsDefined(typeof(AuthPackets), header.ID) && !Enum.IsDefined(typeof(UploadPackets), header.ID))
-                        notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {((clientEntity is AuthClientEntity) ? "Auth" : "Upload")} server!");
-
-
-                    switch (header.ID)
-                    {
-                        case (int)AuthPackets.TS_AG_LOGIN_RESULT:
-                            msg = new TS_AG_LOGIN_RESULT(msgBuffer);
-                            break;
-
-                        case (int)AuthPackets.TS_AG_CLIENT_LOGIN:
-                            msg = new TS_AG_CLIENT_LOGIN(msgBuffer);
-                            break;
+                        #endregion
 
                         #region Upload Packets
 
@@ -290,14 +234,14 @@ namespace Navislamia.Network.Entities
                     // add message to the queue
                     if (msg is not null)
                     {
-                        PendReceive(client, msg);
-
                         if (debugPackets)
                         {
                             string packetDmp = ((Packet)msg).DumpToString();
 
-                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {clientTag}[/]\n\n{packetDmp}");
+                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {clientEntity.IP}:{clientEntity.Port}@{clientName}[/]\n\n{packetDmp}");
                         }
+
+                        PendReceive(client, msg);
                     }
                 }
 

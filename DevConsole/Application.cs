@@ -29,14 +29,14 @@ namespace DevConsole
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _notificationService.WriteString(Resources.arcadia);
-            _notificationService.WriteString("Navislamia starting...");
-            _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
+            _notificationService.WriteString("Navislamia starting...\n");
+            _notificationService.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
             var ip = _networkOptions.Ip;
             var port = _networkOptions.Port;
             var backlog = _networkOptions.Backlog;
             
-            if (string.IsNullOrWhiteSpace(ip) || port == null)
+            if (string.IsNullOrWhiteSpace(ip) || port <= 0)
             {
                 throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }

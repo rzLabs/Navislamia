@@ -84,7 +84,7 @@ namespace Navislamia.Network.Entities
                 if (availableBytes == 0)
                     Listen();
 
-                messageQueue.LoadPlainBuffer(this, entity.MessageBuffer, availableBytes);
+                messageQueue.ProcessClientData(this, entity.MessageBuffer, availableBytes);
             }
             catch (Exception ex)
             {
