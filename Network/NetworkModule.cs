@@ -10,57 +10,30 @@ using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
-using Network;
 
 namespace Navislamia.Network
 {
-    public class NetworkModule : INetworkService
+    public class NetworkModule : INetworkModule
     {
-        private readonly INotificationService _notificationSvc;
-
         private TcpListener _listener;
+        private readonly IClientService<AuthClientEntity> _authService;
+        private readonly IClientService<UploadClientEntity> _uploadService;
 
-        private IClientService<AuthClientEntity> _authService;
-        private IClientService<UploadClientEntity> _uploadService;
+        private readonly INotificationService _notificationSvc;
         private readonly NetworkOptions _networkOptions;
         private readonly ServerOptions _serverServerOptions;
         private readonly IOptions<LogOptions> _logOptions;
         private readonly IOptions<NetworkOptions> _networkIOptions;
 
-        private readonly AuthActions _authActions;
-        private readonly GameActions _gameActions;
-        private readonly UploadActions _uploadActions;
-
-        
-        /// <summary>
-        /// Game clients that have not been authorized yet
-        /// </summary>
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
-
-        /// <summary>
-        /// Game clients that have been authorized and are now only the gameserver
-        /// </summary>
         public Dictionary<string,  ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
-
-        public IClientService<AuthClientEntity> AuthClient => _authService;
-
-        public IClientService<UploadClientEntity> UploadClient => _uploadService;
-
-        public AuthActions AuthActions => _authActions;
-
-        public GameActions GameActions => _gameActions;
-
-        public UploadActions UploadActions => _uploadActions;
-
-        public bool Ready => _authService.GetEntity().Ready && _uploadService.GetEntity().Ready;
-
-        public int PlayerCount => AuthorizedGameClients.Count;
-
-        public NetworkModule() { }
+        public AuthActions AuthActions { get; }
+        public GameActions GameActions { get; }
+        public UploadActions UploadActions { get; }
 
         public NetworkModule(IClientService<AuthClientEntity> authService, IClientService<UploadClientEntity> uploadService,
             IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IOptions<LogOptions> logOptions,
-            IOptions<ServerOptions> serverOptions, IOptions<NetworkOptions> networkIOptions) 
+            IOptions<ServerOptions> serverOptions) 
         {
             _notificationSvc = notificationService;
             _authService = authService;
@@ -70,10 +43,18 @@ namespace Navislamia.Network
             _networkIOptions = networkOptions;
             _logOptions = logOptions;
 
-            _authActions = new AuthActions(notificationService, this);
-            _gameActions = new GameActions(networkOptions, notificationService, this);
-            _uploadActions = new UploadActions(notificationService);
+            AuthActions = new AuthActions(notificationService, this);
+            GameActions = new GameActions(networkOptions, notificationService, this);
+            UploadActions = new UploadActions(notificationService);
         }
+
+        public IClientService<AuthClientEntity> GetAuthClient() => _authService;
+
+        public IClientService<UploadClientEntity> GetUploadClient() => _uploadService;
+
+        public bool IsReady() => _authService.GetEntity().Ready && _uploadService.GetEntity().Ready;
+
+        public int GetPlayerCount() => AuthorizedGameClients.Count;
 
         public int Initialize()
         {

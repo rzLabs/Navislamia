@@ -1,5 +1,4 @@
 ﻿using Navislamia.Network.Enums;
-using Network;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
@@ -10,15 +9,15 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class AuthActions
     {
-        INotificationService notificationSVC;
-        INetworkService networkSVC;
+        private readonly INotificationService _notificationService;
+        private readonly INetworkModule _networkModule;
 
         Dictionary<ushort, Func<ClientService<AuthClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public AuthActions(INotificationService notificationService, INetworkService networkService)
+        public AuthActions(INotificationService notificationService, INetworkModule networkModule)
         {
-            notificationSVC = notificationService;
-            networkSVC = networkService;
+            _notificationService = notificationService;
+            _networkModule = networkModule;
 
             actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
             actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
@@ -39,14 +38,14 @@ namespace Navislamia.Network.Packets.Actions
 
             if (_msg.Result > 0)
             {
-                notificationSVC.WriteError("Failed to register to the Auth Server!");
+                _notificationService.WriteError("Failed to register to the Auth Server!");
 
                 return 1;
             }
 
             client.GetEntity().Ready = true;
 
-            notificationSVC.WriteSuccess("Successfully registered to the Auth Server!");
+            _notificationService.WriteSuccess("Successfully registered to the Auth Server!");
 
             return 0;
         }
@@ -58,23 +57,23 @@ namespace Navislamia.Network.Packets.Actions
             ClientService<GameClientEntity> gameClient = null;
 
             // Check if the game client connection is queued in AuthAccounts
-            if (!networkSVC.UnauthorizedGameClients.ContainsKey(_msg.Account.String))
+            if (!_networkModule.UnauthorizedGameClients.ContainsKey(_msg.Account.String))
             {
-                notificationSVC.WriteError($"Account register failed for: {_msg.Account.String}");
+                _notificationService.WriteError($"Account register failed for: {_msg.Account.String}");
 
                 _msg.Result = (ushort)ResultCode.AccessDenied;
             }
             else
             {
-                gameClient = networkSVC.UnauthorizedGameClients[_msg.Account.String];
+                gameClient = _networkModule.UnauthorizedGameClients[_msg.Account.String];
 
-                networkSVC.UnauthorizedGameClients.Remove(_msg.Account.String);
+                _networkModule.UnauthorizedGameClients.Remove(_msg.Account.String);
 
                 if (_msg.Result == (ushort)ResultCode.Success)
                 {
                     var info = gameClient.GetEntity().Info;
 
-                    if (!networkSVC.RegisterAccount(gameClient, _msg.Account.String))
+                    if (!_networkModule.RegisterAccount(gameClient, _msg.Account.String))
                     {
                         // TODO: SendLogoutToAuth
                         info.AuthVerified = false;

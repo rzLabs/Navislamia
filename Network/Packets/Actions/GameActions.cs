@@ -15,15 +15,15 @@ namespace Navislamia.Network.Packets.Actions
     {
         private readonly NetworkOptions _networkOptions;
         INotificationService notificationSVC;
-        INetworkService networkSVC;
+        INetworkModule _networkModule;
 
         Dictionary<ushort, Func<ClientService<GameClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public GameActions(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, INetworkService networkService)
+        public GameActions(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, INetworkModule networkModule)
         {
             _networkOptions = networkOptions.Value;
             notificationSVC = notificationService;
-            networkSVC = networkService;
+            _networkModule = networkModule;
 
             actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
             actions.Add((ushort)ClientPackets.TS_CS_REPORT, OnReport);
@@ -67,7 +67,7 @@ namespace Navislamia.Network.Packets.Actions
 
             var connMax = _networkOptions.MaxConnections;
 
-            if (networkSVC.PlayerCount > connMax)
+            if (_networkModule.GetPlayerCount() > connMax)
             {
                 client.SendResult(msg.ID, (ushort)ResultCode.LimitMax);
                 return 1;
@@ -75,17 +75,17 @@ namespace Navislamia.Network.Packets.Actions
 
             if (string.IsNullOrEmpty(client.GetEntity().Info.AccountName.String))
             {
-                if (networkSVC.UnauthorizedGameClients.ContainsKey(_msg.Account.String))
+                if (_networkModule.UnauthorizedGameClients.ContainsKey(_msg.Account.String))
                 {
                     client.SendResult(msg.ID, (ushort)ResultCode.AccessDenied);
                     return 1;
                 }
 
-                networkSVC.UnauthorizedGameClients.Add(_msg.Account.String, client);
+                _networkModule.UnauthorizedGameClients.Add(_msg.Account.String, client);
             }
 
-            if (networkSVC.AuthClient.GetEntity().Connected)
-                networkSVC.AuthClient.PendMessage(_loginInfo);
+            if (_networkModule.GetAuthClient().GetEntity().Connected)
+                _networkModule.GetAuthClient().PendMessage(_loginInfo);
 
             return 0;
         }

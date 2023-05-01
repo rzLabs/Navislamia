@@ -57,7 +57,7 @@ public class Program
                 services.AddSingleton<IWorldService, WorldModule>();
                 services.AddSingleton<IScriptingService, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
-                services.AddSingleton<INetworkService, NetworkModule>();
+                services.AddSingleton<INetworkModule, NetworkModule>();
                 services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();

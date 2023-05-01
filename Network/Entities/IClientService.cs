@@ -8,7 +8,7 @@ namespace Navislamia.Network.Entities;
 public interface IClientService<T>
 {
     T GetEntity();
-    void Create(INetworkService networkService, Socket socket);
+    void Create(INetworkModule networkModule, Socket socket);
     int Connect(IPEndPoint ep);
     void Send(byte[] data);
     void Listen();

@@ -22,7 +22,7 @@ namespace Navislamia.Network.Entities
     public class ClientService<T> : IClientService<T> where T : ClientEntity, new()
     {
         private readonly INotificationService notificationSVC;
-        private INetworkService _networkService;
+        private INetworkModule _networkModule;
 
         private readonly NetworkOptions _networkOptions;
         private readonly LogOptions _logOptions;
@@ -90,9 +90,9 @@ namespace Navislamia.Network.Entities
             return Entity;
         }
 
-        public void Create(INetworkService networkService, Socket socket)
+        public void Create(INetworkModule networkModule, Socket socket)
         {
-            _networkService = networkService;
+            _networkModule = networkModule;
 
             var bufferLen = _networkOptions.BufferSize;
 
@@ -384,11 +384,11 @@ namespace Navislamia.Network.Entities
                 else
                 {
                     if (Entity.Type is ClientType.Auth)
-                        _networkService.AuthActions.Execute(this as ClientService<AuthClientEntity>, queuedMsg);
+                        _networkModule.AuthActions.Execute(this as ClientService<AuthClientEntity>, queuedMsg);
                     else if (Entity.Type is ClientType.Game)
-                        _networkService.GameActions.Execute(this as ClientService<GameClientEntity>, queuedMsg);
+                        _networkModule.GameActions.Execute(this as ClientService<GameClientEntity>, queuedMsg);
                     else if (Entity.Type is ClientType.Upload)
-                        _networkService.UploadActions.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
+                        _networkModule.UploadActions.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
                 }
             }
 
