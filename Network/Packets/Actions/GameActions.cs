@@ -6,13 +6,12 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Navislamia.Network.Packets.Game;
-using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Auth;
 
 namespace Navislamia.Network.Packets.Actions
 {
-    public class GameActions : IGameActionService
+    public class GameActions
     {
         private readonly NetworkOptions _networkOptions;
         INotificationService notificationSVC;
@@ -85,8 +84,8 @@ namespace Navislamia.Network.Packets.Actions
                 networkSVC.UnauthorizedGameClients.Add(_msg.Account.String, client);
             }
 
-            if (networkSVC.GetAuthClient().GetEntity().Connected)
-                networkSVC.GetAuthClient().PendMessage(_loginInfo);
+            if (networkSVC.AuthClient.GetEntity().Connected)
+                networkSVC.AuthClient.PendMessage(_loginInfo);
 
             return 0;
         }

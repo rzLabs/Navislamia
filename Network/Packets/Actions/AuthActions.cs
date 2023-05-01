@@ -5,11 +5,10 @@ using System;
 using System.Collections.Generic;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Packets.Actions.Interfaces;
 
 namespace Navislamia.Network.Packets.Actions
 {
-    public class AuthActions : IAuthActionService
+    public class AuthActions
     {
         INotificationService notificationSVC;
         INetworkService networkSVC;
@@ -32,6 +31,7 @@ namespace Navislamia.Network.Packets.Actions
 
             return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
+
 
         private int OnLoginResult(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {

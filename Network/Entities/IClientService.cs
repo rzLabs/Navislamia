@@ -1,13 +1,14 @@
 using System.Net;
 using System.Net.Sockets;
 using Navislamia.Network.Packets;
+using Network;
 
 namespace Navislamia.Network.Entities;
 
 public interface IClientService<T>
 {
     T GetEntity();
-    void Create(Socket socket);
+    void Create(INetworkService networkService, Socket socket);
     int Connect(IPEndPoint ep);
     void Send(byte[] data);
     void Listen();

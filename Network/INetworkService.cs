@@ -1,19 +1,27 @@
 ﻿using Navislamia.Network.Entities;
-using System;
 using System.Collections.Generic;
-using System.Text;
-
-using Navislamia.Network.Interfaces;
+using Navislamia.Network.Packets.Actions;
 
 namespace Network
 {
     public interface INetworkService
     {
-        public bool Ready { get; }
-
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; }
 
         public Dictionary<string, ClientService<GameClientEntity>> AuthorizedGameClients { get; set; }
+
+        public IClientService<AuthClientEntity> AuthClient { get; }
+
+        public IClientService<UploadClientEntity> UploadClient { get; }
+
+        public AuthActions AuthActions { get; }
+
+        public GameActions GameActions { get; }
+
+        public UploadActions UploadActions { get; }
+
+        public bool Ready { get; }
+
 
         public int PlayerCount { get; }
 
@@ -23,8 +31,6 @@ namespace Network
 
         public bool RegisterAccount(ClientService<GameClientEntity> client, string accountName);
 
-        public IClientService<AuthClientEntity> GetAuthClient();
-        
-        public IClientService<UploadClientEntity> GetUploadClient();
+
     }
 }

@@ -11,18 +11,19 @@ using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Extensions;
-using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
 using Network.Security;
-
+using Network;
 
 namespace Navislamia.Network.Entities
 {
     public class ClientService<T> : IClientService<T> where T : ClientEntity, new()
     {
         private readonly INotificationService notificationSVC;
+        private INetworkService _networkService;
+
         private readonly NetworkOptions _networkOptions;
         private readonly LogOptions _logOptions;
         
@@ -33,10 +34,6 @@ namespace Navislamia.Network.Entities
         XRC4Cipher RecvCipher = new();
         XRC4Cipher SendCipher = new();
 
-        IAuthActionService authActionSVC;
-        IGameActionService gameActionSVC;
-        IUploadActionService uploadActionSVC;
-        
         ConcurrentQueue<ISerializablePacket> sendQueue= new();
         BlockingCollection<ISerializablePacket> sendCollection;
         ConcurrentQueue<ISerializablePacket> recvQueue = new();
@@ -44,24 +41,18 @@ namespace Navislamia.Network.Entities
         
         public T Entity;
 
-        public ClientService(IAuthActionService authActionService, IGameActionService gameActionService, 
-            IUploadActionService uploadActionService, IOptions<LogOptions> logOptions, 
-            INotificationService notificationService, IOptions<NetworkOptions> networkOptions)
+        public ClientService(IOptions<LogOptions> logOptions, INotificationService notificationService, IOptions<NetworkOptions> networkOptions)
         {
             notificationSVC = notificationService;
-            _networkOptions = networkOptions.Value;
+
             _networkOptions = networkOptions.Value;
             _logOptions = logOptions.Value;
             
             debugPackets = _logOptions.PacketDebug;
-            notificationSVC = notificationService;
 
             RecvCipher.SetKey(_networkOptions.CipherKey);
             SendCipher.SetKey(_networkOptions.CipherKey);
 
-            authActionSVC = authActionService;
-            uploadActionSVC = uploadActionService;
-            gameActionSVC = gameActionService;
             sendCollection = new BlockingCollection<ISerializablePacket>(sendQueue);
             recvCollection = new BlockingCollection<ISerializablePacket>(recvQueue);
 
@@ -99,9 +90,18 @@ namespace Navislamia.Network.Entities
             return Entity;
         }
 
-        public void Create(Socket socket)
+        public void Create(INetworkService networkService, Socket socket)
         {
+            _networkService = networkService;
+
             var bufferLen = _networkOptions.BufferSize;
+
+            Entity = new T()
+            {
+                Socket = socket,
+                Data = new byte[bufferLen],
+                MessageBuffer = new byte[bufferLen]
+            };
 
             ClientType type = Entity switch
             {
@@ -111,15 +111,7 @@ namespace Navislamia.Network.Entities
                 _ => ClientType.Unknown
             };
 
-            T client = new T()
-            {
-                Socket = socket,
-                Data = new byte[bufferLen],
-                MessageBuffer = new byte[bufferLen],
-                Type = type
-            };
-
-            Entity = client;
+            Entity.Type = type;
         }
 
         public int Connect(IPEndPoint ep)
@@ -267,7 +259,7 @@ namespace Navislamia.Network.Entities
                 // If the message length is invalid ignore this message and advance the buffer by 4 bytes
                 if (msgLength < 0 || msgLength > Entity.DataOffset)
                 {
-                    notificationSVC.WriteWarning($"Invalid message received from {Entity.Type.EnumToString()} client @ {Entity.IP}!!! Packet Length: {msgLength} @ DataOffset: {Entity.DataOffset}");
+                    notificationSVC.WriteWarning($"Invalid message received from {Entity.Type.EnumToString()} client @ {Entity.IP}:{Entity.Port}!!! Packet Length: {msgLength} @ DataOffset: {Entity.DataOffset}");
                     notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)data).Slice(0, count).ToArray()));
 
                     // if msgLength is below 0, set it to 4, if it above offset, set to 4
@@ -281,7 +273,7 @@ namespace Navislamia.Network.Entities
                     ISerializablePacket msg = null;
 
                     if (!Enum.IsDefined(typeof(ClientPackets), header.ID))
-                        notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {Entity.Type.EnumToString()} client {Entity.IP} [{Entity.Port}]");
+                        notificationSVC.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}");
 
                     switch (header.ID)
                     {
@@ -337,7 +329,7 @@ namespace Navislamia.Network.Entities
                         {
                             string packetDmp = ((Packet)msg).DumpToString();
 
-                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {Entity.IP}:{Entity.Port}[/]\n\n{packetDmp}");
+                            notificationSVC.WriteMarkup($"[bold orange3]Receiving message from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}[/]\n\n{packetDmp}");
                         }
 
                         PendReceive(msg);
@@ -387,17 +379,16 @@ namespace Navislamia.Network.Entities
                         notificationSVC.WriteMarkup($"[bold orange3]Sending {queuedMsg.GetType().Name} ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{packetDmp}");
                     }
 
-                    Entity.Socket.Send(sendBuffer);
+                    Send(sendBuffer);
                 }
                 else
                 {
- 
                     if (Entity.Type is ClientType.Auth)
-                        authActionSVC.Execute(this as ClientService<AuthClientEntity>, queuedMsg);
+                        _networkService.AuthActions.Execute(this as ClientService<AuthClientEntity>, queuedMsg);
                     else if (Entity.Type is ClientType.Game)
-                        gameActionSVC.Execute(this as ClientService<GameClientEntity>, queuedMsg);
+                        _networkService.GameActions.Execute(this as ClientService<GameClientEntity>, queuedMsg);
                     else if (Entity.Type is ClientType.Upload)
-                        uploadActionSVC.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
+                        _networkService.UploadActions.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
                 }
             }
 
