@@ -12,7 +12,7 @@ namespace Navislamia.Network.Packets.Game
     {
         public CString Version { get; set; } = new CString(20);
 
-        public TM_CS_VERSION() : base((ushort)ClientPackets.TM_CS_VERSION) { }
+        public TM_CS_VERSION() : base((ushort)GamePackets.TM_CS_VERSION) { }
 
         public TM_CS_VERSION(Span<byte> buffer) : base(buffer) => Deserialize();
 

@@ -15,7 +15,7 @@ namespace Navislamia.Network.Packets.Game
 
         public int Value { get; set; }
 
-        public TS_SC_RESULT(ushort id, ushort result, int value = 0) : base((ushort)ClientPackets.TM_SC_RESULT)
+        public TS_SC_RESULT(ushort id, ushort result, int value = 0) : base((ushort)GamePackets.TM_SC_RESULT)
         {
             RequestMsgID = id;
             Result = result;

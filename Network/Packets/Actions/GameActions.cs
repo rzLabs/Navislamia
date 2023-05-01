@@ -25,10 +25,10 @@ namespace Navislamia.Network.Packets.Actions
             notificationSVC = notificationService;
             _networkModule = networkModule;
 
-            actions.Add((ushort)ClientPackets.TM_CS_VERSION, OnVersion);
-            actions.Add((ushort)ClientPackets.TS_CS_REPORT, OnReport);
-            actions.Add((ushort)ClientPackets.TS_CS_CHARACTER_LIST, OnCharacterList);
-            actions.Add((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
+            actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
+            actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
+            actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
+            actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
         public int Execute(ClientService<GameClientEntity> client, ISerializablePacket msg)
