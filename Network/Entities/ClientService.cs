@@ -95,14 +95,15 @@ namespace Navislamia.Network.Entities
             _networkModule = networkModule;
 
             var bufferLen = _networkOptions.BufferSize;
-            var type = Entity switch
+
+            var type = this switch
             {
-                AuthClientEntity => ClientType.Auth,
-                GameClientEntity => ClientType.Game,
-                UploadClientEntity => ClientType.Upload,
+                ClientService<AuthClientEntity> => ClientType.Auth,
+                ClientService<GameClientEntity> => ClientType.Game,
+                ClientService<UploadClientEntity> => ClientType.Upload,
                 _ => ClientType.Unknown
             };
-            
+
             Entity = new T
             {
                 Socket = socket,
@@ -110,6 +111,7 @@ namespace Navislamia.Network.Entities
                 MessageBuffer = new byte[bufferLen],
                 Type = type
             };
+
         }
 
         public int Connect(IPEndPoint ep)
@@ -287,12 +289,14 @@ namespace Navislamia.Network.Entities
                         // Auth
                         (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new TS_AG_LOGIN_RESULT(msgBuffer),
                         (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new TS_AG_CLIENT_LOGIN(msgBuffer),
+
                         // Game
                         (ushort)GamePackets.TM_NONE => null,
                         (ushort)GamePackets.TM_CS_VERSION => new TM_CS_VERSION(msgBuffer),
                         (ushort)GamePackets.TS_CS_CHARACTER_LIST => new TS_CS_CHARACTER_LIST(msgBuffer),
                         (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new TM_CS_ACCOUNT_WITH_AUTH(msgBuffer),
                         (ushort)GamePackets.TS_CS_REPORT => new TS_CS_REPORT(msgBuffer),
+
                         // Upload
                         (ushort)UploadPackets.TS_US_LOGIN_RESULT => new TS_US_LOGIN_RESULT(msgBuffer),
                         _ => throw new Exception("Unknown Packet Type")
@@ -379,6 +383,7 @@ namespace Navislamia.Network.Entities
                             _networkModule.UploadActions.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
                             break;
                         case ClientType.Unknown:
+
                         default:
                         {
                             throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not execute action for ClientType {type}");

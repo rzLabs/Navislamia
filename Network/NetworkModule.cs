@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
+using Navislamia.Network.Enums;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Auth;
@@ -20,13 +21,14 @@ namespace Navislamia.Network
         private readonly IClientService<UploadClientEntity> _uploadService;
 
         private readonly INotificationService _notificationSvc;
+        private readonly IOptions<NetworkOptions> _networkIOptions;
         private readonly NetworkOptions _networkOptions;
         private readonly ServerOptions _serverServerOptions;
         private readonly IOptions<LogOptions> _logOptions;
-        private readonly IOptions<NetworkOptions> _networkIOptions;
 
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
         public Dictionary<string,  ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
+
         public AuthActions AuthActions { get; }
         public GameActions GameActions { get; }
         public UploadActions UploadActions { get; }
@@ -38,13 +40,13 @@ namespace Navislamia.Network
             _notificationSvc = notificationService;
             _authService = authService;
             _uploadService = uploadService;
+            _networkIOptions = networkOptions;
             _networkOptions = networkOptions.Value;
             _serverServerOptions = serverOptions.Value;
-            _networkIOptions = networkOptions;
             _logOptions = logOptions;
 
             AuthActions = new AuthActions(notificationService, this);
-            GameActions = new GameActions(networkOptions, notificationService, this);
+            GameActions = new GameActions(notificationService, this, _networkOptions);
             UploadActions = new UploadActions(notificationService);
         }
 
@@ -58,21 +60,11 @@ namespace Navislamia.Network
 
         public int Initialize()
         {
-            if (ConnectToAuth() > 0)
+            if (ConnectToAuth() > 0 || ConnectToUpload() > 0)
                 return 1;
 
-            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
-
-            if (SendGsInfoToAuth() > 0)
-                return 2;
-
-            if (ConnectToUpload() > 0)
-                return 3;
-
-            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
-
-            if (SendInfoToUpload() > 0)
-                return 4;
+            if (SendGSInfoToAuth() > 0 || SendInfoToUpload() > 0)
+                return 1;
 
             return 0;
         }
@@ -84,7 +76,7 @@ namespace Navislamia.Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network auth.io.ip configuration! Review your Configuration.json!");
+                _notificationSvc.WriteError("Invalid network auth.io.ip configuration! Review your appsettings.json!");
                 return 1;
             }
 
@@ -122,10 +114,12 @@ namespace Navislamia.Network
                 return status;
             }
 
+            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
+
             return 0;
         }
 
-        private int SendGsInfoToAuth()
+        private int SendGSInfoToAuth()
         {
             try
             {
@@ -157,7 +151,7 @@ namespace Navislamia.Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
+                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your appsettings.json!");
                 return 1;
             }
 
@@ -194,6 +188,8 @@ namespace Navislamia.Network
 
                 return 1;
             }
+
+            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
 
             return 0;
         }

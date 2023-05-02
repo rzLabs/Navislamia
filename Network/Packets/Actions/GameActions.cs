@@ -14,15 +14,15 @@ namespace Navislamia.Network.Packets.Actions
     public class GameActions
     {
         private readonly NetworkOptions _networkOptions;
-        INotificationService notificationSVC;
+        INotificationService _notificationService;
         INetworkModule _networkModule;
 
         Dictionary<ushort, Func<ClientService<GameClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public GameActions(IOptions<NetworkOptions> networkOptions, INotificationService notificationService, INetworkModule networkModule)
+        public GameActions(INotificationService notificationService, INetworkModule networkModule, NetworkOptions networkOptions)
         {
-            _networkOptions = networkOptions.Value;
-            notificationSVC = notificationService;
+            _networkOptions = networkOptions;
+            _notificationService = notificationService;
             _networkModule = networkModule;
 
             actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
