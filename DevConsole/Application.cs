@@ -18,7 +18,8 @@ namespace DevConsole
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, IGameModule gameModule, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameModule gameModule,
+            IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             _environment = environment;
             _gameModule = gameModule;
@@ -32,8 +33,8 @@ namespace DevConsole
             _notificationService.WriteString("Navislamia starting...");
             _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
 
-            var ip = _networkOptions.Ip;
-            var port = _networkOptions.Port;
+            var ip = _networkOptions.Game.Ip;
+            var port = _networkOptions.Game.Port;
             var backlog = _networkOptions.Backlog;
             
             if (string.IsNullOrWhiteSpace(ip) || port == null)

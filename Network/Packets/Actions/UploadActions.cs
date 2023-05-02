@@ -1,5 +1,4 @@
-﻿using Configuration;
-using Navislamia.Network.Interfaces;
+﻿using Navislamia.Network.Interfaces;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets.Actions.Interfaces;

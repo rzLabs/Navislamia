@@ -75,8 +75,8 @@ namespace Navislamia.Network
 
         private void ConnectToAuth()
         {
-            string addrStr = _networkOptions.Ip;
-            int port = _networkOptions.Port;
+            string addrStr = _networkOptions.Auth.Ip;
+            int port = _networkOptions.Auth.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -118,8 +118,8 @@ namespace Navislamia.Network
             try
             {
                 var index = _serverOptions.Index;
-                var ip = _networkOptions.Ip;
-                var port = _networkOptions.Port;
+                var ip = _networkOptions.Game.Ip;
+                var port = _networkOptions.Game.Port;
                 var name = _serverOptions.Name;
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
@@ -135,8 +135,8 @@ namespace Navislamia.Network
 
         private void ConnectToUpload()
         {
-            string addrStr = _networkOptions.UploadIp;
-            int port = _networkOptions.UploadPort;
+            string addrStr = _networkOptions.Upload.Ip;
+            int port = _networkOptions.Upload.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
@@ -190,8 +190,8 @@ namespace Navislamia.Network
 
         private int StartClientListener()
         {
-            string addrStr = _networkOptions.Ip;
-            ushort port = _networkOptions.Port;
+            string addrStr = _networkOptions.Game.Ip;
+            ushort port = _networkOptions.Game.Port;
             int backlog = _networkOptions.Backlog;
 
             IPAddress addr;

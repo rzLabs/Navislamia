@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MoonSharp.Interpreter;
 using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
+using Navislamia.Utilities;
 using Scripting;
 using Scripting.Functions;
 using Serilog.Events;
@@ -32,13 +33,23 @@ namespace Navislamia.Scripting
             try
             {
                 string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
-
                 if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
                 {
-                    _notificationService.WriteMarkup(
-                        "[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]",
-                        LogEventLevel.Error);
-                    return 1;
+                    _notificationService.WriteError("Missing directory: Scripts. Do you want to create one? (y/Y) = Yes, (n/N) = No");
+                    
+                    var input = Console.ReadLine();
+                    ConsoleExtensions.ClearLastLine();
+                    
+                    if (input.IsNegativeInput())
+                    {
+                        _notificationService.WriteMarkup(
+                            "[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]",
+                            LogEventLevel.Error);
+                        return 1;
+                    }
+                    
+                    Directory.CreateDirectory(scriptDir);
+                    _notificationService.WriteSuccess("Created directory: Scripts");
                 }
 
                 ScriptsDirectory = scriptDir;
@@ -132,7 +143,7 @@ namespace Navislamia.Scripting
                         string exMsg;
 
                         if (ex is SyntaxErrorException || ex is ScriptRuntimeException)
-                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {StringExt.LuaExceptionToString(((InterpreterException)ex).DecoratedMessage)}\n";
+                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {StringExtensions.LuaExceptionToString(((InterpreterException)ex).DecoratedMessage)}\n";
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 

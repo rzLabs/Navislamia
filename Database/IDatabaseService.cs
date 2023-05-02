@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Threading.Tasks;
-using System.Text;
-
-using Configuration;
+﻿using System.Threading.Tasks;
 using System.Data;
 using Navislamia.Database.Enums;
 

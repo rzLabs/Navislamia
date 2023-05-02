@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Configuration;
 using Maps;
 using Microsoft.Extensions.Configuration;
@@ -34,7 +35,7 @@ public class Program
                 var env = context.HostingEnvironment.EnvironmentName;
                 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                 configuration.AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true);
-                configuration.AddEnvironmentVariables("NAVISLAMIA_");
+                configuration.AddEnvironmentVariables();
             })
             .ConfigureServices((context, services) =>
             {

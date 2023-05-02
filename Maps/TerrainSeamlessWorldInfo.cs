@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using Objects;
 
-using static Utilities.StringExt;
+using static Navislamia.Utilities.StringExtensions;
 
 namespace Maps
 {

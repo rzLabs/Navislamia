@@ -1,5 +1,4 @@
-﻿using Configuration;
-using Navislamia.Network.Enums;
+﻿using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Auth;
@@ -9,12 +8,9 @@ using Network.Security;
 using Navislamia.Notification;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Interfaces;
@@ -158,7 +154,7 @@ namespace Navislamia.Network.Entities
                 {
                     // Consider this could be auth/upload server client
                     notificationSVC.WriteWarning($"Invalid message received from client @ {clientEntity.IP}!!! Packet Length: {msgLength} @ DataOffset: {clientEntity.DataOffset}");
-                    notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)decodedBuffer).Slice(0, decodedBuffer.Length).ToArray()));
+                    notificationSVC.WriteWarning(Utilities.StringExtensions.ByteArrayToString(((Span<byte>)decodedBuffer).Slice(0, decodedBuffer.Length).ToArray()));
 
                     // if msgLength is below 0, set it to 4, if it above offset, set to 4
                     msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, clientEntity.DataOffset)));
@@ -251,7 +247,7 @@ namespace Navislamia.Network.Entities
                 if (msgLength < 0 || msgLength > clientEntity.DataOffset)
                 {
                     notificationSVC.WriteWarning($"Invalid message received from {((clientEntity is AuthClientEntity) ? "Auth" : "Upload")} server!");
-                    notificationSVC.WriteWarning(Utilities.StringExt.ByteArrayToString(((Span<byte>)messageBuffer).Slice(0, count).ToArray()));
+                    notificationSVC.WriteWarning(Utilities.StringExtensions.ByteArrayToString(((Span<byte>)messageBuffer).Slice(0, count).ToArray()));
 
                     // if msgLength is below 0, set it to 4, if it above offset, set to 4
                     msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, clientEntity.DataOffset)));

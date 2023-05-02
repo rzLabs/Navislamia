@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.IO;
 using Navislamia.Database;
 using Maps;
-using Network;
 using Navislamia.Notification;
 using System.Collections.Generic;
 using Navislamia.World;
@@ -14,7 +13,6 @@ using Navislamia.Database.Loaders;
 using Navislamia.Database.Interfaces;
 using Navislamia.Network;
 using Navislamia.Scripting;
-using Scripting;
 
 namespace Navislamia.Game
 {
@@ -28,6 +26,7 @@ namespace Navislamia.Game
         private readonly INetworkService _networkService;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
+        private readonly ServerOptions _serverOptions;
 
         private List<IRepository> _worldRepositories;
 
@@ -35,10 +34,11 @@ namespace Navislamia.Game
 
         public GameModule(IWorldService worldService, INotificationService notificationService,
             IDatabaseService dbService, IScriptingModule scriptingModule, IMapService mapService,
-            INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
+            INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IOptions<ServerOptions> serverOptions)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
+            _serverOptions = serverOptions.Value;
             _worldService = worldService;
             _notificationService = notificationService;
             _dbService = dbService;
@@ -51,6 +51,7 @@ namespace Navislamia.Game
 
         public async Task Start(string ip, int port, int backlog)
         {
+            _notificationService.WriteWarning(_serverOptions.Name);
             LoadScripts(_scriptOptions.SkipLoading);
             StartMapService(_mapOptions.SkipLoading);
             LoadDbRepositories();
