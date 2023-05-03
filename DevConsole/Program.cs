@@ -33,7 +33,9 @@ public class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((context, configuration) =>
             {
+                var env = context.HostingEnvironment.EnvironmentName;
                 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                configuration.AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true);
                 configuration.AddEnvironmentVariables("NAVISLAMIA_");
             })
             .ConfigureServices((context, services) =>
