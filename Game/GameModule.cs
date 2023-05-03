@@ -1,15 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.IO;
-
-using Configuration;
 using Navislamia.Database;
 using Maps;
-using Network;
 using Navislamia.Notification;
 using Scripting;
-
-using Serilog.Events;
 using System.Collections.Generic;
 using Navislamia.World;
 using System.Threading;
@@ -17,17 +11,18 @@ using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Database.Loaders;
 using Navislamia.Database.Interfaces;
+using Navislamia.Network;
 
 namespace Navislamia.Game
 {
-    public class GameModule : IGameService
+    public class GameModule : IGameModule
     {
         IWorldService worldSVC;
         IDatabaseService dbSVC;
         IScriptingService scriptSVC;
         INotificationService notificationSVC;
         IMapService mapSVC;
-        INetworkService networkSVC;
+        private readonly INetworkModule _networkModule;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
         
@@ -37,7 +32,7 @@ namespace Navislamia.Game
 
         public GameModule(IWorldService contentService, INotificationService notificationService,
             IDatabaseService databaseService, IScriptingService scriptingService, IMapService mapService,
-            INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
+            INetworkModule networkModule, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
@@ -46,7 +41,7 @@ namespace Navislamia.Game
             dbSVC = databaseService;
             scriptSVC = scriptingService;
             mapSVC = mapService;
-            networkSVC = networkService;
+            _networkModule = networkModule;
 
             worldRepositories = new List<IRepository>();
         }
@@ -87,7 +82,7 @@ namespace Navislamia.Game
                 return;
             }
 
-            if (networkSVC.Initialize() > 0)
+            if (_networkModule.Initialize() > 0)
             {
                 return;
             }
@@ -95,7 +90,7 @@ namespace Navislamia.Game
             int curTime = 0;
             int maxTime = 5000;
             
-            while (!networkSVC.Ready)
+            while (!_networkModule.IsReady())
             {
                 if (curTime >= maxTime)
                 {
@@ -109,7 +104,7 @@ namespace Navislamia.Game
                 Thread.Sleep(250);
             }
 
-            networkSVC.StartListener();
+            _networkModule.StartListener();
         }
 
         private bool LoadDbRepositories()

@@ -1,106 +1,99 @@
-﻿using Configuration;
-using Navislamia.Network.Enums;
-using Network;
+﻿using Navislamia.Network.Enums;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Packets;
 using Navislamia.Network.Entities;
-using Navislamia.Network.Packets.Actions.Interfaces;
-using Navislamia.Network.Interfaces;
+using Navislamia.Network.Packets.Auth;
 
 namespace Navislamia.Network.Packets.Actions
 {
-    public class AuthActions : IAuthActionService
+    public class AuthActions
     {
-        INotificationService notificationSVC;
-        INetworkService networkSVC;
+        private readonly INotificationService _notificationService;
+        private readonly INetworkModule _networkModule;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
+        Dictionary<ushort, Func<ClientService<AuthClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public AuthActions(INotificationService notificationService, INetworkService networkService)
+        public AuthActions(INotificationService notificationService, INetworkModule networkModule)
         {
-            notificationSVC = notificationService;
-            networkSVC = networkService;
+            _notificationService = notificationService;
+            _networkModule = networkModule;
 
             actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
             actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
         }
 
-        public int Execute(IClient client, ISerializablePacket msg)
+        public void Execute(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
-                return 1;
+            {
+                return;
+            }
 
-            return actions[msg.ID]?.Invoke(client, msg) ?? 2;
+            actions[msg.ID]?.Invoke(client, msg);
         }
 
-        public int OnLoginResult(IClient client, ISerializablePacket msg)
-        {
-            var _msg = msg as TS_AG_LOGIN_RESULT;
 
-            if (_msg.Result > 0)
+        private int OnLoginResult(ClientService<AuthClientEntity> client, ISerializablePacket msg)
+        {
+            var agLogin = msg as TS_AG_LOGIN_RESULT;
+
+            if (agLogin == null || agLogin.Result > 0)
             {
-                notificationSVC.WriteError("Failed to register to the Auth Server!");
+                _notificationService.WriteError("Failed to register to the Auth Server!");
 
                 return 1;
             }
 
-            ((AuthClient)client).GetEntity().Ready = true;
+            client.GetEntity().Ready = true;
 
-            notificationSVC.WriteSuccess("Successfully registered to the Auth Server!");
+            _notificationService.WriteSuccess("Successfully registered to the Auth Server!");
 
             return 0;
         }
 
-        public int OnAuthClientLoginResult(IClient client, ISerializablePacket msg)
+        private int OnAuthClientLoginResult(ClientService<AuthClientEntity> client, ISerializablePacket msg)
         {
-            var _msg = msg as TS_AG_CLIENT_LOGIN;
+            var agClientLogin = msg as TS_AG_CLIENT_LOGIN;
 
-            GameClient gameClient = null;
+            ClientService<GameClientEntity> gameClient = null;
 
             // Check if the game client connection is queued in AuthAccounts
-            if (!networkSVC.AuthAccounts.ContainsKey(_msg.Account.String))
+            if (!_networkModule.UnauthorizedGameClients.ContainsKey(agClientLogin.Account.String))
             {
-                notificationSVC.WriteError($"Account register failed for: {_msg.Account.String}");
-
-                _msg.Result = (ushort)ResultCode.AccessDenied;
+                _notificationService.WriteError($"Account register failed for: {agClientLogin?.Account.String}");
+                agClientLogin.Result = (ushort)ResultCode.AccessDenied;
             }
             else
             {
-                gameClient = networkSVC.AuthAccounts[_msg.Account.String] as GameClient;
+                gameClient = _networkModule.UnauthorizedGameClients[agClientLogin.Account.String];
 
-                networkSVC.AuthAccounts.Remove(_msg.Account.String);
+                _networkModule.UnauthorizedGameClients.Remove(agClientLogin.Account.String);
 
-                if (_msg.Result == (ushort)ResultCode.Success)
+                if (agClientLogin.Result == (ushort)ResultCode.Success)
                 {
-                    var info = gameClient.GetEntity()?.Info;
+                    var info = gameClient.GetEntity().Info;
 
-                    if (!networkSVC.RegisterAccount(client, _msg.Account.String))
+                    if (!_networkModule.RegisterAccount(gameClient, agClientLogin.Account.String))
                     {
                         // TODO: SendLogoutToAuth
                         info.AuthVerified = false;
                     }
                     else
                     {
-                        info.AccountName = _msg.Account;
-                        info.AccountID = _msg.AccountID;
+                        info.AccountName = agClientLogin.Account;
+                        info.AccountID = agClientLogin.AccountID;
                         info.AuthVerified = true;
-                        info.PCBangMode = _msg.PcBangMode;
-                        info.EventCode = _msg.EventCode;
-                        info.Age = _msg.Age;
-                        info.ContinuousPlayTime = _msg.ContinuousPlayTime;
-                        info.ContinuousLogoutTime = _msg.ContinuousLogoutTime;
+                        info.PCBangMode = agClientLogin.PcBangMode;
+                        info.EventCode = agClientLogin.EventCode;
+                        info.Age = agClientLogin.Age;
+                        info.ContinuousPlayTime = agClientLogin.ContinuousPlayTime;
+                        info.ContinuousLogoutTime = agClientLogin.ContinuousLogoutTime;
                     }
                 }
             }
 
-            gameClient?.SendResult((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH, _msg.Result);
+            gameClient?.SendResult((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, agClientLogin.Result);
             
             return 0;
         }

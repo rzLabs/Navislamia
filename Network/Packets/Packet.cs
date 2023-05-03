@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace Navislamia.Network.Packets
 {
-    using static Navislamia.Network.Packets.Extensions;
-    using static Navislamia.Network.Packets.Header;
-    using static Navislamia.Network.Packets.Checksum;
-
     public class Packet
     {
         public uint Epic { get; set; } = 0x070300;

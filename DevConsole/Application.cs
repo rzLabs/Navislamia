@@ -14,14 +14,14 @@ namespace DevConsole
     public class Application : IHostedService
     {
         private readonly IHostEnvironment _environment;
-        private readonly IGameService _gameService;
+        private readonly IGameModule _gameModule;
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, IGameService gameService, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameModule gameModule, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             _environment = environment;
-            _gameService = gameService;
+            _gameModule = gameModule;
             _notificationService = notificationService;
             _networkOptions = networkOptions.Value;
         }
@@ -29,21 +29,21 @@ namespace DevConsole
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _notificationService.WriteString(Resources.arcadia);
-            _notificationService.WriteString("Navislamia starting...");
-            _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
+            _notificationService.WriteString("Navislamia starting...\n");
+            _notificationService.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
             var ip = _networkOptions.Ip;
             var port = _networkOptions.Port;
             var backlog = _networkOptions.Backlog;
             
-            if (string.IsNullOrWhiteSpace(ip) || port == null)
+            if (string.IsNullOrWhiteSpace(ip) || port <= 0)
             {
                 throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }
 
             try
             {
-                _gameService.Start(ip, port, backlog);
+                _gameModule.Start(ip, port, backlog);
             }
             catch (Exception e)
             {

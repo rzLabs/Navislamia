@@ -11,6 +11,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
 using Navislamia.Network;
+using Navislamia.Network.Entities;
 using Navislamia.Notification;
 using Navislamia.World;
 using Network;
@@ -39,8 +40,9 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
-                //Options
                 services.AddHostedService<Application>();
+                
+                //Options
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
                 services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
                 services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
@@ -48,7 +50,7 @@ public class Program
                 services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
                 services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));
                 services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
-                services.Configure<LogOptions>(context.Configuration.GetSection("Log"));
+                services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
 
 
                 // Services
@@ -57,11 +59,11 @@ public class Program
                 services.AddSingleton<IWorldService, WorldModule>();
                 services.AddSingleton<IScriptingService, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
-                services.AddSingleton<INetworkService, NetworkModule>();
-                services.AddSingleton<IGameService, GameModule>();
+                services.AddSingleton<INetworkModule, NetworkModule>();
+                services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
-
-
+                services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
+                services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
 
             })
             .ConfigureLogging((context, logging) => {

@@ -18,6 +18,7 @@ using Serilog.Events;
 using Spectre.Console;
 
 using Navislamia.Scripting.Functions;
+using Navislamia.Utilities;
 
 namespace Scripting
 {
