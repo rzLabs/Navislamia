@@ -12,6 +12,7 @@ using Navislamia.Database;
 using Navislamia.Game;
 using Navislamia.Maps;
 using Navislamia.Network;
+using Navislamia.Network.Entities;
 using Navislamia.Notification;
 using Navislamia.Scripting;
 using Navislamia.World;
@@ -49,7 +50,7 @@ public class Program
                 services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
                 services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));
                 services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
-                services.Configure<LogOptions>(context.Configuration.GetSection("Log"));
+                services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
 
                 // Services
                 services.AddSingleton<ICommandService, CommandModule>();
@@ -57,9 +58,13 @@ public class Program
                 services.AddSingleton<IWorldService, WorldModule>();
                 services.AddSingleton<IScriptingModule, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
-                services.AddSingleton<INetworkService, NetworkModule>();
+                services.AddSingleton<INetworkModule, NetworkModule>();
+                services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
+                services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
+                services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+
             })
             .ConfigureLogging((context, logging) => {
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));

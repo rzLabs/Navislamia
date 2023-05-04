@@ -14,7 +14,7 @@ namespace Navislamia.Network.Packets.Game
 
         public long OneTimePassword;
 
-        public TM_CS_ACCOUNT_WITH_AUTH() : base((ushort)ClientPackets.TM_CS_ACCOUNT_WITH_AUTH) => Serialize();
+        public TM_CS_ACCOUNT_WITH_AUTH() : base((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH) => Serialize();
 
         public TM_CS_ACCOUNT_WITH_AUTH(Span<byte> buffer) : base(buffer) => Deserialize();
 

@@ -1,22 +1,17 @@
-﻿using Navislamia.Network.Interfaces;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Enums;
-using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Navislamia.Network.Packets.Actions
 {
-    public class UploadActions : IUploadActionService
+    public class UploadActions
     {
         INotificationService notificationSVC;
 
-        Dictionary<ushort, Func<IClient, ISerializablePacket, int>> actions = new();
+        Dictionary<ushort, Func<ClientService<UploadClientEntity>, ISerializablePacket, int>> actions = new();
 
         public UploadActions(INotificationService notificationService)
         {
@@ -24,7 +19,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 
-        public int Execute(IClient client, ISerializablePacket msg)
+        public int Execute(ClientService<UploadClientEntity> client, ISerializablePacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return 1;
@@ -32,7 +27,7 @@ namespace Navislamia.Network.Packets.Actions
             return actions[msg.ID]?.Invoke(client, msg) ?? 2;
         }
 
-        public int OnLoginResult(IClient client, ISerializablePacket msg)
+        public int OnLoginResult(ClientService<UploadClientEntity> client, ISerializablePacket msg)
         {
             var _msg = msg as TS_US_LOGIN_RESULT;
 
@@ -43,7 +38,7 @@ namespace Navislamia.Network.Packets.Actions
                 return 1;
             }
 
-            ((UploadClient)client).GetEntity().Ready = true;
+            client.GetEntity().Ready = true;
 
             notificationSVC.WriteSuccess("Successfully registered to the Upload Server!");
 

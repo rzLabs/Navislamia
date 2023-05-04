@@ -7,10 +7,8 @@ using MoonSharp.Interpreter;
 using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
-using Scripting;
 using Scripting.Functions;
 using Serilog.Events;
-using Utilities;
 
 namespace Navislamia.Scripting
 {

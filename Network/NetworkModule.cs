@@ -6,70 +6,62 @@ using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Entities;
-using Navislamia.Network.Interfaces;
 using Navislamia.Network.Packets.Actions;
-using Navislamia.Network.Packets.Actions.Interfaces;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
 
 namespace Navislamia.Network
 {
-    public class NetworkModule : INetworkService
+    public class NetworkModule : INetworkModule
     {
+        private TcpListener _listener;
+        private readonly IClientService<AuthClientEntity> _authService;
+        private readonly IClientService<UploadClientEntity> _uploadService;
+
         private readonly INotificationService _notificationSvc;
-
-        private TcpListener _listener = null;
-
-        private int _bufferLength = 1024;
-
-        private List<GameClient> _connections = new();
-
-        private AuthClient _auth;
-        private UploadClient _upload;
-
-        private readonly IAuthActionService _authActionSvc;
-        private readonly IGameActionService _gameActionSvc;
-        private readonly IUploadActionService _uploadActionSvc;
+        private readonly IOptions<NetworkOptions> _networkIOptions;
         private readonly NetworkOptions _networkOptions;
-        private readonly IOptions<NetworkOptions> _networkTmpOptions; // Temporary to merge options pattern. Refactor Clients to be injectable
         private readonly ServerOptions _serverOptions;
-        /// <summary>
-        /// Game clients that have not been authorized yet
-        /// </summary>
-        public Dictionary<string, IClient> AuthAccounts { get; set; } = new Dictionary<string, IClient>();
+        private readonly IOptions<LogOptions> _logOptions;
 
-        /// <summary>
-        /// Game clients that have been authorized and are now only the gameserver
-        /// </summary>
-        public Dictionary<string, IClient> GameClients { get; set; } = new Dictionary<string, IClient>();
+        public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
+        public Dictionary<string,  ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
 
-        public int PlayerCount => GameClients.Count;
+        public AuthActions AuthActions { get; }
+        public GameActions GameActions { get; }
+        public UploadActions UploadActions { get; }
 
-        public bool Ready => ((AuthClientEntity)_auth.Entity).Ready && ((UploadClientEntity)_upload.Entity).Ready;
-
-        public AuthClient AuthClient => _auth;
-
-        public UploadClient UploadClient => _upload;
-
-        public NetworkModule() { }
-
-        public NetworkModule(IOptions<NetworkOptions> networkOptions, IOptions<ServerOptions> serverOptions, INotificationService notificationService)
+        public NetworkModule(IClientService<AuthClientEntity> authService, IClientService<UploadClientEntity> uploadService,
+            IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IOptions<LogOptions> logOptions,
+            IOptions<ServerOptions> serverOptions) 
         {
             _notificationSvc = notificationService;
+            _authService = authService;
+            _uploadService = uploadService;
+            _networkIOptions = networkOptions;
             _networkOptions = networkOptions.Value;
-            _networkTmpOptions = networkOptions;
-            
-            _authActionSvc = new AuthActions(_notificationSvc, this);
-            _gameActionSvc = new GameActions(networkOptions, _notificationSvc, this);
-            _uploadActionSvc = new UploadActions(_notificationSvc);
+            _serverOptions = serverOptions.Value;
+            _logOptions = logOptions;
+
+            AuthActions = new AuthActions(notificationService, this);
+            GameActions = new GameActions(notificationService, this, _networkOptions);
+            UploadActions = new UploadActions(notificationService);
         }
+
+        public IClientService<AuthClientEntity> GetAuthClient() => _authService;
+
+        public IClientService<UploadClientEntity> GetUploadClient() => _uploadService;
+
+        public bool IsReady() => _authService.GetEntity().Ready && _uploadService.GetEntity().Ready;
+
+        public int GetPlayerCount() => AuthorizedGameClients.Count;
 
         public void Initialize()
         {
             ConnectToAuth();
-            SendGsInfoToAuth();
             ConnectToUpload();
+            SendGsInfoToAuth();
             SendInfoToUpload();
         }
 
@@ -95,12 +87,11 @@ namespace Navislamia.Network
 
             IPEndPoint authEp = new IPEndPoint(addr, port);
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+            
             try
             {
-                _auth = new AuthClient(_networkTmpOptions, _notificationSvc, _authActionSvc, null, null);
-                _auth.Create(authSock);
-                _auth.Connect(authEp);
+                _authService.Create(this, authSock);
+                _authService.Connect(authEp);
             }
             catch (Exception ex)
             {
@@ -124,7 +115,8 @@ namespace Navislamia.Network
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
-                _auth.PendMessage(msg);
+
+                _authService.PendMessage(msg);
             }
             catch (Exception ex)
             {
@@ -154,13 +146,10 @@ namespace Navislamia.Network
             IPEndPoint uploadEp = new IPEndPoint(addr, port);
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            int status = 0;
-
             try
             {
-                _upload = new UploadClient(_networkTmpOptions, _notificationSvc, null, null, _uploadActionSvc);
-                _upload.Create(uploadSock);
-                _upload.Connect(uploadEp);
+                _uploadService.Create(this, uploadSock);
+                _uploadService.Connect(uploadEp);
             }
             catch (Exception ex)
             {
@@ -179,7 +168,7 @@ namespace Navislamia.Network
                 var serverName = _serverOptions.Name;
                 var msg = new TS_SU_LOGIN(serverName);
 
-                _upload.PendMessage(msg);
+                _uploadService.PendMessage(msg);
             }
             catch (Exception ex)
             {
@@ -220,8 +209,9 @@ namespace Navislamia.Network
 
             socket.NoDelay = true;
 
-            GameClient client = new GameClient(_networkTmpOptions, _notificationSvc, null, _gameActionSvc, null);
-            client.Create(socket);
+            // TODO Debug if this is working correctly
+            ClientService<GameClientEntity> client = new(_logOptions, _notificationSvc, _networkIOptions);
+            client.Create(this, socket);
 
             _notificationSvc.WriteDebug($"Game client connected from: {client.Entity.IP}");
 
@@ -239,14 +229,16 @@ namespace Navislamia.Network
             return 0;
         }
 
-        public bool RegisterAccount(IClient client, string accountName)
+        public bool RegisterAccount(ClientService<GameClientEntity> client, string accountName)
         {
-            if (GameClients.ContainsKey(accountName))
+            if (AuthorizedGameClients.ContainsKey(accountName))
                 return false;
 
-            GameClients[accountName] = client;
+            AuthorizedGameClients[accountName] = client;
 
             return true;
         }
+
+
     }
 }

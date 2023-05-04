@@ -18,8 +18,7 @@ namespace DevConsole
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationService _notificationService;
 
-        public Application(IHostEnvironment environment, IGameModule gameModule,
-            IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameModule gameModule, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
         {
             _environment = environment;
             _gameModule = gameModule;
@@ -30,14 +29,14 @@ namespace DevConsole
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _notificationService.WriteString(Resources.arcadia);
-            _notificationService.WriteString("Navislamia starting...");
-            _notificationService.WriteString("Environment: " +  _environment.EnvironmentName);
+            _notificationService.WriteString("Navislamia starting...\n");
+            _notificationService.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
             var ip = _networkOptions.Game.Ip;
             var port = _networkOptions.Game.Port;
             var backlog = _networkOptions.Backlog;
             
-            if (string.IsNullOrWhiteSpace(ip) || port == null)
+            if (string.IsNullOrWhiteSpace(ip) || port <= 0)
             {
                 throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }

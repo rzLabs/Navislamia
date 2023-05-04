@@ -19,11 +19,11 @@ namespace Navislamia.Game
     public class GameModule : IGameModule
     {
         private readonly IWorldService _worldService;
-        private readonly IDatabaseService _dbService;
+        private readonly IDatabaseService _databaseService;
         private readonly IScriptingModule _scriptingModule;
         private readonly INotificationService _notificationService;
         private readonly IMapService _mapService;
-        private readonly INetworkService _networkService;
+        private readonly INetworkModule _networkModule;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
         private readonly ServerOptions _serverOptions;
@@ -33,34 +33,34 @@ namespace Navislamia.Game
         public GameModule() { }
 
         public GameModule(IWorldService worldService, INotificationService notificationService,
-            IDatabaseService dbService, IScriptingModule scriptingModule, IMapService mapService,
-            INetworkService networkService, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IOptions<ServerOptions> serverOptions)
+            IDatabaseService databaseService, IScriptingModule scriptingService, IMapService mapService,
+            INetworkModule networkModule, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions,
+            IOptions<ServerOptions> serverOptions)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _serverOptions = serverOptions.Value;
             _worldService = worldService;
             _notificationService = notificationService;
-            _dbService = dbService;
-            _scriptingModule = scriptingModule;
+            _databaseService = databaseService;
+            _scriptingModule = scriptingService;
             _mapService = mapService;
-            _networkService = networkService;
+            _networkModule = networkModule;
 
             _worldRepositories = new List<IRepository>();
         }
 
         public async Task Start(string ip, int port, int backlog)
         {
-            _notificationService.WriteWarning(_serverOptions.Name);
             LoadScripts(_scriptOptions.SkipLoading);
             StartMapService(_mapOptions.SkipLoading);
             LoadDbRepositories();
-            _networkService.Initialize();
+            _networkModule.Initialize();
 
             var curTime = DateTime.UtcNow;
             var maxTime = DateTime.UtcNow.AddMinutes(5);
             
-            while (!_networkService.Ready)
+            while (!_networkModule.IsReady())
             {
                 if (curTime >= maxTime)
                 {
@@ -68,13 +68,13 @@ namespace Navislamia.Game
                     return;
                 }
 
-                curTime = curTime.AddMilliseconds(250);
-
                 // Wait for the auth/upload servers to respond
                 Thread.Sleep(250);
+                curTime = curTime.AddMilliseconds(250);
             }
 
-            _networkService.StartListener();
+            _networkModule.StartListener();
+            _networkModule.StartListener();
         }
 
         private void StartMapService(bool skip)
@@ -111,23 +111,28 @@ namespace Navislamia.Game
 
         private void LoadDbRepositories()
         {
-            var loaders = new List<IRepositoryLoader>();
-
-            loaders.Add(new MonsterLoader(_notificationService, _dbService));
-            loaders.Add(new PetLoader(_notificationService, _dbService));
-            loaders.Add(new ItemLoader(_notificationService, _dbService));
-            loaders.Add(new NPCLoader(_notificationService, _dbService));
-            loaders.Add(new StringLoader(_notificationService, _dbService));
-
-            for (int i = 0; i < loaders.Count; i++)
+            var loaders = new List<IRepositoryLoader>
             {
-               if (loaders[i].Init() is null)
-               {
-                   _notificationService.WriteError($"{loaders[i].GetType().Name} failed to load!");
-                   throw new Exception($"{loaders[i].GetType().Name} failed to load!");
-               }
+                new MonsterLoader(_notificationService, _databaseService),
+                new PetLoader(_notificationService, _databaseService),
+                new ItemLoader(_notificationService, _databaseService),
+                new NPCLoader(_notificationService, _databaseService),
+                new StringLoader(_notificationService, _databaseService)
+            };
 
-               _worldRepositories.AddRange(loaders[i].Repositories);
+            foreach(var loader in loaders)
+            {
+                try
+                {
+                    loader.Init();
+                }
+                catch (Exception e)
+                {
+                   _notificationService.WriteError($"{loader.GetType().Name} failed to load!");
+                   throw new Exception($"{loader.GetType().Name} failed to load!");
+                }
+
+                _worldRepositories.AddRange(loader.Repositories);
             }
 
             _notificationService.WriteNewLine(); 
