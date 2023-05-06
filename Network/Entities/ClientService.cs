@@ -26,8 +26,7 @@ namespace Navislamia.Network.Entities
 
         private readonly NetworkOptions _networkOptions;
         private readonly LogOptions _logOptions;
-
-        private readonly bool _debugPackets;
+        
         private bool _sendProcessing;
         private bool _recvProcessing;
 
@@ -47,8 +46,6 @@ namespace Navislamia.Network.Entities
 
             _networkOptions = networkOptions.Value;
             _logOptions = logOptions.Value;
-            
-            _debugPackets = _logOptions.PacketDebug;
 
             _recvCipher.SetKey(_networkOptions.CipherKey);
             _sendCipher.SetKey(_networkOptions.CipherKey);
@@ -114,7 +111,7 @@ namespace Navislamia.Network.Entities
 
         }
 
-        public int Connect(IPEndPoint ep)
+        public void Connect(IPEndPoint ep)
         {
             try
             {
@@ -124,11 +121,7 @@ namespace Navislamia.Network.Entities
             {
                 _notificationSvc.WriteError($"An error occured while attempting to connect to remote endpoint!");
                 _notificationSvc.WriteException(ex);
-
-                return 1;
             }
-
-            return 0;
         }
 
         public void Send(byte[] data)
@@ -305,7 +298,7 @@ namespace Navislamia.Network.Entities
                     // add message to the queue
                     if (msg is not null)
                     {
-                        if (_debugPackets)
+                        if (_logOptions.PacketDebug)
                         {
                             var packetDmp = ((Packet)msg).DumpToString();
 
@@ -360,7 +353,7 @@ namespace Navislamia.Network.Entities
                         _sendCipher.Encode(queuedMsg.Data, sendBuffer, sendBuffer.Length);
                     }
 
-                    if (_debugPackets)
+                    if (_logOptions.PacketDebug)
                     {
                         var packetDmp = ((Packet)queuedMsg).DumpToString();
 

@@ -1,6 +1,4 @@
-using Navislamia.Configuration.Options;
-
-namespace Configuration.Options
+﻿namespace Navislamia.Configuration.Options
 {
     public class DatabaseOptions
     {

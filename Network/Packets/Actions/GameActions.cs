@@ -1,10 +1,8 @@
-﻿using Configuration;
-using Navislamia.Network.Enums;
-using Network;
+﻿using Navislamia.Network.Enums;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Options;
+using Configuration;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Auth;

@@ -1,63 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-
 using System.Threading.Tasks;
-
-using Configuration;
-using Scripting.Functions;
-using Utilities;
-using Navislamia.Notification;
-
 using MoonSharp.Interpreter;
-using Serilog.Events;
-
-using Spectre.Console;
-
+using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
+using Scripting.Functions;
+using Serilog.Events;
 
-namespace Scripting
+namespace Navislamia.Scripting
 {
-    public class ScriptModule : IScriptingService
+    public class ScriptModule : IScriptingModule
     {
         public string ScriptsDirectory;
         public int ScriptCount { get; set; }
 
-        Script luaVM = new Script();
-        INotificationService notificationSVC;
+        Script luaVM = new();
+        private readonly INotificationService _notificationService;
 
-        public ScriptModule() { }
 
         public ScriptModule(INotificationService notificationService)
         {
-            notificationSVC = notificationService;
+            _notificationService = notificationService;
         }
 
         public int Init(string directory = null)
         {
-            //string scriptDir = directory ?? $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}//Scripts//";
-            string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
-
-            if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
+            try
             {
-                notificationSVC.WriteMarkup("[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]", LogEventLevel.Error);
-                return 1;
+                string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
+                if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
+                {
+                    _notificationService.WriteError("Missing directory: Scripts. Do you want to create one? (y/Y) = Yes, (n/N) = No");
+                    
+                    var input = Console.ReadLine();
+                    ConsoleExtensions.ClearLastLine();
+                    
+                    if (input.IsNegativeInput())
+                    {
+                        _notificationService.WriteMarkup(
+                            "[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]",
+                            LogEventLevel.Error);
+                        return 1;
+                    }
+                    
+                    Directory.CreateDirectory(scriptDir);
+                    _notificationService.WriteSuccess("Created directory: Scripts");
+                }
+
+                ScriptsDirectory = scriptDir;
+
+                registerFunctions();
+
+                loadScripts();
+
+                _notificationService.WriteSuccess(new[] { "Script service started successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
+
             }
-
-            ScriptsDirectory = scriptDir;
-
-            registerFunctions();
-
-            loadScripts();
+            catch (Exception e)
+            {
+                _notificationService.WriteError($"Failed to start script service!\\n{e.Message}"); 
+                throw;
+            }
 
             return 0;
         }
 
-        public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
+    public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
 
         public int RunString(string script)
         {
@@ -107,7 +118,7 @@ namespace Scripting
 
             if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
             {
-                notificationSVC.WriteMarkup("[bold red]ScriptModule failed to load because the scripts directory is null or does not exist![/]", LogEventLevel.Error);
+                _notificationService.WriteMarkup("[bold red]ScriptModule failed to load because the scripts directory is null or does not exist![/]", LogEventLevel.Error);
                 return;
             }
 
@@ -130,11 +141,11 @@ namespace Scripting
                         string exMsg;
 
                         if (ex is SyntaxErrorException || ex is ScriptRuntimeException)
-                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {StringExt.LuaExceptionToString(((InterpreterException)ex).DecoratedMessage)}\n";
+                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {StringExtensions.LuaExceptionToString(((InterpreterException)ex).DecoratedMessage)}\n";
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 
-                        notificationSVC.WriteMarkup($"[bold red]{exMsg}[/]");
+                        _notificationService.WriteMarkup($"[bold red]{exMsg}[/]");
                     }
                 }));
 
@@ -152,7 +163,7 @@ namespace Scripting
 
             foreach (var task in scriptTasks)
                 if (task.IsFaulted)
-                    notificationSVC.WriteException(task.Exception);
+                    _notificationService.WriteException(task.Exception);
         }
     }
 }

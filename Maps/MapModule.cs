@@ -1,28 +1,23 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-
-using Configuration;
-using Scripting;
-using Navislamia.Maps.Entities;
+using System.Threading.Tasks;
+using Maps;
 using Maps.X2D;
-using Navislamia.Notification;
-using Objects;
-
-using Serilog.Events;
-using System;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
+using Navislamia.Maps.Entities;
+using Navislamia.Notification;
+using Navislamia.Scripting;
+using Objects;
+using Serilog.Events;
 using static Navislamia.Maps.Entities.ScriptDefine;
 
-namespace Maps
+namespace Navislamia.Maps
 {
     public class MapModule : IMapService
     {
         private readonly MapOptions _mapOptions;
-        IScriptingService scriptSVC;
+        IScriptingModule scriptSVC;
         INotificationService notificationSVC;
 
         static int mapWidth = 700000;
@@ -34,11 +29,11 @@ namespace Maps
         public static Dictionary<int, PropContactScriptInfo> PropScriptInfo = new Dictionary<int, PropContactScriptInfo>();
         public static Dictionary<int, EventAreaInfo> EventAreaInfo = new Dictionary<int, EventAreaInfo>();
 
-        public MapModule(IOptions<MapOptions> mapOptions, INotificationService notificationService, IScriptingService scriptService)
+        public MapModule(IOptions<MapOptions> mapOptions, INotificationService notificationService, IScriptingModule scriptModule)
         {
             _mapOptions = mapOptions.Value;
             notificationSVC = notificationService;
-            scriptSVC = scriptService;
+            scriptSVC = scriptModule;
         }
 
         public void SetDefaultLocation(int x, int y, float mapLength, int locationID)
@@ -561,5 +556,4 @@ namespace Maps
         static List<ScriptRegion> regionList = new List<ScriptRegion>();
         static List<ScriptRegionInfo> scriptEvents = new List<ScriptRegionInfo>();
     }
-
 }

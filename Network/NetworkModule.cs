@@ -5,7 +5,6 @@ using System.Net.Sockets;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.Network.Enums;
 using Navislamia.Network.Entities;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Auth;
@@ -23,7 +22,7 @@ namespace Navislamia.Network
         private readonly INotificationService _notificationSvc;
         private readonly IOptions<NetworkOptions> _networkIOptions;
         private readonly NetworkOptions _networkOptions;
-        private readonly ServerOptions _serverServerOptions;
+        private readonly ServerOptions _serverOptions;
         private readonly IOptions<LogOptions> _logOptions;
 
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
@@ -42,7 +41,7 @@ namespace Navislamia.Network
             _uploadService = uploadService;
             _networkIOptions = networkOptions;
             _networkOptions = networkOptions.Value;
-            _serverServerOptions = serverOptions.Value;
+            _serverOptions = serverOptions.Value;
             _logOptions = logOptions;
 
             AuthActions = new AuthActions(notificationService, this);
@@ -58,78 +57,63 @@ namespace Navislamia.Network
 
         public int GetPlayerCount() => AuthorizedGameClients.Count;
 
-        public int Initialize()
+        public void Initialize()
         {
-            if (ConnectToAuth() > 0 || ConnectToUpload() > 0)
-                return 1;
-
-            if (SendGSInfoToAuth() > 0 || SendInfoToUpload() > 0)
-                return 1;
-
-            return 0;
+            ConnectToAuth();
+            ConnectToUpload();
+            SendGsInfoToAuth();
+            SendInfoToUpload();
         }
 
-        private int ConnectToAuth()
+        private void ConnectToAuth()
         {
-            string addrStr = _networkOptions.AuthIp;
-            int port = _networkOptions.AuthPort;
+            string addrStr = _networkOptions.Auth.Ip;
+            int port = _networkOptions.Auth.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network auth.io.ip configuration! Review your appsettings.json!");
-                return 1;
+                _notificationSvc.WriteError("Invalid network auth ip! Review your configuration!");
+                throw new Exception();
             }
 
             IPAddress addr;
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                _notificationSvc.WriteError($"Failed to parse auth.io.ip: {addrStr}");
-                return 1;
+                _notificationSvc.WriteError($"Failed to parse auth ip: {addrStr}");
+                throw new Exception();
+
             }
 
             IPEndPoint authEp = new IPEndPoint(addr, port);
-
             var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            int status = 0;
-
+            
             try
             {
                 _authService.Create(this, authSock);
-                
-                status = _authService.Connect(authEp);
+                _authService.Connect(authEp);
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                status = 1;
-            }
-
-            if (status == 1)
-            {
                 _notificationSvc.WriteError("Failed to connect to the auth server!");
+                throw new Exception();
 
-                return status;
             }
-
+            
             _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
-
-            return 0;
         }
 
-        private int SendGSInfoToAuth()
+        private void SendGsInfoToAuth()
         {
             try
             {
-                var index = _serverServerOptions.Index;
-                var ip = _networkOptions.Ip;
-                var port = _networkOptions.Port;
-                var name = _serverServerOptions.Name;
-                var screenshotUrl = _serverServerOptions.ScreenshotUrl;
-                var isAdultServer = _serverServerOptions.IsAdultServer;
-
+                var index = _serverOptions.Index;
+                var ip = _networkOptions.Game.Ip;
+                var port = _networkOptions.Game.Port;
+                var name = _serverOptions.Name;
+                var screenshotUrl = _serverOptions.ScreenshotUrl;
+                var isAdultServer = _serverOptions.IsAdultServer;
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
                 _authService.PendMessage(msg);
@@ -137,22 +121,18 @@ namespace Navislamia.Network
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                return 1;
+                throw new Exception("Failed sending message to Authservice");
             }
-
-            return 0;
         }
 
-        private int ConnectToUpload()
+        private void ConnectToUpload()
         {
-            string addrStr = _networkOptions.UploadIp;
-            int port = _networkOptions.UploadPort;
+            string addrStr = _networkOptions.Upload.Ip;
+            int port = _networkOptions.Upload.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your appsettings.json!");
-                return 1;
+                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
             }
 
             IPAddress addr;
@@ -160,45 +140,32 @@ namespace Navislamia.Network
             if (!IPAddress.TryParse(addrStr, out addr))
             {
                 _notificationSvc.WriteError($"Failed to parse io.upload.ip: {addrStr}");
-                return 1;
+                throw new Exception("Could not read upload ip");
             }
 
             IPEndPoint uploadEp = new IPEndPoint(addr, port);
-
             var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            int status = 0;
 
             try
             {
                 _uploadService.Create(this, uploadSock);
-
-                status = _uploadService.Connect(uploadEp);
+                _uploadService.Connect(uploadEp);
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                status = 1;
-            }
-
-            if (status == 1)
-            {
                 _notificationSvc.WriteError("Failed to connect to the upload server!");
-
-                return 1;
+                throw new Exception();
             }
 
-            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }, true);
-
-            return 0;
+            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" });
         }
 
-        private int SendInfoToUpload()
+        private void SendInfoToUpload()
         {
             try
             {
-                var serverName = _serverServerOptions.Name;
+                var serverName = _serverOptions.Name;
                 var msg = new TS_SU_LOGIN(serverName);
 
                 _uploadService.PendMessage(msg);
@@ -206,17 +173,14 @@ namespace Navislamia.Network
             catch (Exception ex)
             {
                 _notificationSvc.WriteException(ex);
-
-                return 1;
+                throw new Exception();
             }
-
-            return 0;
         }
 
         private int StartClientListener()
         {
-            string addrStr = _networkOptions.Ip;
-            ushort port = _networkOptions.Port;
+            string addrStr = _networkOptions.Game.Ip;
+            ushort port = _networkOptions.Game.Port;
             int backlog = _networkOptions.Backlog;
 
             IPAddress addr;

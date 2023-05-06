@@ -1,4 +1,4 @@
-﻿using Navislamia.Network.Entities;
+using Navislamia.Network.Entities;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;

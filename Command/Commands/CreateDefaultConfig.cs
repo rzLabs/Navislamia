@@ -1,13 +1,7 @@
-﻿using Configuration;
-using Navislamia.Notification;
+﻿using Navislamia.Notification;
 using Spectre.Console.Cli;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Navislamia.Command.Interfaces;
 
 namespace Navislamia.Command.Commands

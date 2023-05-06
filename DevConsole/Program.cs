@@ -1,6 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Configuration;
-using Configuration.Options;
 using Maps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,12 +10,12 @@ using Navislamia.Command;
 using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
+using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
 using Navislamia.Notification;
+using Navislamia.Scripting;
 using Navislamia.World;
-using Network;
-using Scripting;
 
 
 namespace DevConsole;
@@ -36,7 +36,7 @@ public class Program
                 var env = context.HostingEnvironment.EnvironmentName;
                 configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                 configuration.AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true);
-                configuration.AddEnvironmentVariables("NAVISLAMIA_");
+                configuration.AddEnvironmentVariables();
             })
             .ConfigureServices((context, services) =>
             {
@@ -52,14 +52,14 @@ public class Program
                 services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
                 services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
 
-
                 // Services
                 services.AddSingleton<ICommandService, CommandModule>();
                 services.AddSingleton<IDatabaseService, DatabaseModule>();
                 services.AddSingleton<IWorldService, WorldModule>();
-                services.AddSingleton<IScriptingService, ScriptModule>();
+                services.AddSingleton<IScriptingModule, ScriptModule>();
                 services.AddSingleton<IMapService, MapModule>();
                 services.AddSingleton<INetworkModule, NetworkModule>();
+                services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationService, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
