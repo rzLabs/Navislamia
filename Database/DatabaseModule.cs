@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
-
-using Configuration;
 using Navislamia.Notification;
-
 using Navislamia.Database.Contexts;
 using Navislamia.Database.Enums;
-
 using Dapper;
-using System.Text;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.World;
 
 namespace Navislamia.Database
 {

@@ -30,7 +30,7 @@ namespace Navislamia.Network
 
         int GetPlayerCount();
 
-        int Initialize();
+        void Initialize();
 
         int StartListener();
 

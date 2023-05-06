@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using Configuration;
-using Scripting;
-using Navislamia.Notification;
-using Objects;
+﻿using Objects;
 
 namespace Maps
 {

@@ -1,12 +1,15 @@
 {
   "profiles": {
-    "DevConsole": {
-      "commandName": "Project"
-    },
-    "DevConsole_Dev": {
+    "CLI Dev": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Dev"
+      }
+    },
+    "CLI Prod": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Prod"
       }
     }
   }

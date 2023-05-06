@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Threading;
-using Configuration;
 using DevConsole.Properties;
 using Navislamia.Game;
 using Navislamia.Notification;
 using System.Threading.Tasks;
+using Configuration;
 using DevConsole.Exceptions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -32,8 +32,8 @@ namespace DevConsole
             _notificationService.WriteString("Navislamia starting...\n");
             _notificationService.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
-            var ip = _networkOptions.Ip;
-            var port = _networkOptions.Port;
+            var ip = _networkOptions.Game.Ip;
+            var port = _networkOptions.Game.Port;
             var backlog = _networkOptions.Backlog;
             
             if (string.IsNullOrWhiteSpace(ip) || port <= 0)
