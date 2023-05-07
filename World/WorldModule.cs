@@ -2,13 +2,13 @@
 
 namespace Navislamia.World
 {
-    public class WorldModule : IWorldService
+    public class WorldModule : IWorldModule
     {
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
 
-        public WorldModule(INotificationService notificationService)
+        public WorldModule(INotificationModule notificationModule)
         {
-            notificationSVC = notificationService;
+            notificationSVC = notificationModule;
         }
 
     }

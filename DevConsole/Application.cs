@@ -16,21 +16,22 @@ namespace DevConsole
         private readonly IHostEnvironment _environment;
         private readonly IGameModule _gameModule;
         private readonly NetworkOptions _networkOptions;
-        private readonly INotificationService _notificationService;
+        private readonly INotificationModule _notificationModule;
 
-        public Application(IHostEnvironment environment, IGameModule gameModule, IOptions<NetworkOptions> networkOptions, INotificationService notificationService)
+        public Application(IHostEnvironment environment, IGameModule gameModule,
+            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule)
         {
             _environment = environment;
             _gameModule = gameModule;
-            _notificationService = notificationService;
+            _notificationModule = notificationModule;
             _networkOptions = networkOptions.Value;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _notificationService.WriteString(Resources.arcadia);
-            _notificationService.WriteString("Navislamia starting...\n");
-            _notificationService.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
+            _notificationModule.WriteString(Resources.arcadia);
+            _notificationModule.WriteString("Navislamia starting...\n");
+            _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
             var ip = _networkOptions.Game.Ip;
             var port = _networkOptions.Game.Port;
@@ -48,7 +49,7 @@ namespace DevConsole
             catch (Exception e)
             {
                 StopAsync(cancellationToken);
-                _notificationService.WriteMarkup("[bold red]Failed to start the game service![/]");
+                _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
             }
 
             Console.ReadLine();

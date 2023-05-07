@@ -1,22 +1,18 @@
-﻿using Navislamia.Database;
-using Navislamia.Database.Entities;
+﻿using Navislamia.Database.Entities;
 using Navislamia.Database.Interfaces;
 using Navislamia.Database.Repositories;
 using Navislamia.Notification;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Navislamia.Database.Loaders
 {
     public class ItemLoader : RepositoryLoader, IRepositoryLoader
     {
-        IDatabaseService dbSVC;
+        IDatabaseModule dbSVC;
 
-        public ItemLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService)
+        public ItemLoader(INotificationModule notificationModule, IDatabaseModule databaseModule) : base(notificationModule)
         {
-            dbSVC = databaseService;
+            dbSVC = databaseModule;
         }
 
         public List<IRepository> Init()

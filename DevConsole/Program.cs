@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Configuration;
-using Maps;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,24 +43,25 @@ public class Program
                 
                 //Options
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
-                services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
-                services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
-                services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
                 services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
                 services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));
+                services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
+                services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));
+                services.Configure<GameOptions>(context.Configuration.GetSection("Network:Game"));
+                services.Configure<UploadOptions>(context.Configuration.GetSection("Network:Upload"));
+                services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
+                services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
                 services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
-                services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
 
                 // Services
-                services.AddSingleton<ICommandService, CommandModule>();
-                services.AddSingleton<IDatabaseService, DatabaseModule>();
-                services.AddSingleton<IWorldService, WorldModule>();
+                services.AddSingleton<ICommandModule, CommandModule>();
+                services.AddSingleton<IDatabaseModule, DatabaseModule>();
+                services.AddSingleton<IWorldModule, WorldModule>();
                 services.AddSingleton<IScriptingModule, ScriptModule>();
-                services.AddSingleton<IMapService, MapModule>();
+                services.AddSingleton<IMapModule, MapModule>();
                 services.AddSingleton<INetworkModule, NetworkModule>();
                 services.AddSingleton<IGameModule, GameModule>();
-                services.AddSingleton<IGameModule, GameModule>();
-                services.AddSingleton<INotificationService, NotificationModule>();
+                services.AddSingleton<INotificationModule, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
                 services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
 

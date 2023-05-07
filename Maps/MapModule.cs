@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Maps;
-using Maps.X2D;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
+using Navislamia.Maps.Constants;
 using Navislamia.Maps.Entities;
+using Navislamia.Maps.Enums;
+using Navislamia.Maps.X2D;
 using Navislamia.Notification;
 using Navislamia.Scripting;
 using Objects;
@@ -14,123 +18,142 @@ using static Navislamia.Maps.Entities.ScriptDefine;
 
 namespace Navislamia.Maps
 {
-    public class MapModule : IMapService
+    public class MapModule : IMapModule
     {
+        private const int AttrCountPerTile = 8;
+        
         private readonly MapOptions _mapOptions;
-        IScriptingModule scriptSVC;
-        INotificationService notificationSVC;
+        private readonly IScriptingModule _scriptingModule;
+        private readonly INotificationModule _notificationModule;
 
-        static int mapWidth = 700000;
-        static int mapHeight = 1000000;
+        private static QuadTree _qtLocationInfo;
+        private static QuadTree _qtBlockInfo;
+        private static QuadTree _qtAutoBlockInfo;
+        private static Dictionary<int, PropContactScriptInfo> _propScriptInfo;
+        private static Dictionary<int, EventAreaInfo> _eventAreaInfo; // TODO: currently only updated but never used
 
-        public static QuadTree QtLocationInfo = new QuadTree(0, 0, mapWidth, mapHeight);
-        public static QuadTree QtBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
-        public static QuadTree QtAutoBlockInfo = new QuadTree(0, 0, mapWidth, mapHeight);
-        public static Dictionary<int, PropContactScriptInfo> PropScriptInfo = new Dictionary<int, PropContactScriptInfo>();
-        public static Dictionary<int, EventAreaInfo> EventAreaInfo = new Dictionary<int, EventAreaInfo>();
+        private static int _currentLocationId;
+        private static float _tileSize = 1;
+        public KSize MapCount { get; set; } = new (0, 0);
+        private static int _currentRegionIdx;
 
-        public MapModule(IOptions<MapOptions> mapOptions, INotificationService notificationService, IScriptingModule scriptModule)
+        private static readonly TerrainSeamlessWorldInfo SeamlessWorldInfo = new ();
+        private static readonly TerrainPropInfo PropInfo = new ();
+        private static readonly List<ScriptRegion> RegionList = new ();
+        private static readonly List<ScriptRegionInfo> ScriptEvents = new ();
+
+        public MapModule(IOptions<MapOptions> mapOptions, INotificationModule notificationModule, IScriptingModule scriptModule)
         {
             _mapOptions = mapOptions.Value;
-            notificationSVC = notificationService;
-            scriptSVC = scriptModule;
+            _notificationModule = notificationModule;
+            _scriptingModule = scriptModule;
+            
+            _qtLocationInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
+            _qtBlockInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
+            _qtAutoBlockInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
+            _propScriptInfo = new Dictionary<int, PropContactScriptInfo>();
+            _eventAreaInfo = new Dictionary<int, EventAreaInfo>();
         }
 
-        public void SetDefaultLocation(int x, int y, float mapLength, int locationID)
+        public void SetDefaultLocation(int x, int y, float mapLength, int locationId)
         {
-            MapLocationInfo location_info = new MapLocationInfo();
+            var locationInfo = new MapLocationInfo();
 
-            PointF[] pt = new PointF[] { new PointF(0, 0), new PointF(0, 0), new PointF(0, 0), new PointF(0, 0) };
-            pt[0].Set(x * mapLength, y * mapLength);
-            pt[1].Set((x + 1) * mapLength, y * mapLength);
-            pt[2].Set((x + 1) * mapLength, (y + 1) * mapLength);
-            pt[3].Set(x * mapLength, (y + 1) * mapLength);
+            PointF[] points = { new (0, 0), new (0, 0), new (0, 0), new (0, 0) };
+            points[0].Set(x * mapLength, y * mapLength);
+            points[1].Set((x + 1) * mapLength, y * mapLength);
+            points[2].Set((x + 1) * mapLength, (y + 1) * mapLength);
+            points[3].Set(x * mapLength, (y + 1) * mapLength);
 
-            location_info.Priority = 0x7ffffffe;
-            location_info.LocationID = locationID;
+            locationInfo.Priority = 0x7ffffffe;
+            locationInfo.LocationId = locationId;
+            locationInfo.Set(points);
 
-            location_info.Set(pt);
-
-            registerMapLocationInfo(location_info);
+            RegisterMapLocationInfo(locationInfo);
         }
 
         public bool Initialize(string directory)
         {
-            List<Task> tasks = new List<Task>();
-            Task worker = null;
+            List<Task> tasks = new ();
 
-            bool skipLoadingNfa = _mapOptions.SkipLoadingNfa;
+            var skipLoadingNfa = _mapOptions.SkipLoadingNfa;
 
             tasks.Add(Task.Run(() =>
             {
-                seamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
-                notificationSVC.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
+                SeamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
+                _notificationModule.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
             }));
 
             tasks.Add(Task.Run(() =>
             {
-                propInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-                notificationSVC.WriteSuccess("TerrainPropInfo.cfg loaded!");
+                PropInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
+                _notificationModule.WriteSuccess("TerrainPropInfo.cfg loaded!");
             }));
 
-            worker = Task.WhenAll(tasks);
+            var worker = Task.WhenAll(tasks);
             worker.Wait();
 
             if (!worker.IsCompletedSuccessfully)
             {
-                foreach (Task t in tasks)
-                    if (t.IsFaulted)
-                        notificationSVC.WriteException(t.Exception);
+                foreach (var t in tasks.Where(t => t.IsFaulted))
+                {
+                    _notificationModule.WriteException(t.Exception);
+                }
 
                 return false;
             }
-            else
+
+            tasks.Clear();
+
+            _tileSize = SeamlessWorldInfo.TileLength;
+            MapCount = SeamlessWorldInfo.SizeMapCount;
+
+            var mapLength = SeamlessWorldInfo.TileLength * SeamlessWorldInfo.SegmentCountPerMap * SeamlessWorldInfo.TileCountPerSegment;
+            var attrLen = SeamlessWorldInfo.TileLength / AttrCountPerTile;
+
+            for (var y = 0; y < MapCount.CY; ++y)
             {
-                tasks.Clear();
-                worker = null;
-            }
-
-            tileSize = seamlessWorldInfo.TileLength;
-            MapCount = seamlessWorldInfo.MapCount;
-
-            float mapLength = seamlessWorldInfo.TileLength * seamlessWorldInfo.SegmentCountPerMap * seamlessWorldInfo.TileCountPerSegment;
-            float attrLen = seamlessWorldInfo.TileLength / (float)attrCountPerTile;
-
-            for (int y = 0; y < MapCount.CY; ++y)
-            {
-                for (int x = 0; x < MapCount.CX; ++x)
+                for (var x = 0; x < MapCount.CX; ++x)
                 {
-                    notificationSVC.WriteDebug($"Loading map: m{x.ToString("D3")}_{y.ToString("D3")}...");
+                    _notificationModule.WriteDebug($"Loading map: m{x:D3}_{y:D3}...");
 
-                    string locationFileName = seamlessWorldInfo.GetLocationFileName(x, y);
+                    var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
 
                     if (string.IsNullOrEmpty(locationFileName))
+                    {
                         continue;
+                    }
 
-                    if (seamlessWorldInfo.GetWorldID(x, y) != -1)
-                        SetDefaultLocation(x, y, mapLength, seamlessWorldInfo.GetWorldID(x, y));
+                    if (SeamlessWorldInfo.GetWorldId(x, y) != -1)
+                    {
+                        SetDefaultLocation(x, y, mapLength, SeamlessWorldInfo.GetWorldId(x, y));
+                    }
 
                     tasks.Add(Task.Run(() =>
                     {
                         LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
                     }));
 
-                    string scriptFileName = seamlessWorldInfo.GetScriptFileName(x, y);
+                    var scriptFileName = SeamlessWorldInfo.GetScriptFileName(x, y);
 
                     if (string.IsNullOrEmpty(scriptFileName))
+                    {
                         continue;
+                    }
 
                     tasks.Add(Task.Run(() =>
                     {
-                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, propInfo);
+                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, PropInfo);
                     }));
 
                     if (!skipLoadingNfa)
                     {
-                        string attributeFileName = seamlessWorldInfo.GetAttributePolygonFileName(x, y);
+                        var attributeFileName = SeamlessWorldInfo.GetAttributePolygonFileName(x, y);
 
                         if (string.IsNullOrEmpty(attributeFileName))
+                        {
                             continue;
+                        }
 
                         tasks.Add(Task.Run(() =>
                         {
@@ -138,10 +161,12 @@ namespace Navislamia.Maps
                         }));
                     }
 
-                    string eventAreaFileName = seamlessWorldInfo.GetEventAreaFileName(x, y);
+                    var eventAreaFileName = SeamlessWorldInfo.GetEventAreaFileName(x, y);
 
                     if (string.IsNullOrEmpty(eventAreaFileName))
+                    {
                         continue;
+                    }
 
                     tasks.Add(Task.Run(() =>
                     {
@@ -151,14 +176,17 @@ namespace Navislamia.Maps
                     worker = Task.WhenAll(tasks);
                     worker.Wait();
 
-                    if (!worker.IsCompletedSuccessfully)
+                    if (worker.IsCompletedSuccessfully)
                     {
-                        foreach (Task t in tasks)
-                            if (t.IsFaulted)
-                                notificationSVC.WriteException(t.Exception);
-
-                        return false;
+                        continue;
                     }
+                    
+                    foreach (var t in tasks.Where(t => t.IsFaulted))
+                    {
+                        _notificationModule.WriteException(t.Exception);
+                    }
+
+                    return false;
                 }
             }
 
@@ -168,41 +196,46 @@ namespace Navislamia.Maps
         public void LoadAttributeFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
             if (!File.Exists(fileName))
-                return;
-
-            KStream stream = new KStream(fileName);
-
-            if (stream == null)
-                return;
-
-            int polygonCnt = stream.ReadInt();
-
-            PolygonF block_info = new PolygonF();
-
-            for (int i = 0; i < polygonCnt; ++i)
             {
-                int ptCnt = stream.ReadInt();
+                return;
+            }
 
-                if (ptCnt < 3)
+            KStream stream = new (fileName);
+
+            var polygonCnt = stream.ReadInt();
+
+            PolygonF blockInfo = new ();
+
+            for (var i = 0; i < polygonCnt; ++i)
+            {
+                var pointCount = stream.ReadInt();
+
+                if (pointCount < 3)
                     continue;
 
-                PointF[] points = new PointF[ptCnt];
+                var points = new PointF[pointCount];
 
-                for (int pointNum = 0; pointNum < points.Length; ++pointNum)
-                    points[pointNum] = new PointF(stream.ReadInt(), stream.ReadInt());
-
-                for (int pointNum = 0; pointNum < points.Length; ++pointNum)
+                for (var pointNum = 0; pointNum < points.Length; ++pointNum)
                 {
-                    points[pointNum].X = mapLength * x + points[pointNum].X * attrLen;
-                    points[pointNum].Y = mapLength * y + points[pointNum].Y * attrLen;
+                    points[pointNum] = new PointF(stream.ReadInt(), stream.ReadInt());
                 }
 
-                if (block_info.Set(points))
+                foreach (var point in points)
                 {
-                    QtBlockInfo.Add(new MapLocationInfo(new PolygonF(block_info)));
+                    point.X = mapLength * x + point.X * attrLen;
+                    point.Y = mapLength * y + point.Y * attrLen;
+                }
 
-                    if (ptCnt < 50)
-                        QtAutoBlockInfo.Add(new MapLocationInfo(new PolygonF(block_info)));
+                if (!blockInfo.Set(points))
+                {
+                    continue;
+                }
+                
+                _qtBlockInfo.Add(new MapLocationInfo(new PolygonF(blockInfo)));
+
+                if (pointCount < 50)
+                {
+                    _qtAutoBlockInfo.Add(new MapLocationInfo(new PolygonF(blockInfo)));
                 }
             }
         }
@@ -210,139 +243,139 @@ namespace Navislamia.Maps
         public void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
             if (!File.Exists(fileName))
-                return;
-
-            KStream stream = new KStream(fileName);
-
-            if (stream == null)
-                return;
-
-            int eventAreaCount = stream.ReadInt();
-
-            for (int eventAreaIdx = 0; eventAreaIdx < eventAreaCount; ++eventAreaIdx)
             {
-                int eventAreaID = stream.ReadInt();
-                int polygonCnt = stream.ReadInt();
+                return;
+            }
 
-                for (int i = 0; i < polygonCnt; ++i)
+            KStream stream = new (fileName);
+
+            var eventAreaCount = stream.ReadInt();
+
+            for (var eventAreaIdx = 0; eventAreaIdx < eventAreaCount; ++eventAreaIdx)
+            {
+                var eventAreaId = stream.ReadInt();
+                var polygonCnt = stream.ReadInt();
+
+                for (var i = 0; i < polygonCnt; ++i)
                 {
-                    int ptCnt = stream.ReadInt();
+                    var pointCount = stream.ReadInt();
 
-                    PointF[] points = new PointF[ptCnt];
+                    var points = new PointF[pointCount];
 
-                    for (int pointNum = 0; pointNum < points.Length; ++pointNum)
-                        points[pointNum] = new PointF(stream.ReadInt(), stream.ReadInt());
-
-                    for (int pointNum = 0; pointNum < points.Length; ++pointNum)
+                    for (var pointNum = 0; pointNum < points.Length; ++pointNum)
                     {
-                        points[pointNum].X = mapLength * x + points[pointNum].X * attrLen;
-                        points[pointNum].Y = mapLength * y + points[pointNum].Y * attrLen;
+                        points[pointNum] = new PointF(stream.ReadInt(), stream.ReadInt());
                     }
 
-                    EventAreaInfo[eventAreaID] = new EventAreaInfo(eventAreaID, points);
+                    foreach (var point in points)
+                    {
+                        point.X = mapLength * x + point.X * attrLen;
+                        point.Y = mapLength * y + point.Y * attrLen;
+                    }
+
+                    _eventAreaInfo[eventAreaId] = new EventAreaInfo(eventAreaId, points);
                 }
             }
         }
 
         public void LoadLocationFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
-            MapLocationInfo location_info = new MapLocationInfo();
+            MapLocationInfo locationInfo = new ();
 
             if (!File.Exists(fileName))
-                return;
-
-            KStream stream = new KStream(fileName);
-
-            if (stream == null)
-                return;
-
-            int localSize = 0;
-
-            localSize = stream.ReadInt();
-
-            for (int localCount = 0; localCount < localSize; ++localCount)
             {
-                LocationInfoHeader locationInfoHeader = new LocationInfoHeader();
+                return;
+            }
 
-                locationInfoHeader.Priority = stream.ReadInt();
-                locationInfoHeader.CenterPosition = new Point3D
+            var stream = new KStream(fileName);
+
+            var localSize = stream.ReadInt();
+
+            for (var localCount = 0; localCount < localSize; ++localCount)
+            {
+                var locationInfoHeader = new LocationInfoHeader
                 {
-                    X = stream.ReadFloat(),
-                    Y = stream.ReadFloat(),
-                    Z = stream.ReadFloat()
+                    Priority = stream.ReadInt(),
+                    CenterPosition = new Point3D
+                    {
+                        X = stream.ReadFloat(),
+                        Y = stream.ReadFloat(),
+                        Z = stream.ReadFloat()
+                    },
+                    Radius = stream.ReadFloat()
                 };
-                locationInfoHeader.Radius = stream.ReadFloat();
 
-                location_info.Priority = locationInfoHeader.Priority;
+                locationInfo.Priority = locationInfoHeader.Priority;
 
-                int charSize = stream.ReadInt();
+                var charSize = stream.ReadInt();
 
                 if (charSize > 1)
                 {
-                    string localName = stream.ReadString(charSize);
+                    // TODO localName never used?
+                    var localName = stream.ReadString(charSize);
                 }
 
                 charSize = stream.ReadInt();
 
-                CurrentLocationID = 0;
+                _currentLocationId = 0;
 
                 if (charSize > 1)
                 {
-                    string script = stream.ReadString(charSize);
-                    scriptSVC.RunString(script);
+                    var script = stream.ReadString(charSize);
+                    _scriptingModule.RunString(script);
                 }
 
-                if (CurrentLocationID == 0)
-                    return;
-
-                location_info.LocationID = CurrentLocationID;
-
-                int polygonSize = stream.ReadInt();
-
-                for (int polygonCount = 0; polygonCount < polygonSize; ++polygonCount)
+                if (_currentLocationId == 0)
                 {
-                    int pointCount = 0;
-                    location_info.Clear();
+                    return;
+                }
 
-                    pointCount = stream.ReadInt();
+                locationInfo.LocationId = _currentLocationId;
 
-                    Point[] points = new Point[pointCount];
-                    PointF[] pt = new PointF[pointCount];
+                var polygonSize = stream.ReadInt();
 
-                    for (int pointNum = 0; pointNum < pointCount; ++pointNum)
+                for (var polygonCount = 0; polygonCount < polygonSize; ++polygonCount)
+                {
+                    locationInfo.ClearPolygon();
+
+                    var pointCount = stream.ReadInt();
+                    var points = new Point[pointCount];
+                    var point = new PointF[pointCount];
+
+                    for (var pointNum = 0; pointNum < pointCount; ++pointNum)
                     {
-                        points[pointNum] = new Point()
+                        points[pointNum] = new Point
                         {
                             X = stream.ReadInt(),
                             Y = stream.ReadInt()
                         };
                     }
 
-                    for (int pointNum = 0; pointNum < pointCount; ++pointNum)
-                        pt[pointNum] = new PointF(
+                    for (var pointNum = 0; pointNum < pointCount; ++pointNum)
+                        point[pointNum] = new PointF(
                             mapLength * x + points[pointNum].X * attrLen,
                             mapLength * y + points[pointNum].Y * attrLen);
 
-                    location_info.Set(pt);
+                    locationInfo.Set(point);
 
-                    registerMapLocationInfo(location_info);
+                    RegisterMapLocationInfo(locationInfo);
                 }
             }
         }
 
-        private void registerMapLocationInfo(MapLocationInfo location_info) => QtLocationInfo.Add(location_info);
+        private void RegisterMapLocationInfo(MapLocationInfo locationInfo) => _qtLocationInfo.Add(locationInfo);
 
-        public void LoadScriptFile(string fileName, int x, int y, float attrLen, float mapLength, TerrainPropInfo propInfo)
+        public void LoadScriptFile(string fileName, int x, int y, float attrLen, float mapLength,
+            TerrainPropInfo terrainPropInfo)
         {
             if (!File.Exists(fileName))
+            {
                 return;
+            }
 
-            KStream stream = new KStream(fileName);
+            var stream = new KStream(fileName);
 
-            if (stream == null)
-                return;
-
-            NFS_HEADER_V02 header = new NFS_HEADER_V02()
+            var header = new NFS_HEADER_V02()
             {
                 Sign = stream.ReadString(16),
                 Version = stream.ReadInt(),
@@ -351,88 +384,86 @@ namespace Navislamia.Maps
                 PropScriptOffset = stream.ReadInt()
             };
 
-            if (header.Sign != NFSFILE_SIGN)
+            if (header.Sign != ScriptDefineConstants.NFSFILE_SIGN)
             {
-                notificationSVC.WriteMarkup("[bold red]\t- Invalid script header![/]\n", LogEventLevel.Fatal);
+                _notificationModule.WriteMarkup("[bold red]\t- Invalid script header![/]\n", LogEventLevel.Fatal);
                 return;
             }
 
-            if (header.Version != NFSCurrentVer)
+            if (header.Version != ScriptDefineConstants.NFSCurrentVer)
             {
-                notificationSVC.WriteMarkup("[red\\t- Invalid script version![/]\n", LogEventLevel.Fatal);
+                _notificationModule.WriteMarkup("[red\\t- Invalid script version![/]\n", LogEventLevel.Fatal);
                 return;
             }
 
             stream.Seek(header.EventLocationOffset, SeekOrigin.Begin);
-            loadRegion(stream, x, y, mapLength);
+            LoadRegion(stream, x, y, mapLength);
 
             stream.Seek(header.EventScriptOffset, SeekOrigin.Begin);
-            loadRegionScriptInfo(stream, scriptEvents);
+            LoadRegionScriptInfo(stream, ScriptEvents);
 
             stream.Seek(header.PropScriptOffset, SeekOrigin.Begin);
-            loadPropScriptInfo(propInfo, stream, x, y, mapLength);
+            LoadPropScriptInfo(terrainPropInfo, stream, x, y, mapLength);
 
-            currentRegionIdx = regionList.Count;
+            _currentRegionIdx = RegionList.Count;
         }
 
-        void loadRegion(KStream stream, int x, int y, float mapLength)
+        private void LoadRegion(KStream stream, int x, int y, float mapLength)
         {
-            int locationCount = 0;
-            float sx = x * mapLength;
-            float sy = y * mapLength;
+            var sx = x * mapLength;
+            var sy = y * mapLength;
 
-            locationCount = stream.ReadInt();
+            var locationCount = stream.ReadInt();
 
-            for (int i = 0; i < locationCount; ++i)
+            for (var i = 0; i < locationCount; ++i)
             {
-                ScriptRegion sr = new ScriptRegion()
+                var sr = new ScriptRegion
                 {
-                    Left = (tileSize * ((float)stream.ReadInt() + sx)),
-                    Top = (tileSize * ((float)stream.ReadInt() + sy)),
-                    Right = (tileSize * ((float)stream.ReadInt() + sx)),
-                    Bottom = (tileSize * ((float)stream.ReadInt() + sy)),
+                    Left = _tileSize * (stream.ReadInt() + sx),
+                    Top = _tileSize * (stream.ReadInt() + sy),
+                    Right = _tileSize * (stream.ReadInt() + sx),
+                    Bottom = _tileSize * (stream.ReadInt() + sy),
                 };
 
-                int length = stream.ReadInt();
+                var length = stream.ReadInt();
 
                 if (length > 0)
+                {
                     sr.Name = stream.ReadString(length);
+                }
 
-                regionList.Add(sr);
+                RegionList.Add(sr);
             }
         }
 
-        void loadRegionScriptInfo(KStream stream, List<ScriptRegionInfo> v)
+        private void LoadRegionScriptInfo(KStream stream, List<ScriptRegionInfo> v)
         {
-            int scriptCount = 0;
+            var scriptCount = stream.ReadInt();
 
-            scriptCount = stream.ReadInt();
-
-            for (int i = 0; i < scriptCount; ++i)
+            for (var i = 0; i < scriptCount; ++i)
             {
-                ScriptRegionInfo tag = new ScriptRegionInfo(0);
-
-                tag.RegionIndex = stream.ReadInt();
-
-                loadFunctionInfo(stream, tag.InfoList);
-
-                for (int j = 0; j < tag.InfoList.Count; ++j)
+                var tag = new ScriptRegionInfo
                 {
-                    ScriptTag st = tag.InfoList[j];
+                    RegionIndex = stream.ReadInt()
+                };
 
-                    string left;
-                    string right;
-                    string top;
-                    string bottom;
-                    string box;
+                LoadFunctionInfo(stream, tag.InfoList);
 
-                    if (st.Function.IndexOf("#") != -1)
+                for (var j = 0; j < tag.InfoList.Count; ++j)
+                {
+                    var st = tag.InfoList[j];
+
+                    if (st.Function.IndexOf("#", StringComparison.Ordinal) != -1)
                     {
-                        left = regionList[currentRegionIdx + tag.RegionIndex].Left.ToString();
-                        right = regionList[currentRegionIdx + tag.RegionIndex].Right.ToString();
-                        top = regionList[currentRegionIdx + tag.RegionIndex].Top.ToString();
-                        bottom = regionList[currentRegionIdx + tag.RegionIndex].Bottom.ToString();
-                        box = $"{regionList[currentRegionIdx + tag.RegionIndex].Left},{regionList[currentRegionIdx + tag.RegionIndex].Top},{regionList[currentRegionIdx + tag.RegionIndex].Right},{regionList[currentRegionIdx + tag.RegionIndex].Bottom}";
+                        var left = RegionList[_currentRegionIdx + tag.RegionIndex].Left.ToString(CultureInfo.InvariantCulture);
+                        var right = RegionList[_currentRegionIdx + tag.RegionIndex].Right.ToString(CultureInfo.InvariantCulture);
+                        var top = RegionList[_currentRegionIdx + tag.RegionIndex].Top.ToString(CultureInfo.InvariantCulture);
+                        var bottom = RegionList[_currentRegionIdx + tag.RegionIndex].Bottom.ToString(CultureInfo.InvariantCulture);
+                        var box =
+                            $"{RegionList[_currentRegionIdx + tag.RegionIndex].Left}," +
+                            $"{RegionList[_currentRegionIdx + tag.RegionIndex].Top}," +
+                            $"{RegionList[_currentRegionIdx + tag.RegionIndex].Right}," +
+                            $"{RegionList[_currentRegionIdx + tag.RegionIndex].Bottom}";
 
                         st.Function = st.Function.Replace("#LEFT", left);
                         st.Function = st.Function.Replace("#RIGHT", right);
@@ -449,20 +480,18 @@ namespace Navislamia.Maps
             }
         }
 
-        void loadFunctionInfo(KStream stream, List<ScriptTag> v)
+        private void LoadFunctionInfo(KStream stream, List<ScriptTag> v)
         {
-            int functionCount = 0;
-            ScriptTag info;
+            var functionCount = stream.ReadInt();
 
-            functionCount = stream.ReadInt();
-
-            for (int i = 0; i < functionCount; ++i)
+            for (var i = 0; i < functionCount; ++i)
             {
-                info = new ScriptTag();
+                var info = new ScriptTag
+                {
+                    Trigger = stream.ReadInt()
+                };
 
-                info.Trigger = stream.ReadInt();
-
-                int length = stream.ReadInt();
+                var length = stream.ReadInt();
 
                 if (length > 0)
                     info.Function = stream.ReadString(length);
@@ -471,89 +500,80 @@ namespace Navislamia.Maps
             }
         }
 
-        void loadPropScriptInfo(TerrainPropInfo terrainPropInfo, KStream stream, int x, int y, float mapLength)
+        private void LoadPropScriptInfo(TerrainPropInfo terrainPropInfo, KStream stream, int x, int y, float mapLength)
         {
-            int scriptCount = stream.ReadInt();
+            var scriptCount = stream.ReadInt();
 
-            for (int i = 0; i < scriptCount; ++i)
+            for (var i = 0; i < scriptCount; ++i)
             {
-                PropContactScriptInfo tag;
-
-                ushort model_id = 0;
-
-                tag = new PropContactScriptInfo()
+                var tag = new PropContactScriptInfo
                 {
-                    PropID = stream.ReadInt(),
+                    PropId = stream.ReadInt(),
                     X = stream.ReadFloat(),
                     Y = stream.ReadFloat()
                 };
 
-                model_id = stream.ReadUShort();
+                var modelId = stream.ReadUShort();
 
                 tag.X += x * mapLength;
                 tag.Y += y * mapLength;
 
-                if (terrainPropInfo.GetPropType(model_id) == PropType.NPC)
-                    tag.Prop_Type = (int)PropContactScriptInfo.PropType.NPC;
-                else if (terrainPropInfo.GetPropType(model_id) == PropType.USE_NX3)
-                    tag.Prop_Type = (int)PropContactScriptInfo.PropType.Prop;
-
-                List<ScriptTag> tagList = new List<ScriptTag>();
-                loadFunctionInfo(stream, tagList);
-
-                List<PropContactScriptInfo._FunctionList> functionList = new List<PropContactScriptInfo._FunctionList>();
-
-                for (int j = 0; j < tagList.Count; ++j)
+                if (terrainPropInfo.GetPropType(modelId) == PropType.NPC)
                 {
-                    PropContactScriptInfo._FunctionList tmp = new PropContactScriptInfo._FunctionList();
+                    tag.PropType = PropContractType.NPC;
+                }
+                else if (terrainPropInfo.GetPropType(modelId) == PropType.USE_NX3)
+                {
+                    tag.PropType = PropContractType.Prop;
+                }
 
-                    if (tagList[j].Trigger == (int)ScriptTrigger.Initialize)
-                        tmp.TriggerID = (int)PropContactScriptInfo._FunctionList.TriggerType.INIT;
-                    else if (tagList[j].Trigger == (int)ScriptTrigger.Contact)
-                        tmp.TriggerID = (int)PropContactScriptInfo._FunctionList.TriggerType.CONTACT;
+                var tagList = new List<ScriptTag>();
+                LoadFunctionInfo(stream, tagList);
+
+                var functionList = new List<FunctionList>();
+
+                for (var j = 0; j < tagList.Count; ++j)
+                {
+                    var tmp = new FunctionList();
+
+                    tmp.TriggerId = tagList[j].Trigger switch
+                    {
+                        (int)ScriptTrigger.Initialize => TriggerType.INIT,
+                        (int)ScriptTrigger.Contact => TriggerType.CONTACT,
+                        _ => tmp.TriggerId
+                    };
 
                     tmp.Function = tagList[j].Function;
 
                     functionList.Add(tmp);
                 }
 
-                registerPropContactScriptInfo(tag.PropID, tag.Prop_Type, model_id, tag.X, tag.Y, functionList);
+                RegisterPropContactScriptInfo(tag.PropId, tag.PropType, modelId, tag.X, tag.Y, functionList);
             }
         }
 
-        private bool registerPropContactScriptInfo(int propID, int prop_Type, ushort model_info, float x, float y, List<PropContactScriptInfo._FunctionList> functionList)
+        private void RegisterPropContactScriptInfo(int propId, PropContractType propType, ushort modelInfo, float x, float y,
+            List<FunctionList> functionList)
         {
-            if (PropScriptInfo.ContainsKey(propID))
+            if (_propScriptInfo.ContainsKey(propId))
             {
-                notificationSVC.WriteWarning($"Duplicate prop index: {propID}");
-
-                return false;
+                _notificationModule.WriteWarning($"Duplicate prop index: {propId}");
+                return;
             }
 
-            PropContactScriptInfo tag = new PropContactScriptInfo()
+            var tag = new PropContactScriptInfo
             {
-                PropID = propID,
+                PropId = propId,
                 X = x,
                 Y = y,
-                Model_Info = model_info,
+                ModelInfo = modelInfo,
                 FunctionList = functionList,
-                Prop_Type = prop_Type
+                PropType = propType
             };
 
-            PropScriptInfo.Add(propID, tag);
-
-            return true;
+            _propScriptInfo.Add(propId, tag);
         }
 
-        public static int CurrentLocationID = 0;
-        const int attrCountPerTile = 8;
-        static float tileSize = 1;
-        public KSize MapCount { get; set; } = new KSize(0, 0);
-        static int currentRegionIdx = 0;
-
-        static TerrainSeamlessWorldInfo seamlessWorldInfo = new TerrainSeamlessWorldInfo();
-        static TerrainPropInfo propInfo = new TerrainPropInfo();
-        static List<ScriptRegion> regionList = new List<ScriptRegion>();
-        static List<ScriptRegionInfo> scriptEvents = new List<ScriptRegionInfo>();
+        
     }
 }

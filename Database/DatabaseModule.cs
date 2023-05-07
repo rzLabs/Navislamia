@@ -10,9 +10,9 @@ using Navislamia.Configuration.Options;
 
 namespace Navislamia.Database
 {
-    public class DatabaseModule : IDatabaseService
+    public class DatabaseModule : IDatabaseModule
     {
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
 
         WorldDbContext worldDbContext;
         PlayerDbContext playerDbContext;
@@ -21,11 +21,11 @@ namespace Navislamia.Database
         internal readonly WorldOptions _worldOptions; 
         internal readonly PlayerOptions _playerOptions; 
 
-        public DatabaseModule(IOptions<WorldOptions> worldOptions, IOptions<PlayerOptions> playerOptions, INotificationService notificationService)
+        public DatabaseModule(IOptions<WorldOptions> worldOptions, IOptions<PlayerOptions> playerOptions, INotificationModule notificationModule)
         {
             _worldOptions = worldOptions.Value;
             _playerOptions = playerOptions.Value;
-            notificationSVC = notificationService;
+            notificationSVC = notificationModule;
 
             // TODO refactor context to be loaded from framework instead of manual creation (with migrations and entities)
             worldDbContext = new WorldDbContext(worldOptions);

@@ -21,7 +21,7 @@ namespace Navislamia.Network.Entities
 {
     public class ClientService<T> : IClientService<T> where T : ClientEntity, new()
     {
-        private readonly INotificationService _notificationSvc;
+        private readonly INotificationModule _notificationSvc;
         private INetworkModule _networkModule;
 
         private readonly NetworkOptions _networkOptions;
@@ -40,9 +40,9 @@ namespace Navislamia.Network.Entities
         
         public T Entity;
 
-        public ClientService(IOptions<LogOptions> logOptions, INotificationService notificationService, IOptions<NetworkOptions> networkOptions)
+        public ClientService(IOptions<LogOptions> logOptions, INotificationModule notificationModule, IOptions<NetworkOptions> networkOptions)
         {
-            _notificationSvc = notificationService;
+            _notificationSvc = notificationModule;
 
             _networkOptions = networkOptions.Value;
             _logOptions = logOptions.Value;
