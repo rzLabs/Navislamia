@@ -55,10 +55,11 @@ namespace Navislamia.Game
             LoadScripts(_scriptOptions.SkipLoading);
             StartMapService(_mapOptions.SkipLoading);
             LoadDbRepositories();
+
             _networkModule.Initialize();
 
             var curTime = DateTime.UtcNow;
-            var maxTime = DateTime.UtcNow.AddMinutes(5);
+            var maxTime = DateTime.UtcNow.AddSeconds(30);
             
             while (!_networkModule.IsReady())
             {
@@ -70,10 +71,10 @@ namespace Navislamia.Game
 
                 // Wait for the auth/upload servers to respond
                 Thread.Sleep(250);
+
                 curTime = curTime.AddMilliseconds(250);
             }
 
-            _networkModule.StartListener();
             _networkModule.StartListener();
         }
 
@@ -128,7 +129,9 @@ namespace Navislamia.Game
                 }
                 catch (Exception e)
                 {
-                   _notificationService.WriteError($"{loader.GetType().Name} failed to load!");
+                    _notificationService.WriteError($"{loader.GetType().Name} failed to load!");
+                    _notificationService.WriteException(e);
+
                    throw new Exception($"{loader.GetType().Name} failed to load!");
                 }
 

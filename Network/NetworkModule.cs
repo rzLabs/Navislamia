@@ -116,11 +116,13 @@ namespace Navislamia.Network
                 var isAdultServer = _serverOptions.IsAdultServer;
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
-                _authService.PendMessage(msg);
+                _authService.SendMessage(msg);
             }
             catch (Exception ex)
             {
+                _notificationSvc.WriteError("Failed to send Game server info to the Auth Server!");
                 _notificationSvc.WriteException(ex);
+
                 throw new Exception("Failed sending message to Authservice");
             }
         }
@@ -168,7 +170,7 @@ namespace Navislamia.Network
                 var serverName = _serverOptions.Name;
                 var msg = new TS_SU_LOGIN(serverName);
 
-                _uploadService.PendMessage(msg);
+                _uploadService.SendMessage(msg);
             }
             catch (Exception ex)
             {

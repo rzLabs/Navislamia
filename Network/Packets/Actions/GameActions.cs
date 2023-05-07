@@ -83,7 +83,7 @@ namespace Navislamia.Network.Packets.Actions
             }
 
             if (_networkModule.GetAuthClient().GetEntity().Connected)
-                _networkModule.GetAuthClient().PendMessage(_loginInfo);
+                _networkModule.GetAuthClient().SendMessage(_loginInfo);
 
             return 0;
         }
