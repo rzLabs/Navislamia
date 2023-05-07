@@ -8,7 +8,6 @@ using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
 using Scripting.Functions;
-using Serilog.Events;
 
 namespace Navislamia.Scripting
 {
@@ -33,21 +32,8 @@ namespace Navislamia.Scripting
                 string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
                 if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
                 {
-                    _notificationModule.WriteError("Missing directory: Scripts. Do you want to create one? (y/Y) = Yes, (n/N) = No");
-                    
-                    var input = Console.ReadLine();
-                    ConsoleExtensions.ClearLastLine();
-                    
-                    if (input.IsNegativeInput())
-                    {
-                        _notificationModule.WriteMarkup(
-                            "[bold red]LuaManager failed to initialize because the provided directory was null or does not exist![/]",
-                            LogEventLevel.Error);
-                        return 1;
-                    }
-                    
                     Directory.CreateDirectory(scriptDir);
-                    _notificationModule.WriteSuccess("Created directory: Scripts");
+                    _notificationModule.WriteWarning("Missing directory: .\\Scripts has been created!");
                 }
 
                 ScriptsDirectory = scriptDir;
@@ -61,14 +47,14 @@ namespace Navislamia.Scripting
             }
             catch (Exception e)
             {
-                _notificationModule.WriteError($"Failed to start script service!\\n{e.Message}"); 
+                _notificationModule.WriteError($"Failed to start script service!\\n{e.Message}");
                 throw;
             }
 
             return 0;
         }
 
-    public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
+        public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
 
         public int RunString(string script)
         {
@@ -118,7 +104,7 @@ namespace Navislamia.Scripting
 
             if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
             {
-                _notificationModule.WriteMarkup("[bold red]ScriptModule failed to load because the scripts directory is null or does not exist![/]", LogEventLevel.Error);
+                _notificationModule.WriteError("ScriptModule failed to load because the scripts directory is null or does not exist!");
                 return;
             }
 

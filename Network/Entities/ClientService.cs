@@ -164,12 +164,6 @@ namespace Navislamia.Network.Entities
             }
         }
 
-        public void PendMessage(ISerializablePacket msg)
-        {
-            PendSend(msg);
-            Finalize(QueueType.Send);
-        }
-
         private void ListenCallback(IAsyncResult ar)
         {
             T entity = (T)ar.AsyncState;
@@ -197,7 +191,7 @@ namespace Navislamia.Network.Entities
                 _notificationSvc.WriteException(ex);
             }
         }
-        
+
         private void Finalize(QueueType type)
         {
             switch (type)
@@ -229,9 +223,20 @@ namespace Navislamia.Network.Entities
             }
         }
 
+        public void SendMessage(ISerializablePacket msg)
+        {
+            PendSend(msg);
+            Finalize(QueueType.Send);
+        }
+
+        public void SendResult(ushort id, ushort result, int value = 0)
+        {
+            SendMessage(new TS_SC_RESULT(id, result, value));
+        }
+
         private void ProcessClientData(byte[] data, int count)
         {
-            if (Entity is GameClientEntity)
+            if (Entity.Type is ClientType.Game)
             {
                 var buffer = new byte[count];
 
@@ -267,7 +272,7 @@ namespace Navislamia.Network.Entities
                     msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, Entity.DataOffset)));
                 }
                 else // process and queue the message data
-                {                
+                {
                     var msgBuffer = clientData.Slice(0, msgLength).ToArray();
                     var header = Header.GetPacketHeader(msgBuffer);
 
@@ -302,16 +307,13 @@ namespace Navislamia.Network.Entities
                         {
                             var packetDmp = ((Packet)msg).DumpToString();
 
-                            _notificationSvc.WriteMarkup($"[bold orange3]Receiving message from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}[/]\n\n{packetDmp}");
+                            _notificationSvc.WriteMarkup($"[bold orange3]Received message from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}[/]\n\n{packetDmp}");
                         }
 
                         PendReceive(msg);
                     }
                     else
-                    {
-                        _notificationSvc.WriteWarning(
-                            $"TM_NONE of {header.Length} received from client {Entity.IP}:{Entity.Port}");
-                    }
+                        _notificationSvc.WriteWarning($"TM_NONE of {header.Length} received from client {Entity.IP}:{Entity.Port}");
                 }
 
                 // move the remaining bytes to the front of client data
@@ -349,9 +351,7 @@ namespace Navislamia.Network.Entities
                     var sendBuffer = queuedMsg.Data;
 
                     if (Entity.Type is ClientType.Game)
-                    {
                         _sendCipher.Encode(queuedMsg.Data, sendBuffer, sendBuffer.Length);
-                    }
 
                     if (_logOptions.PacketDebug)
                     {
@@ -378,9 +378,9 @@ namespace Navislamia.Network.Entities
                         case ClientType.Unknown:
 
                         default:
-                        {
-                            throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not execute action for ClientType {type}");
-                        }
+                            {
+                                throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not execute action for {type} client");
+                            }
                     }
                 }
             }
@@ -394,13 +394,7 @@ namespace Navislamia.Network.Entities
                 _recvProcessing = false;
             }
         }
-
-        public void SendResult(ushort id, ushort result, int value = 0)
-        {
-            PendMessage(new TS_SC_RESULT(id, result, value));
-        }
-    }
-        
+    }      
 }
 
 

@@ -3,7 +3,6 @@ using System.IO;
 using Navislamia.Database;
 using Navislamia.Notification;
 using System.Collections.Generic;
-using System.Threading;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Database.Loaders;
@@ -48,11 +47,12 @@ namespace Navislamia.Game
             LoadScripts(_scriptOptions.SkipLoading);
             LoadMapService(_mapOptions.SkipLoading);
             LoadDbRepositories();
+
             _networkModule.Initialize();
             
             while (!_networkModule.IsReady())
             {
-                var maxTime = DateTime.UtcNow.AddSeconds(5);
+                var maxTime = DateTime.UtcNow.AddSeconds(30);
 
                 if (DateTime.UtcNow < maxTime)
                 {
@@ -62,7 +62,7 @@ namespace Navislamia.Game
                 _notificationModule.WriteError("Network service timed out!");
                 return;
             }
-
+            
             _networkModule.StartListener();
         }
 

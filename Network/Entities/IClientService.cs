@@ -12,6 +12,6 @@ public interface IClientService<T>
     void Connect(IPEndPoint ep);
     void Send(byte[] data);
     void Listen();
-    void PendMessage(ISerializablePacket msg);
+    void SendMessage(ISerializablePacket msg);
     void SendResult(ushort id, ushort result, int value = 0);
 }
