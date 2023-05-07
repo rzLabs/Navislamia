@@ -8,8 +8,6 @@ using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
 using Scripting.Functions;
-using Serilog.Events;
-using Spectre.Console;
 
 namespace Navislamia.Scripting
 {
@@ -31,7 +29,7 @@ namespace Navislamia.Scripting
         {
             try
             {
-                string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");D
+                string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
                 if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
                 {
                     Directory.CreateDirectory(scriptDir);
