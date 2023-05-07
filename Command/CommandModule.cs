@@ -3,6 +3,8 @@ using Navislamia.Notification;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Navislamia.Command.Commands;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace Navislamia.Command
 {
@@ -10,6 +12,7 @@ namespace Navislamia.Command
     {
         CommandApp commandApp;
         INotificationModule notificationSVC;
+        IConfiguration _configService;
 
         string _input;
 
@@ -19,21 +22,31 @@ namespace Navislamia.Command
             set => _input = value;
         }
 
-        public CommandModule(INotificationModule notificaftionModule)
+        public CommandModule(INotificationModule notificaftionModule, IConfiguration configurationService)
         {
             notificationSVC = notificaftionModule;
+            _configService = configurationService;
         }
 
         // TODO: register all CommandModule.Commands and Implementations here!
-        public int Init(ITypeRegistrar registrar)
+        public int Init()
         {
+            var registrations = new ServiceCollection();
+            var registrar = new TypeRegistrar(registrations);
+
+            
+            registrar.RegisterInstance(typeof(INotificationModule), notificationSVC);
+            registrar.RegisterInstance(typeof(IConfiguration), _configService);
+
             registrar.Register(typeof(IAbout), typeof(AboutPrinter));
+            registrar.Register(typeof(IConfigurationGetter), typeof(ConfigurationGetter));
 
             commandApp = new CommandApp(registrar);
 
             commandApp.Configure(config =>
             {
                 config.AddCommand<About>("about").WithDescription("Print information about the Navislamia Framework").WithExample(new string[] { "about" });
+                config.AddCommand<GetConfiguration>("get").WithDescription("Get stored configuration value by category and name").WithExample(new[] { "get", "server", "name" });
             });
 
             return 0;
@@ -70,7 +83,7 @@ namespace Navislamia.Command
                 }
                 else if (key.Key == ConsoleKey.Escape)
                 {
-                    notificationSVC.WriteString("Navislamia shutting down...");
+                    notificationSVC.WriteWarning("Navislamia shutting down...");
                     break;
                 }
             }

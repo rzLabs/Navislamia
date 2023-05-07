@@ -8,6 +8,7 @@ using Configuration;
 using DevConsole.Exceptions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Navislamia.Command;
 
 namespace DevConsole
 {
@@ -17,14 +18,16 @@ namespace DevConsole
         private readonly IGameModule _gameModule;
         private readonly NetworkOptions _networkOptions;
         private readonly INotificationModule _notificationModule;
+        private readonly ICommandModule _commandModule;
 
         public Application(IHostEnvironment environment, IGameModule gameModule,
-            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule)
+            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, ICommandModule commandModule)
         {
             _environment = environment;
             _gameModule = gameModule;
             _notificationModule = notificationModule;
             _networkOptions = networkOptions.Value;
+            _commandModule = commandModule;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -45,6 +48,8 @@ namespace DevConsole
             try
             {
                 _gameModule.Start(ip, port, backlog);
+
+               
             }
             catch (Exception e)
             {
@@ -52,7 +57,13 @@ namespace DevConsole
                 _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
             }
 
-            Console.ReadLine();
+            _commandModule.Init();
+
+            while (true)
+                if (_commandModule.Wait() == 0)
+                    break;
+
+            //Console.ReadLine();
             return null;
         }
 

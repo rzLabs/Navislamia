@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Navislamia.Maps.Enums;
+using Navislamia.Utilities;
 using static Navislamia.Utilities.StringExtensions;
 
 namespace Navislamia.Maps.Entities;
@@ -32,15 +33,15 @@ public class TerrainPropInfo
         Release();
 
         _propInfos = new PropInfo[MaxPropCount];
-        
-        foreach (var propInfo in _propInfos)
+
+        _propInfos.Populate(() => new PropInfo
         {
-            propInfo.Type = PropType.UNUSED;
-            propInfo.RenderType = RenderType.RENDER_GENERAL;
-            propInfo.Category = 0;
-            propInfo.VisibleRatio = 1f;
-            propInfo.Name = string.Empty;
-        }
+            Type = PropType.UNUSED,
+            RenderType = RenderType.RENDER_GENERAL,
+            Category = 0,
+            VisibleRatio = 1f,
+            Name = string.Empty
+        });
 
         if (!File.Exists(propInfoFileName))
         {

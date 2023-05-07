@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Navislamia.Command;
+using Navislamia.Command.Commands;
 using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
@@ -40,7 +41,7 @@ public class Program
             .ConfigureServices((context, services) =>
             {
                 services.AddHostedService<Application>();
-                
+
                 //Options
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
                 services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
@@ -64,7 +65,6 @@ public class Program
                 services.AddSingleton<INotificationModule, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
                 services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
-
             })
             .ConfigureLogging((context, logging) => {
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));
