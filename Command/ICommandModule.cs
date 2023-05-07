@@ -6,7 +6,7 @@ namespace Navislamia.Command
     {
         public string Input { get; set; }
 
-        public int Init(ITypeRegistrar registrar);
+        public int Init();
 
         public int Wait();
 
