@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.IO;
 using Navislamia.Database;
-using Maps;
 using Navislamia.Notification;
 using System.Collections.Generic;
-using Navislamia.World;
-using System.Threading;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Database.Loaders;
 using Navislamia.Database.Interfaces;
+using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Scripting;
 
@@ -18,84 +15,75 @@ namespace Navislamia.Game
 {
     public class GameModule : IGameModule
     {
-        private readonly IWorldService _worldService;
-        private readonly IDatabaseService _databaseService;
+        private readonly IDatabaseModule _databaseModule;
         private readonly IScriptingModule _scriptingModule;
-        private readonly INotificationService _notificationService;
-        private readonly IMapService _mapService;
+        private readonly INotificationModule _notificationModule;
+        private readonly IMapModule _mapModule;
         private readonly INetworkModule _networkModule;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
-        private readonly ServerOptions _serverOptions;
 
         private List<IRepository> _worldRepositories;
 
         public GameModule() { }
 
-        public GameModule(IWorldService worldService, INotificationService notificationService,
-            IDatabaseService databaseService, IScriptingModule scriptingService, IMapService mapService,
-            INetworkModule networkModule, IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions,
-            IOptions<ServerOptions> serverOptions)
+        public GameModule(INotificationModule notificationModule, IDatabaseModule databaseModule,
+            IScriptingModule scriptingService, IMapModule mapModule, INetworkModule networkModule, 
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
-            _serverOptions = serverOptions.Value;
-            _worldService = worldService;
-            _notificationService = notificationService;
-            _databaseService = databaseService;
+            _notificationModule = notificationModule;
+            _databaseModule = databaseModule;
             _scriptingModule = scriptingService;
-            _mapService = mapService;
+            _mapModule = mapModule;
             _networkModule = networkModule;
 
             _worldRepositories = new List<IRepository>();
         }
 
-        public async Task Start(string ip, int port, int backlog)
+        public void Start(string ip, int port, int backlog)
         {
             LoadScripts(_scriptOptions.SkipLoading);
-            StartMapService(_mapOptions.SkipLoading);
+            LoadMapService(_mapOptions.SkipLoading);
             LoadDbRepositories();
 
             _networkModule.Initialize();
-
-            var curTime = DateTime.UtcNow;
-            var maxTime = DateTime.UtcNow.AddSeconds(30);
             
             while (!_networkModule.IsReady())
             {
-                if (curTime >= maxTime)
+                var maxTime = DateTime.UtcNow.AddSeconds(30);
+
+                if (DateTime.UtcNow < maxTime)
                 {
-                    _notificationService.WriteError("Network service timed out!");
-                    return;
+                    continue;
                 }
-
-                // Wait for the auth/upload servers to respond
-                Thread.Sleep(250);
-
-                curTime = curTime.AddMilliseconds(250);
+                
+                _notificationModule.WriteError("Network service timed out!");
+                return;
             }
-
+            
             _networkModule.StartListener();
         }
 
-        private void StartMapService(bool skip)
+        private void LoadMapService(bool skip)
         {
             if (skip)
             {
-                _notificationService.WriteWarning("Map loading disabled!");
+                _notificationModule.WriteWarning("Map loading disabled!");
                 return;
             }
 
-            if (!_mapService.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
+            if (!_mapModule.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
             {
-                _notificationService.WriteError("Failed to start the map service!");
+                _notificationModule.WriteError("Failed to start the map service!");
             }
 
-            _notificationService.WriteSuccess(
+            _notificationModule.WriteSuccess(
                 new[]
                 {
                     "Map service started successfully!",
-                    $"[green]{_mapService.MapCount.CX + _mapService.MapCount.CY}[/] files loaded!"
+                    $"[green]{_mapModule.MapCount.CX + _mapModule.MapCount.CY}[/] files loaded!"
                 }, true);
         }
 
@@ -103,7 +91,7 @@ namespace Navislamia.Game
         {
             if (skip)
             {
-                _notificationService.WriteWarning("Script loading disabled!");
+                _notificationModule.WriteWarning("Script loading disabled!");
                 return;
             }
 
@@ -114,11 +102,11 @@ namespace Navislamia.Game
         {
             var loaders = new List<IRepositoryLoader>
             {
-                new MonsterLoader(_notificationService, _databaseService),
-                new PetLoader(_notificationService, _databaseService),
-                new ItemLoader(_notificationService, _databaseService),
-                new NPCLoader(_notificationService, _databaseService),
-                new StringLoader(_notificationService, _databaseService)
+                new MonsterLoader(_notificationModule, _databaseModule),
+                new PetLoader(_notificationModule, _databaseModule),
+                new ItemLoader(_notificationModule, _databaseModule),
+                new NPCLoader(_notificationModule, _databaseModule),
+                new StringLoader(_notificationModule, _databaseModule)
             };
 
             foreach(var loader in loaders)
@@ -129,16 +117,14 @@ namespace Navislamia.Game
                 }
                 catch (Exception e)
                 {
-                    _notificationService.WriteError($"{loader.GetType().Name} failed to load!");
-                    _notificationService.WriteException(e);
-
+                   _notificationModule.WriteError($"{loader.GetType().Name} failed to load![/]{e.Message}");
                    throw new Exception($"{loader.GetType().Name} failed to load!");
                 }
 
                 _worldRepositories.AddRange(loader.Repositories);
             }
 
-            _notificationService.WriteNewLine(); 
+            _notificationModule.WriteNewLine(); 
         }
     }
 }

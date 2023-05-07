@@ -9,12 +9,12 @@ namespace Navislamia.Command.Commands
 
     public class CreateDefaultConfig : Command<CreateDefaultConfig.Settings>
     {
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
         IConfigurationCreator _creator;
 
-        public CreateDefaultConfig(INotificationService notificationService, IConfigurationCreator creator)
+        public CreateDefaultConfig(INotificationModule notificationModule, IConfigurationCreator creator)
         {
-            notificationSVC = notificationService;
+            notificationSVC = notificationModule;
             _creator = creator;
         }
 

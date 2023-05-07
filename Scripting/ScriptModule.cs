@@ -17,12 +17,12 @@ namespace Navislamia.Scripting
         public int ScriptCount { get; set; }
 
         Script luaVM = new();
-        private readonly INotificationService _notificationService;
+        private readonly INotificationModule _notificationModule;
 
 
-        public ScriptModule(INotificationService notificationService)
+        public ScriptModule(INotificationModule notificationModule)
         {
-            _notificationService = notificationService;
+            _notificationModule = notificationModule;
         }
 
         public int Init(string directory = null)
@@ -33,7 +33,7 @@ namespace Navislamia.Scripting
                 if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
                 {
                     Directory.CreateDirectory(scriptDir);
-                    _notificationService.WriteWarning("Missing directory: .\\Scripts has been created!");
+                    _notificationModule.WriteWarning("Missing directory: .\\Scripts has been created!");
                 }
 
                 ScriptsDirectory = scriptDir;
@@ -42,12 +42,12 @@ namespace Navislamia.Scripting
 
                 loadScripts();
 
-                _notificationService.WriteSuccess(new[] { "Script service started successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
+                _notificationModule.WriteSuccess(new[] { "Script service started successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
 
             }
             catch (Exception e)
             {
-                _notificationService.WriteError($"Failed to start script service!\\n{e.Message}");
+                _notificationModule.WriteError($"Failed to start script service!\\n{e.Message}");
                 throw;
             }
 
@@ -104,7 +104,7 @@ namespace Navislamia.Scripting
 
             if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
             {
-                _notificationService.WriteError("ScriptModule failed to load because the scripts directory is null or does not exist!");
+                _notificationModule.WriteError("ScriptModule failed to load because the scripts directory is null or does not exist!");
                 return;
             }
 
@@ -131,7 +131,7 @@ namespace Navislamia.Scripting
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 
-                        _notificationService.WriteMarkup($"[bold red]{exMsg}[/]");
+                        _notificationModule.WriteMarkup($"[bold red]{exMsg}[/]");
                     }
                 }));
 
@@ -149,7 +149,7 @@ namespace Navislamia.Scripting
 
             foreach (var task in scriptTasks)
                 if (task.IsFaulted)
-                    _notificationService.WriteException(task.Exception);
+                    _notificationModule.WriteException(task.Exception);
         }
     }
 }

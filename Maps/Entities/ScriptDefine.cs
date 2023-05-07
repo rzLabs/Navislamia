@@ -1,10 +1,10 @@
 ﻿
+using Navislamia.Maps.Enums;
+
 namespace Navislamia.Maps.Entities
 {
     public static class ScriptDefine
     {
-        public const string NFSFILE_SIGN = "nFlavor Script";
-        public const int NFSCurrentVer = 2;
 
         public struct NFS_HEADER_V02
         {
@@ -17,16 +17,6 @@ namespace Navislamia.Maps.Entities
             public int EventLocationOffset;
             public int EventScriptOffset;
             public int PropScriptOffset;
-        }
-
-        public enum ScriptTrigger
-        {
-            Initialize,
-            Contact,
-            Enter,
-            Leave,
-            ClientWater,
-            MinimapInfo
         }
 
         public struct ScriptFunction

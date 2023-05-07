@@ -6,10 +6,10 @@ using Navislamia.Command.Commands;
 
 namespace Navislamia.Command
 {
-    public class CommandModule : ICommandService
+    public class CommandModule : ICommandModule
     {
         CommandApp commandApp;
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
 
         string _input;
 
@@ -19,9 +19,9 @@ namespace Navislamia.Command
             set => _input = value;
         }
 
-        public CommandModule(INotificationService notificaftionService)
+        public CommandModule(INotificationModule notificaftionModule)
         {
-            notificationSVC = notificaftionService;
+            notificationSVC = notificaftionModule;
         }
 
         // TODO: register all CommandModule.Commands and Implementations here!

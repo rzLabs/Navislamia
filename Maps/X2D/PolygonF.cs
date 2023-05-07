@@ -1,606 +1,722 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Navislamia.Maps.Enums;
+using static Navislamia.Maps.X2D.X2DUtil;
 
-using static Maps.X2D.X2DUtil;
+namespace Navislamia.Maps.X2D;
 
-namespace Maps.X2D
+public class PolygonF
 {
-    public class PolygonF
+    private bool _isValid;
+    private bool _isClockWise;
+    private List<PointF> _points = new ();
+    private readonly BoxF _bxArea = new (0, 0, 0, 0);
+    
+    public PolygonF()
     {
-        public PolygonF()
+        ClearPolygon();
+    }
+
+    public PolygonF(BoxF rh)
+    {
+        PointF[] pt = new PointF[4];
+        pt[0].Set(rh.GetLeft(), rh.GetTop());
+        pt[1].Set(rh.GetRight(), rh.GetTop());
+        pt[2].Set(rh.GetRight(), rh.GetBottom());
+        pt[3].Set(rh.GetLeft(), rh.GetBottom());
+
+        Set(pt);
+    }
+
+    public PolygonF(PolygonF rh)
+    {
+        Set(rh._points.ToArray());
+    }
+
+    public PolygonF(IEnumerable<PointF> pts) => Set(pts);
+
+    public bool Set(IEnumerable<PointF> list)
+    {
+        ClearPolygon();
+
+        _points = new List<PointF>(list);
+
+        RemoveDuplicatedPoint();
+
+        _isValid = IsValid(_points);
+
+        if (_isValid)
         {
-            Clear();
+            _isClockWise = IsClockWise();
+
+            CalculateArea(_points, _bxArea);
+        }
+        else
+        {
+            ClearPolygon();
         }
 
-        public PolygonF(BoxF rh)
-        {
-            PointF[] pt = new PointF[4];
-            pt[0].Set(rh.GetLeft(), rh.GetTop());
-            pt[1].Set(rh.GetRight(), rh.GetTop());
-            pt[2].Set(rh.GetRight(), rh.GetBottom());
-            pt[3].Set(rh.GetLeft(), rh.GetBottom());
+        return _isValid;
+    }
 
-            Set(pt);
+    public bool Scale(float scale, bool alignCenter = false)
+    {
+        List<PointF> points = new (_points);
+
+        foreach (var point in points)
+        {
+            point.X *= scale;
+            point.Y *= scale;
         }
 
-        public PolygonF(PolygonF rh)
+        float xOffset;
+        float yOffset;
+
+        BoxF bxArea = new (0, 0, 0, 0);
+        CalculateArea(points, bxArea);
+
+        if (alignCenter)
         {
-            Set(rh.list.ToArray());
+            xOffset = bxArea.GetCenter().X - _bxArea.GetCenter().X;
+            yOffset = bxArea.GetCenter().Y - _bxArea.GetCenter().Y;
+        }
+        else
+        {
+            xOffset = bxArea.GetLeft() - _bxArea.GetLeft();
+            yOffset = bxArea.GetTop() - _bxArea.GetTop();
         }
 
-        public PolygonF(PointF[] pts) => Set(pts);
-
-        public bool Set(PointF[] list)
+        foreach (var point in points)
         {
-            Clear();
+            point.X -= xOffset;
+            point.Y -= yOffset;
+        }
 
-            this.list = new List<PointF>(list);
+        Set(points.ToArray());
 
-            RemoveDuplicatedPoint();
+        return true;
+    }
 
-            _isValid = isValid(this.list);
+    public void ClearPolygon()
+    {
+        _points.Clear();
+        _bxArea.Set(0, 0, 0, 0);
+        _isClockWise = false;
+        _isValid = false;
+    }
 
-            if (_isValid)
+    private void ReverseCurrentList()
+    {
+        if (_points.Count == 0)
+        {
+            return;
+        }
+
+        _points.Reverse();
+        _isClockWise = !_isClockWise;
+    }
+
+    public void MakeToClockwise()
+    {
+        if (!_isClockWise)
+            ReverseCurrentList();
+    }
+
+    public bool IsIn(RectF t)
+    {
+        return _points.All(t.IsIncluded);
+    }
+
+    public bool IsLooseIn(RectF t)
+    {
+        return _points.All(t.IsLooseIncluded);
+    }
+
+    public bool Contains(PointF pt)
+    {
+        return _points.Any(t => t == pt);
+    }
+
+    public bool Contains(LineF line)
+    {
+        for (var index = 0; index < _points.Count; ++index)
+        {
+            if (GetSegment(index) == line)
             {
-                _isClockWise = isClockWise();
-
-                caculateArea(this.list, bxArea);
+                return true;
             }
-            else
-                Clear();
-
-            return _isValid;
         }
 
-        public bool Scale(float scale, bool alignCenter = false)
+        return false;
+    }
+
+    public BoxF GetBoundingBox() => _bxArea;
+
+    public bool IsIncluded(PointF point)
+    {
+        // if (!IsValid())
+        //  throw new Exception("PolygonF is not valid!")
+
+        if (!_bxArea.IsIncluded(point))
         {
-            List<PointF> tmpList = new List<PointF>(list);
-
-            for (int i = 0; i < tmpList.Count; ++i)
-            {
-                tmpList[i].X *= scale;
-                tmpList[i].Y *= scale;
-            }
-
-            float x_offset;
-            float y_offset;
-
-            BoxF bxArea = new BoxF(0, 0, 0, 0);
-            caculateArea(tmpList, bxArea);
-
-            if (alignCenter)
-            {
-                x_offset = bxArea.GetCenter().X - this.bxArea.GetCenter().X;
-                y_offset = bxArea.GetCenter().Y - this.bxArea.GetCenter().Y;
-            }
-            else
-            {
-                x_offset = bxArea.GetLeft() - this.bxArea.GetLeft();
-                y_offset = bxArea.GetTop() - this.bxArea.GetTop();
-            }
-
-            for (int i = 0; i < tmpList.Count; ++i)
-            {
-                tmpList[i].X -= x_offset;
-                tmpList[i].Y -= y_offset;
-            }
-
-            Set(tmpList.ToArray());
-
-            return true;
-        }
-
-        public void Clear()
-        {
-            list.Clear();
-            bxArea.Set(0, 0, 0, 0);
-            _isClockWise = false;
-            _isValid = false;
-        }
-
-        public void Reverse()
-        {
-            if (list.Count == 0)
-                return;
-
-            list.Reverse();
-
-            _isClockWise = !_isClockWise;
-        }
-
-        public bool IsClockWise() => _isClockWise;
-
-        public void MakeToClockwise()
-        {
-            if (!IsClockWise())
-                Reverse();
-        }
-
-        public bool IsIn(RectF t)
-        {
-            for (int i = 0; i < list.Count; ++i)
-                if (!t.IsInclude(list[i]))
-                    return false;
-
-            return true;
-        }
-
-        public bool IsLooseIn(RectF t)
-        {
-            for (int i = 0; i < list.Count; ++i)
-                if (!t.IsLooseInclude(list[i]))
-                    return false;
-
-            return true;
-        }
-
-        public bool Has(PointF pt)
-        {
-            for (int i = 0; i < list.Count; ++i)
-            {
-                if (list[i] == pt)
-                    return true;
-            }
-
             return false;
         }
 
-        public bool Has(LineF line)
+        PointF farAway = new (_bxArea.GetRight(), point.Y);
+        farAway.X++;
+
+        var touchCnt = 0;
+        var intersectCnt = 0;
+
+        for (var index = 0; index < _points.Count; ++index)
         {
-            for (int idx = 0; idx < list.Count; ++idx)
+            if (point == _points[index])
             {
-                if (GetSegment(idx) == line)
-                    return true;
+                return true;
             }
 
-            return false;
-        }
+            var point1 = _points[index];
+            var point2 = _points[GetNextIndex(index)];
+            var result = LineF.IntersectCcw(point1, point2, farAway, point);
 
-        public BoxF GetBoundingBox() => bxArea;
-
-        public bool IsInclude(PointF pt)
-        {
-            // if (!IsValid())
-            //  throw new Exception("PolygonF is not valid!")
-
-            if (!bxArea.IsInclude(pt))
-                return false;
-
-            PointF farAway = new PointF(bxArea.GetRight(), pt.Y);
-            farAway.X++;
-
-            int touchCnt = 0;
-            int intersectCnt = 0;
-
-            for (int idx = 0; idx < list.Count; ++idx)
+            switch (result)
             {
-                if (pt == list[idx])
-                    return true;
-
-                PointF pt1 = list[idx];
-                PointF pt2 = list[getNextIndex(idx)];
-
-                IntersectResult result = LineF.IntersectCCW(pt1, pt2, farAway, pt);
-
-                if (result == IntersectResult.INTERSECT)
+                case IntersectResult.INTERSECT:
                     intersectCnt++;
-
-                if (result == IntersectResult.TOUCH)
-                    if (pt.Y == Math.Min(pt1.Y, pt2.Y) && pt1.Y != pt2.Y)
-                        touchCnt++;
-            }
-
-            return ((touchCnt + intersectCnt) % 2 == 1);
-        }
-
-        public bool IsInclude(float x, float y) => IsInclude(new PointF(x, y));
-
-        public bool IsLooseInclude(PointF pt)
-        {
-            // if (!IsValid)
-            //  throw new Exception("PolygonF is not valid!");
-
-            if (bxArea.IsInclude(pt))
-                return false;
-
-            PointF farAway = new PointF(bxArea.GetRight(), pt.Y);
-            farAway.X++;
-
-            int intersectCnt = 0;
-            int touchCnt = 0;
-
-            for (int idx = 0; idx < list.Count; ++idx)
-            {
-                if (pt == list[idx])
-                    return false;
-
-                PointF pt1 = list[idx];
-                PointF pt2 = list[getNextIndex(idx)];
-
-                IntersectResult result = LineF.IntersectCCW(pt1, pt2, farAway, pt);
-
-                if (result == IntersectResult.INTERSECT)
-                    intersectCnt++;
-
-                if (result == IntersectResult.TOUCH)
-                    if (pt.Y == Math.Min(pt1.Y, pt2.Y) && pt1.Y != pt2.Y)
-                        touchCnt++;
-            }
-
-            return ((intersectCnt + touchCnt) % 2 == 1);
-        }
-
-        public bool IsLooseInclude(float x, float y) => IsLooseInclude(new PointF(x, y));
-
-        public bool IsValid => _isValid;
-
-        public LineF GetSegment(int idx) => new LineF(list[idx], list[getNextIndex(idx)]);
-
-        public static bool operator ==(PolygonF lh, PolygonF rh)
-        {
-            // (if !lh.IsValid && !rh.IsValid)
-            //      throw new Exception("Provided polygons are not valid!");
-
-            if (lh.Size() != rh.Size())
-                return false;
-
-            int begin = 0;
-            int add = 1;
-
-            if (lh.IsClockWise() != rh.IsClockWise())
-            {
-                begin = lh.Size() - 1;
-                add = -1;
-            }
-
-            int mod = 0;
-
-            for (int i = 0; i < rh.list.Count; ++i, ++mod)
-                if (lh.list[0] == rh.list[i])
                     break;
+                case IntersectResult.TOUCH:
+                {
+                    if (point.Y == Math.Min(point1.Y, point2.Y) && point1.Y != point2.Y)
+                    {
+                        touchCnt++;
+                    }
+                    break;
+                }
+            }
+        }
 
-            if (lh.list[0] == rh.list[rh.list.Count - 1])
+        return (touchCnt + intersectCnt) % 2 == 1;
+    }
+
+    public bool IsIncluded(float x, float y) => IsIncluded(new PointF(x, y));
+
+    public bool IsLooseIncluded(PointF pt)
+    {
+        // if (!IsValid)
+        //  throw new Exception("PolygonF is not valid!");
+
+        if (_bxArea.IsIncluded(pt))
+            return false;
+
+        PointF farAway = new (_bxArea.GetRight(), pt.Y);
+        farAway.X++;
+
+        var intersectCnt = 0;
+        var touchCnt = 0;
+
+        for (var index = 0; index < _points.Count; ++index)
+        {
+            if (pt == _points[index])
                 return false;
 
-            int rh_idx = 0;
+            var point1 = _points[index];
+            var point2 = _points[GetNextIndex(index)];
 
-            for (int idx = begin; idx >= 0 && idx < lh.Size(); idx += add, ++rh_idx)
-                if (rh.list[(rh_idx + mod) % rh.Size()] != lh.list[idx])
+            var result = LineF.IntersectCcw(point1, point2, farAway, pt);
+
+            switch (result)
+            {
+                case IntersectResult.INTERSECT:
+                    intersectCnt++;
+                    break;
+                case IntersectResult.TOUCH:
+                {
+                    if (pt.Y == Math.Min(point1.Y, point2.Y) && point1.Y != point2.Y)
+                    {
+                        touchCnt++;
+                    }
+                    break;
+                }
+            }
+        }
+
+        return (intersectCnt + touchCnt) % 2 == 1;
+    }
+
+    public bool IsLooseInclude(float x, float y) => IsLooseIncluded(new PointF(x, y));
+
+    public LineF GetSegment(int idx) => new LineF(_points[idx], _points[GetNextIndex(idx)]);
+
+    public static bool operator ==(PolygonF lh, PolygonF rh)
+    {
+        // (if !lh.IsValid && !rh.IsValid)
+        //      throw new Exception("Provided polygons are not valid!");
+
+        if (lh == null || rh == null)
+        {
+            // TODO is true correct here?
+            return true;
+        }
+        
+        if (lh.Size() != rh.Size())
+        {
+            return false;
+        }
+
+        var begin = 0;
+        var add = 1;
+
+        if (lh._isClockWise != rh._isClockWise)
+        {
+            begin = lh.Size() - 1;
+            add = -1;
+        }
+
+        var mod = 0;
+
+        for (var i = 0; i < rh._points.Count; ++i, ++mod)
+        {
+            if (lh._points[0] == rh._points[i])
+            {
+                break;
+            }
+        }
+
+        if (lh._points[0] == rh._points[rh._points.Count - 1])
+        {
+            return false;
+        }
+
+        var rhIndex = 0;
+
+        for (var index = begin; index >= 0 && index < lh.Size(); index += add, ++rhIndex)
+        {
+            if (rh._points[(rhIndex + mod) % rh.Size()] != lh._points[index])
+            {
+                return false;
+            }
+            
+        }
+
+        return true;
+    }
+
+    public static bool operator !=(PolygonF lh, PolygonF rh) => !(lh == rh);
+
+    public bool IsIncluded(PolygonF rh)
+    {
+        if (!_bxArea.IsIncluded(rh._bxArea))
+        {
+            return false;
+        }
+
+        if (rh._points.Any(point => !IsIncluded(point)))
+        {
+            return false;
+        }
+
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
+        {
+            for (var rhIndex = 0; rhIndex < rh.Size(); ++rhIndex)
+            {
+                if (GetSegment(myIndex).IntersectCcw(rh.GetSegment(rhIndex)) != IntersectResult.SEPERATE)
+                {
                     return false;
+                }
+            }
+        }
+            
 
+        return true;
+    }
+
+    public bool IsCollision(PointF rh) => IsIncluded(rh);
+
+    public bool IsCollision(BoxF rh)
+    {
+        PolygonF temp = new (rh);
+        return IsCollision(temp);
+    }
+
+    public bool IsCollision(RectF rectangle)
+    {
+        if (IsIncluded(new PointF(rectangle.GetLeft(), rectangle.GetTop())))
+        {
             return true;
         }
 
-        public static bool operator !=(PolygonF lh, PolygonF rh) => !(lh == rh);
-
-        public bool IsInclude(PolygonF rh)
+        if (_points.Any(point => Included(rectangle, point)))
         {
-            if (!bxArea.IsInclude(rh.bxArea))
-                return false;
-
-            for (int i = 0; i < rh.list.Count; ++i)
-                if (!IsInclude(rh.list[i]))
-                    return false;
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
-                for (int rh_idx = 0; rh_idx < rh.Size(); ++rh_idx)
-                    if (GetSegment(my_idx).IntersectCCW(rh.GetSegment(rh_idx)) != IntersectResult.SEPERATE)
-                        return false;
-
             return true;
         }
 
-        public bool IsCollision(PointF rh) => IsInclude(rh);
+        LineF lineA = new (rectangle.GetLeft(), rectangle.GetTop(), rectangle.GetRight(), rectangle.GetTop());
+        LineF lineB = new (rectangle.GetRight(), rectangle.GetTop(), rectangle.GetRight(), rectangle.GetBottom());
+        LineF lineC = new (rectangle.GetRight(), rectangle.GetBottom(), rectangle.GetLeft(), rectangle.GetBottom());
+        LineF lineD = new (rectangle.GetLeft(), rectangle.GetBottom(), rectangle.GetLeft(), rectangle.GetTop());
 
-        public bool IsCollision(BoxF rh)
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
         {
-            PolygonF temp = new PolygonF(rh);
-            return IsCollision(temp);
-        }
+            var line = GetSegment(myIndex);
 
-        public bool IsCollision(RectF rc)
-        {
-            if (IsInclude(new PointF(rc.GetLeft(), rc.GetTop())))
-                return true;
-
-            for (int i = 0; i < list.Count; ++i)
-                if (INCLUDE(rc, list[i]))
-                    return true;
-
-            LineF line_a = new LineF(rc.GetLeft(), rc.GetTop(), rc.GetRight(), rc.GetTop());
-            LineF line_b = new LineF(rc.GetRight(), rc.GetTop(), rc.GetRight(), rc.GetBottom());
-            LineF line_c = new LineF(rc.GetRight(), rc.GetBottom(), rc.GetLeft(), rc.GetBottom());
-            LineF line_d = new LineF(rc.GetLeft(), rc.GetBottom(), rc.GetLeft(), rc.GetTop());
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
+            if (line.IntersectCcw(lineA) == IntersectResult.INTERSECT)
             {
-                LineF line = GetSegment(my_idx);
-                IntersectResult result_a, result_b, result_c, result_d;
-
-                if ((result_a = line.IntersectCCW(line_a)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_b = line.IntersectCCW(line_b)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_c = line.IntersectCCW(line_c)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_d = line.IntersectCCW(line_d)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if (line.Begin.X != line.End.X && line.Begin.Y != line.End.Y)
-                    if (result_b == IntersectResult.TOUCH && result_c == IntersectResult.TOUCH)
-                        return true;
+                return true;
             }
 
-
-            return false;
-        }
-
-        public bool IsCollision(LineF line)
-        {
-            if (IsInclude(line.Begin) || IsInclude(line.End))
-                return true;
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
-                if (GetSegment(my_idx).IntersectCCW(line) != IntersectResult.SEPERATE)
-                    return true;
-
-            return false;
-        }
-
-        public bool IsCollision(PolygonF rh)
-        {
-            if (!bxArea.IsCollision(rh.bxArea))
-                return false;
-
-            for (int i = 0; i < list.Count; ++i)
-                if (rh.IsInclude(list[i]))
-                    return true;
-
-            for (int i = 0; i < rh.list.Count; ++i)
-                if (IsInclude(rh.list[i]))
-                    return true;
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
-                for (int rh_idx = 0; rh_idx < rh.Size(); ++rh_idx)
-                    if (GetSegment(my_idx).IntersectCCW(rh.GetSegment(rh_idx)) != IntersectResult.SEPERATE)
-                        return true;
-
-            return false;
-        }
-
-        public bool IsLooseCollision(PointF rh) => IsLooseInclude(rh);
-
-        public bool IsLooseCollision(BoxF rh)
-        {
-            PolygonF temp = new PolygonF(rh);
-            return IsLooseCollision(temp);
-        }
-
-        public bool IsLooseCollision(RectF rc)
-        {
-            if (IsLooseInclude(new PointF(rc.GetLeft(), rc.GetTop())))
-                return true;
-
-            for (int i = 0; i < list.Count; ++i)
-                if (LOOSE_INCLUDE(rc, list[i]))
-                    return true;
-
-            LineF line_a = new LineF(rc.GetLeft(), rc.GetTop(), rc.GetRight(), rc.GetTop());
-            LineF line_b = new LineF(rc.GetRight(), rc.GetTop(), rc.GetRight(), rc.GetBottom());
-            LineF line_c = new LineF(rc.GetRight(), rc.GetBottom(), rc.GetLeft(), rc.GetBottom());
-            LineF line_d = new LineF(rc.GetLeft(), rc.GetBottom(), rc.GetLeft(), rc.GetTop());
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
+            var resultB = line.IntersectCcw(lineB);
+            if (resultB == IntersectResult.INTERSECT)
             {
-                LineF line = GetSegment(my_idx);
-
-                IntersectResult result_a, result_b, result_c, result_d;
-
-                if ((result_a = line.IntersectCCW(line_a)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_b = line.IntersectCCW(line_b)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_c = line.IntersectCCW(line_c)) == IntersectResult.INTERSECT)
-                    return true;
-
-                if ((result_d = line.IntersectCCW(line_d)) == IntersectResult.INTERSECT)
-                    return true;
+                return true;
             }
 
+            var resultC = line.IntersectCcw(lineC);
+            if (resultC == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+
+            if (line.IntersectCcw(lineD) == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+
+            if (line.Begin.X == line.End.X || line.Begin.Y == line.End.Y)
+            {
+                continue;
+            }
+            
+            if (resultB == IntersectResult.TOUCH && resultC == IntersectResult.TOUCH)
+            {
+                return true;
+            }
+        }
+
+
+        return false;
+    }
+
+    public bool IsCollision(LineF line)
+    {
+        if (IsIncluded(line.Begin) || IsIncluded(line.End))
+        {
+            return true;
+        }
+
+        for (int myIndex = 0; myIndex < Size(); ++myIndex)
+        {
+            if (GetSegment(myIndex).IntersectCcw(line) != IntersectResult.SEPERATE)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsCollision(PolygonF rh)
+    {
+        if (!_bxArea.IsCollision(rh._bxArea))
+        {
             return false;
         }
 
-        public bool IsLooseCollision(LineF line)
+        if (_points.Any(rh.IsIncluded))
         {
-            if (IsLooseInclude(line.Begin) || IsLooseInclude(line.End))
-                return true;
+            return true;
+        }
 
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
+        if (rh._points.Any(IsIncluded))
+        {
+            return true;
+        }
+
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
+        {
+            for (var rhIndex = 0; rhIndex < rh.Size(); ++rhIndex)
             {
-                IntersectResult result = GetSegment(my_idx).IntersectCCW(line);
+                if (GetSegment(myIndex).IntersectCcw(rh.GetSegment(rhIndex)) != IntersectResult.SEPERATE)
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    public bool IsLooseCollision(PointF rh) => IsLooseIncluded(rh);
+
+    public bool IsLooseCollision(BoxF rh)
+    {
+        var temp = new PolygonF(rh);
+        return IsLooseCollision(temp);
+    }
+
+    public bool IsLooseCollision(RectF rectangle)
+    {
+        if (IsLooseIncluded(new PointF(rectangle.GetLeft(), rectangle.GetTop())))
+        {
+            return true;
+        }
+
+        if (_points.Any(point => LOOSE_INCLUDE(rectangle, point)))
+        {
+            return true;
+        }
+
+        LineF lineA = new (rectangle.GetLeft(), rectangle.GetTop(), rectangle.GetRight(), rectangle.GetTop());
+        LineF lineB = new (rectangle.GetRight(), rectangle.GetTop(), rectangle.GetRight(), rectangle.GetBottom());
+        LineF lineC = new (rectangle.GetRight(), rectangle.GetBottom(), rectangle.GetLeft(), rectangle.GetBottom());
+        LineF lineD = new (rectangle.GetLeft(), rectangle.GetBottom(), rectangle.GetLeft(), rectangle.GetTop());
+
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
+        {
+            var line = GetSegment(myIndex);
+
+            if (line.IntersectCcw(lineA) == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+
+            if (line.IntersectCcw(lineB) == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+
+            if (line.IntersectCcw(lineC) == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+
+            if (line.IntersectCcw(lineD) == IntersectResult.INTERSECT)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsLooseCollision(LineF line)
+    {
+        if (IsLooseIncluded(line.Begin) || IsLooseIncluded(line.End))
+        {
+            return true;
+        }
+
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
+        {
+            var result = GetSegment(myIndex).IntersectCcw(line);
+
+            if (result != IntersectResult.SEPERATE && result != IntersectResult.TOUCH)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsLooseCollision(PolygonF rh)
+    {
+        if (!_bxArea.IsLooseCollision(rh._bxArea))
+        {
+            return false;
+        }
+
+        if (_points.Any(rh.IsLooseIncluded))
+        {
+            return true;
+        }
+
+        if (rh._points.Any(IsLooseIncluded))
+        {
+            return true;
+        }
+
+        for (var myIndex = 0; myIndex < Size(); ++myIndex)
+            for (var rhIndex = 0; rhIndex < rh.Size(); ++rhIndex)
+            {
+                var result = GetSegment(myIndex).IntersectCcw(rh.GetSegment(rhIndex));
 
                 if (result != IntersectResult.SEPERATE && result != IntersectResult.TOUCH)
+                {
                     return true;
+                }
             }
 
-            return false;
-        }
+        return false;
+    }
 
-        public bool IsLooseCollision(PolygonF rh)
+    public void RemoveDuplicatedPoint()
+    {
+        if (!_isValid)
         {
-            if (!bxArea.IsLooseCollision(rh.bxArea))
-                return false;
-
-            for (int i = 0; i < list.Count; ++i)
-                if (rh.IsLooseInclude(list[i]))
-                    return true;
-
-            for (int i = 0; i < rh.list.Count; ++i)
-                if (IsLooseInclude(rh.list[i]))
-                    return true;
-
-            for (int my_idx = 0; my_idx < Size(); ++my_idx)
-                for (int rh_idx = 0; rh_idx < rh.Size(); ++rh_idx)
-                {
-                    IntersectResult result = GetSegment(my_idx).IntersectCCW(rh.GetSegment(rh_idx));
-
-                    if (result != IntersectResult.SEPERATE && result != IntersectResult.TOUCH)
-                        return true;
-                }
-
-            return false;
+            return;
         }
-
-        public void RemoveDuplicatedPoint()
-        {
-            if (!IsValid)
-                return;
-            
-            PointF prev_pt = list[0];
-            PointF cur_pt = null;
-
-            for (int i = 0; i < list.Count; ++i)
-                if ((cur_pt = list[i]) == prev_pt)
-                    list.RemoveAt(i);
-                else
-                    prev_pt = cur_pt;
-
-            int cnt = list.Count;
-
-            if (cnt < 3)
-                Clear();
-        }
-
-        public int Size() => list.Count();
-
-        public PointF GetPoint(int idx) => list[idx];
-
-        public PointF GetRawPoint() => list[0];
-
-        public PointF GetCenter() => bxArea.GetCenter();
-
-        public float GetTop() => bxArea.GetTop(); 
-
-        public float GetBottom() => bxArea.GetBottom();
-
-        public float GetLeft() => bxArea.GetLeft();
-
-        public float GetRight() => bxArea.GetRight();
         
-        int getPrevIndex(int idx) => idx == 0 ? list.Count() - 1 : idx - 1;
-        int getNextIndex(int idx) => idx == list.Count() - 1 ? 0 : idx + 1;
+        PointF prevPoint = _points[0];
 
-        bool isValid(List<PointF> list)
+        for (var i = 0; i < _points.Count; ++i)
         {
-            if (list.Count < 3)
-                return false;
-
-            for (int i = 0; i < list.Count; ++i)
-                for (int j = i + 1; j < list.Count; ++j)
-                    if (list[j] == list[i])
-                        return false;
-
-            for (int idx_1 = 0; idx_1 < list.Count; idx_1++)
+            PointF curPoint;
+            if ((curPoint = _points[i]) == prevPoint)
             {
-                for (int idx_2 = idx_1 + 1; idx_2 < list.Count; ++idx_2)
+                _points.RemoveAt(i);
+            }
+            else
+            {
+                prevPoint = curPoint;
+            }
+        }
+
+        var pointCount = _points.Count;
+
+        if (pointCount < 3)
+        {
+            ClearPolygon();
+        }
+    }
+
+    public int Size() => _points.Count;
+
+    public PointF GetPoint(int idx) => _points[idx];
+
+    public PointF GetRawPoint() => _points[0];
+
+    public PointF GetCenter() => _bxArea.GetCenter();
+
+    public float GetTop() => _bxArea.GetTop(); 
+
+    public float GetBottom() => _bxArea.GetBottom();
+
+    public float GetLeft() => _bxArea.GetLeft();
+
+    public float GetRight() => _bxArea.GetRight();
+    
+    private int GetPrevIndex(int idx) => idx == 0 ? _points.Count() - 1 : idx - 1;
+    
+    private int GetNextIndex(int idx) => idx == _points.Count() - 1 ? 0 : idx + 1;
+
+    private bool IsValid(List<PointF> list)
+    {
+        if (list.Count < 3)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < list.Count; ++i)
+        {
+            for (var j = i + 1; j < list.Count; ++j)
+            {
+                if (list[j] == list[i])
                 {
-                    int p1 = idx_1;
-                    int p2 = getNextIndex(idx_1);
-                    int p3 = idx_2;
-                    int p4 = getNextIndex(idx_2);
+                    return false;
+                }
+            }
+        }
 
-                    IntersectResult result = LineF.IntersectCCW(list[p1], list[p2], list[p3], list[p4]);
-
-                    if (result == IntersectResult.INTERSECT)
-                        return false;
-
-                    if (result == IntersectResult.TOUCH && p2 != p3 && p1 != p4)
+        for (var index1 = 0; index1 < list.Count; index1++)
+        {
+            for (var index2 = index1 + 1; index2 < list.Count; ++index2)
+            {
+                var p2 = GetNextIndex(index1);
+                var p4 = GetNextIndex(index2);
+                var result = LineF.IntersectCcw(list[index1], list[p2], list[index2], list[p4]);
+                
+                // false on intersect or touch
+                switch (result)
+                {
+                    case IntersectResult.INTERSECT:
+                    case IntersectResult.TOUCH when p2 != index2 && index1 != p4:
                         return false;
                 }
             }
-
-            return true;
         }
 
-        bool isClockWise()
+        return true;
+    }
+
+    private bool IsClockWise()
+    {
+        var midIndex = 0;
+
+        for (var i = 0; i < _points.Count; ++i)
         {
-            int mid_idx = 0;
-
-            for (int i = 0; i < list.Count; ++i)
-            {
-                if (list[mid_idx].X > list[i].X)
-                    mid_idx = i;
-            }
-
-            CCWResult ccwResult = CCWResult.ClockWise;
-
-            int cnt = 0;
-
-            while (true)
-            {
-                int prev_idx = getPrevIndex(mid_idx);
-                int next_idx = getNextIndex(mid_idx);
-
-                ccwResult = CheckCloseWise(list[prev_idx].X, list[prev_idx].Y, list[mid_idx].X, list[mid_idx].Y, list[next_idx].X, list[next_idx].Y);
-
-                if (ccwResult == CCWResult.Parallelism)
-                    break;
-
-                if (mid_idx > list.Count)
-                    throw new IndexOutOfRangeException("mid_idx is out of range!");
-
-                ++mid_idx;
-                ++cnt;
-
-                if (cnt > list.Count)
-                    break;
-
-                if (mid_idx == list.Count)
-                    mid_idx = 0;
-            }
-
-            return ccwResult == CCWResult.ClockWise;
+            if (_points[midIndex].X > _points[i].X)
+                midIndex = i;
         }
 
-        void loop() =>
-            throw new NotImplementedException();
+        CcwResult ccwResult;
 
-        void caculateArea(List<PointF> list, BoxF area)
+        var count = 0;
+
+        while (true)
         {
-            PointF p1 = new PointF(list[0].X, list[0].Y);
-            PointF p2 = new PointF(list[0].X, list[0].Y);
+            var prevIndex = GetPrevIndex(midIndex);
+            var nextIndex = GetNextIndex(midIndex);
 
-            area.Set(p1, p2);
+            ccwResult = CheckCloseWise(_points[prevIndex].X, _points[prevIndex].Y, _points[midIndex].X, _points[midIndex].Y, _points[nextIndex].X, _points[nextIndex].Y);
 
-            for (int i = 0; i < list.Count; ++i)
+            if (ccwResult == CcwResult.Parallelism)
             {
-                PointF it = list[i];
+                break;
+            }
 
-                if (it.X < area.GetLeft())
-                    area.SetLeft(it.X);
+            if (midIndex > _points.Count)
+            {
+                throw new IndexOutOfRangeException("midIndex is out of range!");
+            }
 
-                if (it.Y < area.GetTop())
-                    area.SetTop(it.Y);
+            ++midIndex;
+            ++count;
 
-                if (it.X > area.GetRight())
-                    area.SetRight(it.X);
+            if (count > _points.Count)
+            {
+                break;
+            }
 
-                if (it.Y > area.GetBottom())
-                    area.SetBottom(it.Y);
+            if (midIndex == _points.Count)
+            {
+                midIndex = 0;
             }
         }
 
-        bool _isValid = false;
-        bool _isClockWise = false;
-        List<PointF> list = new List<PointF>();
-        BoxF bxArea = new BoxF(0, 0, 0, 0);
+        return ccwResult == CcwResult.ClockWise;
+    }
+
+    private void Loop() => throw new NotImplementedException();
+
+    private void CalculateArea(List<PointF> points, BoxF area)
+    {
+        PointF p1 = new (points[0].X, points[0].Y);
+        PointF p2 = new (points[0].X, points[0].Y);
+
+        area.Set(p1, p2);
+
+        foreach (var point in points)
+        {
+            if (point.X < area.GetLeft())
+            {
+                area.SetLeft(point.X);
+            }
+
+            if (point.Y < area.GetTop())
+            {
+                area.SetTop(point.Y);
+            }
+
+            if (point.X > area.GetRight())
+            {
+                area.SetRight(point.X);
+            }
+
+            if (point.Y > area.GetBottom())
+            {
+                area.SetBottom(point.Y);
+            }
+        }
     }
 }

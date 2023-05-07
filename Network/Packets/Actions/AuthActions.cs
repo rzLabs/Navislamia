@@ -9,14 +9,14 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class AuthActions
     {
-        private readonly INotificationService _notificationService;
+        private readonly INotificationModule _notificationModule;
         private readonly INetworkModule _networkModule;
 
         Dictionary<ushort, Func<ClientService<AuthClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public AuthActions(INotificationService notificationService, INetworkModule networkModule)
+        public AuthActions(INotificationModule notificationModule, INetworkModule networkModule)
         {
-            _notificationService = notificationService;
+            _notificationModule = notificationModule;
             _networkModule = networkModule;
 
             actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
@@ -40,14 +40,14 @@ namespace Navislamia.Network.Packets.Actions
 
             if (agLogin == null || agLogin.Result > 0)
             {
-                _notificationService.WriteError("Failed to register to the Auth Server!");
+                _notificationModule.WriteError("Failed to register to the Auth Server!");
 
                 return 1;
             }
 
             client.GetEntity().Ready = true;
 
-            _notificationService.WriteSuccess("Successfully registered to the Auth Server!");
+            _notificationModule.WriteSuccess("Successfully registered to the Auth Server!");
 
             return 0;
         }
@@ -61,7 +61,7 @@ namespace Navislamia.Network.Packets.Actions
             // Check if the game client connection is queued in AuthAccounts
             if (!_networkModule.UnauthorizedGameClients.ContainsKey(agClientLogin.Account.String))
             {
-                _notificationService.WriteError($"Account register failed for: {agClientLogin?.Account.String}");
+                _notificationModule.WriteError($"Account register failed for: {agClientLogin?.Account.String}");
                 agClientLogin.Result = (ushort)ResultCode.AccessDenied;
             }
             else

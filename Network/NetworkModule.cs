@@ -19,7 +19,7 @@ namespace Navislamia.Network
         private readonly IClientService<AuthClientEntity> _authService;
         private readonly IClientService<UploadClientEntity> _uploadService;
 
-        private readonly INotificationService _notificationSvc;
+        private readonly INotificationModule _notificationSvc;
         private readonly IOptions<NetworkOptions> _networkIOptions;
         private readonly NetworkOptions _networkOptions;
         private readonly ServerOptions _serverOptions;
@@ -33,10 +33,10 @@ namespace Navislamia.Network
         public UploadActions UploadActions { get; }
 
         public NetworkModule(IClientService<AuthClientEntity> authService, IClientService<UploadClientEntity> uploadService,
-            IOptions<NetworkOptions> networkOptions, INotificationService notificationService, IOptions<LogOptions> logOptions,
+            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, IOptions<LogOptions> logOptions,
             IOptions<ServerOptions> serverOptions) 
         {
-            _notificationSvc = notificationService;
+            _notificationSvc = notificationModule;
             _authService = authService;
             _uploadService = uploadService;
             _networkIOptions = networkOptions;
@@ -44,9 +44,9 @@ namespace Navislamia.Network
             _serverOptions = serverOptions.Value;
             _logOptions = logOptions;
 
-            AuthActions = new AuthActions(notificationService, this);
-            GameActions = new GameActions(notificationService, this, _networkOptions);
-            UploadActions = new UploadActions(notificationService);
+            AuthActions = new AuthActions(notificationModule, this);
+            GameActions = new GameActions(notificationModule, this, _networkOptions);
+            UploadActions = new UploadActions(notificationModule);
         }
 
         public IClientService<AuthClientEntity> GetAuthClient() => _authService;

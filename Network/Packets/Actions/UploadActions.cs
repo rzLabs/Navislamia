@@ -9,13 +9,13 @@ namespace Navislamia.Network.Packets.Actions
 {
     public class UploadActions
     {
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
 
         Dictionary<ushort, Func<ClientService<UploadClientEntity>, ISerializablePacket, int>> actions = new();
 
-        public UploadActions(INotificationService notificationService)
+        public UploadActions(INotificationModule notificationModule)
         {
-            notificationSVC = notificationService;
+            notificationSVC = notificationModule;
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 

@@ -14,11 +14,11 @@ namespace Navislamia.Database.Loaders
 {
     public class NPCLoader : RepositoryLoader, IRepositoryLoader
     {
-        IDatabaseService dbSVC;
+        IDatabaseModule dbSVC;
 
-        public NPCLoader(INotificationService notificationService, IDatabaseService dbService) : base(notificationService)
+        public NPCLoader(INotificationModule notificationModule, IDatabaseModule dbModule) : base(notificationModule)
         {
-            dbSVC = dbService;
+            dbSVC = dbModule;
         }
 
         public List<IRepository> Init()

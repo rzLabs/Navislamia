@@ -17,15 +17,15 @@ namespace Navislamia.Database.Loaders
 
     public class RepositoryLoader : IRepositoryLoader
     {
-        INotificationService notificationSVC;
+        INotificationModule notificationSVC;
 
         public List<Task<IRepository>> Tasks = new List<Task<IRepository>>();
 
         public List<IRepository> Repositories { get; set; } = new List<IRepository>();
 
-        public RepositoryLoader(INotificationService notificationService)
+        public RepositoryLoader(INotificationModule notificationModule)
         {
-            notificationSVC = notificationService;
+            notificationSVC = notificationModule;
         }
 
         public bool Execute()

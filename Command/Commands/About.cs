@@ -1,12 +1,7 @@
 ﻿using Navislamia.Notification;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Navislamia.Command.Commands
 {
@@ -17,9 +12,9 @@ namespace Navislamia.Command.Commands
 
     public class AboutPrinter : IAbout
     {
-        INotificationService notificaitonSVC;
+        INotificationModule notificaitonSVC;
 
-        public AboutPrinter(INotificationService notificationService) => notificaitonSVC = notificationService;
+        public AboutPrinter(INotificationModule notificationModule) => notificaitonSVC = notificationModule;
 
         public void Print()
         {

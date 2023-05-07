@@ -11,11 +11,11 @@ namespace Navislamia.Database.Loaders
 
     public class MonsterLoader : RepositoryLoader, IRepositoryLoader
     {
-        IDatabaseService dbSVC;
+        IDatabaseModule dbSVC;
 
-        public MonsterLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService) 
+        public MonsterLoader(INotificationModule notificationModule, IDatabaseModule databaseModule) : base(notificationModule) 
         {
-            dbSVC = databaseService;
+            dbSVC = databaseModule;
         }
 
         public List<IRepository> Init()

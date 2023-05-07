@@ -10,11 +10,11 @@ namespace Navislamia.Database.Loaders
 {
     public class PetLoader : RepositoryLoader, IRepositoryLoader
     {
-        IDatabaseService dbSVC;
+        IDatabaseModule dbSVC;
 
-        public PetLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService)
+        public PetLoader(INotificationModule notificationModule, IDatabaseModule databaseModule) : base(notificationModule)
         {
-            dbSVC = databaseService;
+            dbSVC = databaseModule;
         }
 
         public List<IRepository> Init()

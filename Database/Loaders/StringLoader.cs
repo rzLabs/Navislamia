@@ -9,11 +9,11 @@ namespace Navislamia.Database.Loaders
 {
     public class StringLoader : RepositoryLoader, IRepositoryLoader
     {
-        IDatabaseService dbSVC;
+        IDatabaseModule dbSVC;
 
-        public StringLoader(INotificationService notificationService, IDatabaseService databaseService) : base(notificationService) 
+        public StringLoader(INotificationModule notificationModule, IDatabaseModule databaseModule) : base(notificationModule) 
         {
-            dbSVC = databaseService;
+            dbSVC = databaseModule;
         }
 
         public List<IRepository> Init()

@@ -14,7 +14,7 @@ using static Navislamia.Notification.StringUtilities;
 
 namespace Navislamia.Notification
 {
-    public class NotificationModule : INotificationService
+    public class NotificationModule : INotificationModule
     {
         public NotificationModule()
         {
