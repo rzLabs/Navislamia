@@ -14,7 +14,7 @@ namespace Navislamia.Command.Commands
 {
     public interface IConfigurationGetter
     {
-        public string Get(string key);
+        public string Get(string[] keys);
     }
 
     public sealed class ConfigurationGetter : IConfigurationGetter
@@ -26,13 +26,9 @@ namespace Navislamia.Command.Commands
             _configuratiion = configuration;
         }
 
-<<<<<<< Updated upstream
         public string Get(params string[] keys)
-=======
-        public string Get(string key) // TODO: must validate keys actually exist
->>>>>>> Stashed changes
         {
-            var value = _configuratiion.GetSection(key.Replace(".", ":")).Value;
+            var value = _configuratiion.GetSection(string.Join(":", keys)).Value;
 
             return value;
         }
@@ -52,18 +48,18 @@ namespace Navislamia.Command.Commands
         public class Settings : CommandSettings
         {
             [CommandArgument(0, "[Keys]")]
-            public string Key { get; set; }
+            public string[] Keys { get; set; }
 
         }
 
         public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
         {
-            var value = _configurationGetter.Get(settings.Key);
+            var value = _configurationGetter.Get(settings.Keys);
 
             if (value is null)
                 _notificationModule.WriteMarkup($"\n[red]Could not locate configuration[/]\n");
             else
-                _notificationModule.WriteMarkup($"\n[orange3]{settings.Key}[/] : [yellow]{value}[/]\n\n");
+                _notificationModule.WriteMarkup($"\n[orange3]{settings.Keys}[/] : [yellow]{value}[/]\n\n");
 
             return 0;
         }

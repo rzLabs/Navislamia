@@ -19,6 +19,9 @@ using Network.Security;
 
 namespace Navislamia.Network.Entities
 {
+    // TODO: Poll connections by configuration interval
+    // TODO: Disconnect/Destroy
+
     public class ClientService<T> : IClientService<T> where T : ClientEntity, new()
     {
         private readonly INotificationModule _notificationSvc;
@@ -26,25 +29,21 @@ namespace Navislamia.Network.Entities
 
         private readonly NetworkOptions _networkOptions;
         private readonly LogOptions _logOptions;
-        
+
         private bool _sendProcessing;
         private bool _recvProcessing;
 
         private readonly XRC4Cipher _recvCipher = new();
         private readonly XRC4Cipher _sendCipher = new();
 
-        private readonly ConcurrentQueue<ISerializablePacket> _sendQueue= new();
+        private readonly ConcurrentQueue<ISerializablePacket> _sendQueue = new();
         private readonly ConcurrentQueue<ISerializablePacket> _recvQueue = new();
         private BlockingCollection<ISerializablePacket> _sendCollection;
         private BlockingCollection<ISerializablePacket> _recvCollection;
-<<<<<<< Updated upstream
-        
-=======
 
         private readonly CancellationTokenSource _sendCancelSource = new();
         private readonly CancellationTokenSource _receiveCancelSource = new();
 
->>>>>>> Stashed changes
         public T Entity;
 
         public ClientService(IOptions<LogOptions> logOptions, INotificationModule notificationModule, IOptions<NetworkOptions> networkOptions)
@@ -60,18 +59,15 @@ namespace Navislamia.Network.Entities
             _sendCollection = new BlockingCollection<ISerializablePacket>(_sendQueue);
             _recvCollection = new BlockingCollection<ISerializablePacket>(_recvQueue);
 
-<<<<<<< Updated upstream
-=======
             ProcessSendQueue(_sendCancelSource.Token);
             ProcessReceiveQueue(_receiveCancelSource.Token);
         }
 
         private Task ProcessSendQueue(CancellationToken cancellationToken)
         {
->>>>>>> Stashed changes
             Task.Run(() =>
             {
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     if (_sendCollection.IsAddingCompleted && !_sendProcessing)
                         ProcessQueue(QueueType.Send);
@@ -81,11 +77,16 @@ namespace Navislamia.Network.Entities
 
                     Thread.Sleep(100); // TODO research required processing speed
                 }
-            });
+            }, cancellationToken);
 
+            return null;
+        }
+
+        private Task ProcessReceiveQueue(CancellationToken cancellationToken)
+        {
             Task.Run(() =>
             {
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     if (_recvCollection.IsAddingCompleted && !_recvProcessing)
                         ProcessQueue(QueueType.Receive);
@@ -95,7 +96,9 @@ namespace Navislamia.Network.Entities
 
                     Thread.Sleep(100); // TODO research required processing speed
                 }
-            });
+            }, cancellationToken);
+
+            return null;
         }
 
         public T GetEntity()
@@ -140,8 +143,6 @@ namespace Navislamia.Network.Entities
             }
         }
 
-<<<<<<< Updated upstream
-=======
         public void Disconnect()
         {
             if (Entity is null)
@@ -160,7 +161,6 @@ namespace Navislamia.Network.Entities
             _receiveCancelSource.Cancel();
         }
 
->>>>>>> Stashed changes
         public void Send(byte[] data)
         {
             try

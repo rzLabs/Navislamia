@@ -10,6 +10,7 @@ public interface IClientService<T>
     T GetEntity();
     void Create(INetworkModule networkModule, Socket socket);
     void Connect(IPEndPoint ep);
+    void Disconnect();
     void Send(byte[] data);
     void Listen();
     void SendMessage(ISerializablePacket msg);

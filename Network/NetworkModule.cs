@@ -64,9 +64,6 @@ namespace Navislamia.Network
             SendGsInfoToAuth();
             SendInfoToUpload();
         }
-
-<<<<<<< Updated upstream
-=======
         public void Shutdown()
         {
             _notificationSvc.WriteString("NetworkModule is shutting down...\n");
@@ -103,7 +100,6 @@ namespace Navislamia.Network
             _notificationSvc.WriteSuccess("NetworkModule has successfully shutdown!");
         }
 
->>>>>>> Stashed changes
         private void ConnectToAuth()
         {
             string addrStr = _networkOptions.Auth.Ip;
