@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Notification\Notification.csproj" />
     <ProjectReference Include="..\Objects\Objects.csproj" />
     <ProjectReference Include="..\Scripting\Scripting.csproj" />
+    <ProjectReference Include="..\World\World.csproj" />
   </ItemGroup>
 
   <ItemGroup>

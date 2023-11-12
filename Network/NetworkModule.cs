@@ -65,6 +65,45 @@ namespace Navislamia.Network
             SendInfoToUpload();
         }
 
+<<<<<<< Updated upstream
+=======
+        public void Shutdown()
+        {
+            _notificationSvc.WriteString("NetworkModule is shutting down...\n");
+
+            _authService.Disconnect();
+            _uploadService.Disconnect();
+
+            using (var clientEnumerator = UnauthorizedGameClients.GetEnumerator())
+            {
+                while (clientEnumerator.MoveNext())
+                {
+                    IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
+
+                    // TODO: send logout packet to client
+                    client.Disconnect();
+                }
+
+                UnauthorizedGameClients.Clear();
+            }
+
+            using (var clientEnumerator = AuthorizedGameClients.GetEnumerator())
+            {
+                while (clientEnumerator.MoveNext())
+                {
+                    IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
+
+                    // TODO: send logout packet to client
+                    client.Disconnect();
+                }
+
+                AuthorizedGameClients.Clear();
+            }
+
+            _notificationSvc.WriteSuccess("NetworkModule has successfully shutdown!");
+        }
+
+>>>>>>> Stashed changes
         private void ConnectToAuth()
         {
             string addrStr = _networkOptions.Auth.Ip;

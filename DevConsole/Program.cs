@@ -43,6 +43,7 @@ public class Program
                 services.AddHostedService<Application>();
 
                 //Options
+                services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
                 services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
                 services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));

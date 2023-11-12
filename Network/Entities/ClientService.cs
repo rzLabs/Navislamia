@@ -37,7 +37,14 @@ namespace Navislamia.Network.Entities
         private readonly ConcurrentQueue<ISerializablePacket> _recvQueue = new();
         private BlockingCollection<ISerializablePacket> _sendCollection;
         private BlockingCollection<ISerializablePacket> _recvCollection;
+<<<<<<< Updated upstream
         
+=======
+
+        private readonly CancellationTokenSource _sendCancelSource = new();
+        private readonly CancellationTokenSource _receiveCancelSource = new();
+
+>>>>>>> Stashed changes
         public T Entity;
 
         public ClientService(IOptions<LogOptions> logOptions, INotificationModule notificationModule, IOptions<NetworkOptions> networkOptions)
@@ -53,6 +60,15 @@ namespace Navislamia.Network.Entities
             _sendCollection = new BlockingCollection<ISerializablePacket>(_sendQueue);
             _recvCollection = new BlockingCollection<ISerializablePacket>(_recvQueue);
 
+<<<<<<< Updated upstream
+=======
+            ProcessSendQueue(_sendCancelSource.Token);
+            ProcessReceiveQueue(_receiveCancelSource.Token);
+        }
+
+        private Task ProcessSendQueue(CancellationToken cancellationToken)
+        {
+>>>>>>> Stashed changes
             Task.Run(() =>
             {
                 while (true)
@@ -124,6 +140,27 @@ namespace Navislamia.Network.Entities
             }
         }
 
+<<<<<<< Updated upstream
+=======
+        public void Disconnect()
+        {
+            if (Entity is null)
+                return;
+
+            if (Entity.Socket is null)
+                return;
+
+            Entity.Socket.Disconnect(false);
+
+            _notificationSvc.WriteSuccess($"{Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port} has been disconnected!");
+
+            Entity.Socket.Dispose();
+
+            _sendCancelSource.Cancel();
+            _receiveCancelSource.Cancel();
+        }
+
+>>>>>>> Stashed changes
         public void Send(byte[] data)
         {
             try

@@ -40,6 +40,7 @@ namespace Navislamia.Command
 
             registrar.Register(typeof(IAbout), typeof(AboutPrinter));
             registrar.Register(typeof(IConfigurationGetter), typeof(ConfigurationGetter));
+            registrar.Register(typeof(IConfigurationSetter), typeof(ConfigurationSetter));
 
             commandApp = new CommandApp(registrar);
 
@@ -47,6 +48,7 @@ namespace Navislamia.Command
             {
                 config.AddCommand<About>("about").WithDescription("Print information about the Navislamia Framework").WithExample(new string[] { "about" });
                 config.AddCommand<GetConfiguration>("get").WithDescription("Get stored configuration value by category and name").WithExample(new[] { "get", "server", "name" });
+                config.AddCommand<SetConfiguration>("set").WithDescription("Set stored configuration value by category and name").WithExample(new[] { "set", "server", "name", "navislamia" });
             });
 
             return 0;

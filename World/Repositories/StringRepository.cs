@@ -1,0 +1,35 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Dapper;
+using Navislamia.World.Repositories.Entities;
+
+namespace Navislamia.World.Repositories
+{
+    public class StringRepository : IRepository
+    {
+        const string query = "select [code],[name],[value] from dbo.StringResource with (nolock)";
+
+        IDbConnection dbConnection;
+
+        IEnumerable<StringResource> Data;
+
+        public string Name => "StringResoure";
+
+        public int Count => Data?.Count() ?? 0;
+
+        public StringRepository(IDbConnection connection) => dbConnection = connection;
+
+        public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
+
+        public async Task<IRepository> Load()
+        {
+            Data = await dbConnection.QueryAsync<StringResource>(query);
+
+            return this;
+        }
+    }
+}

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Navislamia.Database.Entities;
+using Navislamia.World.Repositories.Entities;
 
 namespace Navislamia.Game.Entities
 {

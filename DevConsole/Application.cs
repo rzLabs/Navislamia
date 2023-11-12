@@ -32,7 +32,7 @@ namespace DevConsole
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _notificationModule.WriteString(Resources.arcadia);
+            _notificationModule.WriteString($"\n{Resources.arcadia}");
             _notificationModule.WriteString("Navislamia starting...\n");
             _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 

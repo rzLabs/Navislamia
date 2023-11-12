@@ -19,7 +19,7 @@ namespace Navislamia.Network.Entities
             {
                 if (Socket is not null)
                 {
-                    IPEndPoint ep = Socket.RemoteEndPoint as IPEndPoint;
+                    IPEndPoint ep = Socket.RemoteEndPoint as IPEndPoint ?? Socket.LocalEndPoint as IPEndPoint;
 
                     return ep?.Address.ToString();
                 }

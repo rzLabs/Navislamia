@@ -5,11 +5,12 @@ using Navislamia.Notification;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.Database.Loaders;
-using Navislamia.Database.Interfaces;
 using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Scripting;
+using Navislamia.World.Repositories;
+using Navislamia.World.Repositories.Loaders;
+
 
 namespace Navislamia.Game
 {
@@ -109,7 +110,7 @@ namespace Navislamia.Game
                 new StringLoader(_notificationModule, _databaseModule)
             };
 
-            foreach(var loader in loaders)
+            foreach (var loader in loaders)
             {
                 try
                 {
@@ -117,14 +118,14 @@ namespace Navislamia.Game
                 }
                 catch (Exception e)
                 {
-                   _notificationModule.WriteError($"{loader.GetType().Name} failed to load![/]{e.Message}");
-                   throw new Exception($"{loader.GetType().Name} failed to load!");
+                    _notificationModule.WriteError($"{loader.GetType().Name} failed to load![/]{e.Message}");
+                    throw new Exception($"{loader.GetType().Name} failed to load!");
                 }
 
                 _worldRepositories.AddRange(loader.Repositories);
             }
 
-            _notificationModule.WriteNewLine(); 
+            _notificationModule.WriteNewLine();
         }
     }
 }

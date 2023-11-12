@@ -17,7 +17,6 @@
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
     <ProjectReference Include="..\Notification\Notification.csproj" />
     <ProjectReference Include="..\Utilities\Utilities.csproj" />
-    <ProjectReference Include="..\World\World.csproj" />
   </ItemGroup>
 
 </Project>

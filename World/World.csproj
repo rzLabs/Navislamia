@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\Maps\Maps.csproj" />
     <ProjectReference Include="..\Notification\Notification.csproj" />
   </ItemGroup>
