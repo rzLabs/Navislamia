@@ -10,17 +10,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\Database\Database.csproj" />
-    <ProjectReference Include="..\Maps\Maps.csproj" />
     <ProjectReference Include="..\Network\Network.csproj" />
     <ProjectReference Include="..\Notification\Notification.csproj" />
     <ProjectReference Include="..\Objects\Objects.csproj" />
-    <ProjectReference Include="..\Scripting\Scripting.csproj" />
-    <ProjectReference Include="..\World\World.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
+    <PackageReference Include="Dapper" Version="2.1.21" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 
 </Project>

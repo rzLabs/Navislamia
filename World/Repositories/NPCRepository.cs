@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dapper;
+using Navislamia.Database;
 using Navislamia.World.Repositories.Entities;
 
 namespace Navislamia.World.Repositories
@@ -13,7 +13,7 @@ namespace Navislamia.World.Repositories
     {
         const string query = "select * from dbo.NpcResource with (nolock)";
 
-        IDbConnection dbConnection;
+        IDatabaseModule _databaseModule;
 
         IEnumerable<NPCBase> Data;
 
@@ -23,11 +23,13 @@ namespace Navislamia.World.Repositories
 
         public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
-        public NPCRepository(IDbConnection connection) => dbConnection = connection;
+        public NPCRepository(IDatabaseModule databaseModule) => _databaseModule = databaseModule;
 
-        public async Task<IRepository> Load()
+        public IRepository Load()
         {
-            Data = await dbConnection.QueryAsync<NPCBase>(query);
+            using IDbConnection dbConn = _databaseModule.WorldConnection;
+
+            Data = _databaseModule.ExecuteQueryAsync<NPCBase>(query, dbConn).Result;
 
             return this;
         }
