@@ -91,97 +91,13 @@ namespace Navislamia.Maps
                 _notificationModule.WriteSuccess("TerrainPropInfo.cfg loaded!");
             }));
 
-            var worker = Task.WhenAll(tasks);
-            worker.Wait();
-
-            if (!worker.IsCompletedSuccessfully)
+            try
             {
-                foreach (var t in tasks.Where(t => t.IsFaulted))
+                var worker = Task.WhenAll(tasks);
+                worker.Wait();
+
+                if (!worker.IsCompletedSuccessfully)
                 {
-                    _notificationModule.WriteException(t.Exception);
-                }
-
-                return false;
-            }
-
-            tasks.Clear();
-
-            _tileSize = SeamlessWorldInfo.TileLength;
-            MapCount = SeamlessWorldInfo.SizeMapCount;
-
-            var mapLength = SeamlessWorldInfo.TileLength * SeamlessWorldInfo.SegmentCountPerMap * SeamlessWorldInfo.TileCountPerSegment;
-            var attrLen = SeamlessWorldInfo.TileLength / AttrCountPerTile;
-
-            for (var y = 0; y < MapCount.CY; ++y)
-            {
-                for (var x = 0; x < MapCount.CX; ++x)
-                {
-                    _notificationModule.WriteDebug($"Loading map: m{x:D3}_{y:D3}...");
-
-                    var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
-
-                    if (string.IsNullOrEmpty(locationFileName))
-                    {
-                        continue;
-                    }
-
-                    if (SeamlessWorldInfo.GetWorldId(x, y) != -1)
-                    {
-                        SetDefaultLocation(x, y, mapLength, SeamlessWorldInfo.GetWorldId(x, y));
-                    }
-
-                    tasks.Add(Task.Run(() =>
-                    {
-                        LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
-                    }));
-
-                    var scriptFileName = SeamlessWorldInfo.GetScriptFileName(x, y);
-
-                    if (string.IsNullOrEmpty(scriptFileName))
-                    {
-                        continue;
-                    }
-
-                    tasks.Add(Task.Run(() =>
-                    {
-                        LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, PropInfo);
-                    }));
-
-                    if (!skipLoadingNfa)
-                    {
-                        var attributeFileName = SeamlessWorldInfo.GetAttributePolygonFileName(x, y);
-
-                        if (string.IsNullOrEmpty(attributeFileName))
-                        {
-                            continue;
-                        }
-
-                        tasks.Add(Task.Run(() =>
-                        {
-                            LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
-                        }));
-                    }
-
-                    var eventAreaFileName = SeamlessWorldInfo.GetEventAreaFileName(x, y);
-
-                    if (string.IsNullOrEmpty(eventAreaFileName))
-                    {
-                        continue;
-                    }
-
-                    tasks.Add(Task.Run(() =>
-                    {
-                        LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
-                    }));
-
-                    worker = Task.WhenAll(tasks);
-                    worker.Wait();
-
-                    if (worker.IsCompletedSuccessfully)
-                    {
-                        continue;
-                    }
-
                     foreach (var t in tasks.Where(t => t.IsFaulted))
                     {
                         _notificationModule.WriteException(t.Exception);
@@ -189,7 +105,105 @@ namespace Navislamia.Maps
 
                     return false;
                 }
+
+                tasks.Clear();
+
+                _tileSize = SeamlessWorldInfo.TileLength;
+                MapCount = SeamlessWorldInfo.SizeMapCount;
+
+                var mapLength = SeamlessWorldInfo.TileLength * SeamlessWorldInfo.SegmentCountPerMap * SeamlessWorldInfo.TileCountPerSegment;
+                var attrLen = SeamlessWorldInfo.TileLength / AttrCountPerTile;
+
+                for (var y = 0; y < MapCount.CY; ++y)
+                {
+                    for (var x = 0; x < MapCount.CX; ++x)
+                    {
+                        _notificationModule.WriteDebug($"Loading map: m{x:D3}_{y:D3}...");
+
+                        var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
+
+                        if (string.IsNullOrEmpty(locationFileName))
+                        {
+                            continue;
+                        }
+
+                        if (SeamlessWorldInfo.GetWorldId(x, y) != -1)
+                        {
+                            SetDefaultLocation(x, y, mapLength, SeamlessWorldInfo.GetWorldId(x, y));
+                        }
+
+                        tasks.Add(Task.Run(() =>
+                        {
+                            LoadLocationFile($"{directory}\\{locationFileName}", x, y, attrLen, mapLength);
+                        }));
+
+                        var scriptFileName = SeamlessWorldInfo.GetScriptFileName(x, y);
+
+                        if (string.IsNullOrEmpty(scriptFileName))
+                        {
+                            continue;
+                        }
+
+                        tasks.Add(Task.Run(() =>
+                        {
+                            LoadScriptFile($"{directory}\\{scriptFileName}", x, y, attrLen, mapLength, PropInfo);
+                        }));
+
+                        if (!skipLoadingNfa)
+                        {
+                            var attributeFileName = SeamlessWorldInfo.GetAttributePolygonFileName(x, y);
+
+                            if (string.IsNullOrEmpty(attributeFileName))
+                            {
+                                continue;
+                            }
+
+                            tasks.Add(Task.Run(() =>
+                            {
+                                LoadAttributeFile($"{directory}\\{attributeFileName}", x, y, attrLen, mapLength);
+                            }));
+                        }
+
+                        var eventAreaFileName = SeamlessWorldInfo.GetEventAreaFileName(x, y);
+
+                        if (string.IsNullOrEmpty(eventAreaFileName))
+                        {
+                            continue;
+                        }
+
+                        tasks.Add(Task.Run(() =>
+                        {
+                            LoadEventAreaFile($"{directory}\\{eventAreaFileName}", x, y, attrLen, mapLength);
+                        }));
+
+                        worker = Task.WhenAll(tasks);
+                        worker.Wait();
+
+                        if (worker.IsCompletedSuccessfully)
+                        {
+                            continue;
+                        }
+
+                        foreach (var t in tasks.Where(t => t.IsFaulted))
+                        {
+                            _notificationModule.WriteException(t.Exception);
+                        }
+
+                        return false;
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                _notificationModule.WriteError($"Failed loads maps!");
+                _notificationModule.WriteException(ex);
+                return false;
+            }
+
+            _notificationModule.WriteSuccess(new[]{
+                "Maps loaded successfully!",
+                $"[green]{MapCount.CX + MapCount.CY}[/] files loaded!"
+            }, true);
 
             return true;
         }

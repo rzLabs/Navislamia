@@ -44,8 +44,12 @@ namespace Navislamia.Game
 
         public void Start(string ip, int port, int backlog)
         {
-            LoadScripts(_scriptOptions.SkipLoading);
-            LoadMaps(_mapOptions.SkipLoading);
+            if (!LoadScripts(_scriptOptions.SkipLoading))
+                return;
+
+            if (!LoadMaps(_mapOptions.SkipLoading))
+                return; 
+
             LoadDbRepositories();
 
             _networkModule.Initialize();
@@ -66,36 +70,27 @@ namespace Navislamia.Game
             _networkModule.StartListener();
         }
 
-        private void LoadMaps(bool skip)
+        private bool LoadMaps(bool skip)
         {
             if (skip)
             {
                 _notificationModule.WriteWarning("Map loading disabled!");
-                return;
+                return true;
             }
 
-            if (!_mapContent.Initialize($"{Directory.GetCurrentDirectory()}\\Maps"))
-            {
-                _notificationModule.WriteError("Failed to start the map service!");
-            }
-
-            _notificationModule.WriteSuccess(
-                new[]
-                {
-                    "Map service started successfully!",
-                    $"[green]{_mapContent.MapCount.CX + _mapContent.MapCount.CY}[/] files loaded!"
-                }, true);
+            // TODO: MapContent should be printing messages
+            return _mapContent.Initialize($"{Directory.GetCurrentDirectory()}\\Maps");
         }
 
-        private void LoadScripts(bool skip)
+        private bool LoadScripts(bool skip)
         {
             if (skip)
             {
                 _notificationModule.WriteWarning("Script loading disabled!");
-                return;
+                return true;
             }
 
-            _scriptContent.Init();
+            return _scriptContent.Init();
         }
 
         private void LoadDbRepositories()

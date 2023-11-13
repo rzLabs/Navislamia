@@ -27,7 +27,7 @@ namespace Navislamia.Scripting
             Instance = this;
         }
 
-        public int Init(string directory = null)
+        public bool Init(string directory = null)
         {
             try
             {
@@ -44,16 +44,17 @@ namespace Navislamia.Scripting
 
                 loadScripts();
 
-                _notificationModule.WriteSuccess(new[] { "Script service started successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
+                _notificationModule.WriteSuccess(new[] { "Scripts loaded successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
 
             }
             catch (Exception e)
             {
-                _notificationModule.WriteError($"Failed to start script service!\\n{e.Message}");
-                throw;
+                _notificationModule.WriteError($"Failed loads scripts!");
+                _notificationModule.WriteException(e);
+                return false;
             }
 
-            return 0;
+            return true;
         }
 
         public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
