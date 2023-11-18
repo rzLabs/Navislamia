@@ -266,6 +266,11 @@ namespace Navislamia.Network.Entities
             Finalize(QueueType.Send);
         }
 
+        public void SendMessage(IExPacket msg)
+        {
+            Send(msg.MessageData);
+        }
+
         public void SendResult(ushort id, ushort result, int value = 0)
         {
             SendMessage(new TS_SC_RESULT(id, result, value));

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Navislamia.Network.Packets.Auth;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +33,24 @@ namespace Navislamia.Network.Packets
             value += (byte)((id >> 8) & 0xFF);
 
             return packet.Checksum = value;
+        }
+
+        public static byte Calculate(this ExPacket packet)
+        {
+            byte value = 0;
+
+            uint size = (uint)packet.Length;
+            uint id = (uint)packet.ID;
+
+            value += (byte)(size & 0xFF);
+            value += (byte)((size >> 8) & 0xFF);
+            value += (byte)((size >> 16) & 0xFF);
+            value += (byte)((size >> 24) & 0xFF);
+
+            value += (byte)(id & 0xFF);
+            value += (byte)((id >> 8) & 0xFF);
+
+            return value;
         }
     }
 }

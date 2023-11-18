@@ -149,8 +149,12 @@ namespace Navislamia.Network
                 var name = _serverOptions.Name;
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
-                var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
+                
+                // TODO: Nexitis here 
+                var Oldmsg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
+                var msg = new EX_TS_GA_LOGIN(index, name, screenshotUrl, 0, ip, port);
 
+                // TODO: Nexitis put a break here so you can inspect the messages. Old is origin packet msg is new packet
                 _authService.SendMessage(msg);
             }
             catch (Exception ex)
