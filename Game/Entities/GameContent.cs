@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using Navislamia.World.Repositories.Entities;
 
-namespace Navislamia.Game.Entities
+using Navislamia.Data.Entities;
+
+namespace Navislamia.Entities.Content
 {
     public static class GameContent
     {
