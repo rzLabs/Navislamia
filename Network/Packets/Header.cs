@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Reflection;
+using Navislamia.Network.Packets.Auth;
 
 namespace Navislamia.Network.Packets
 {
@@ -38,6 +39,13 @@ namespace Navislamia.Network.Packets
                                       ID = BitConverter.ToUInt16(buffer.Slice(4,2)),
                                       Checksum = buffer.Slice(6,1)[0] 
             };
+        }
+
+        public static void GetHeaderInfo(Span<byte> span,out int length, out ushort id, out byte checksum)
+        {
+            length = BitConverter.ToInt32(span.Slice(0, 4));
+            id = BitConverter.ToUInt16(span.Slice(4, 2));
+            checksum = span.Slice(6, 1)[0];
         }
     }
 }

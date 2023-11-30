@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
@@ -149,6 +150,7 @@ namespace Navislamia.Network
                 var name = _serverOptions.Name;
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
+                
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
                 _authService.SendMessage(msg);

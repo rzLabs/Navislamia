@@ -10,13 +10,13 @@ using Navislamia.Command.Commands;
 using Navislamia.Configuration.Options;
 using Navislamia.Database;
 using Navislamia.Game;
-using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
 using Navislamia.Notification;
 using Navislamia.Scripting;
-using Navislamia.World;
 
+using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Auth;
 
 namespace DevConsole;
 
@@ -57,10 +57,6 @@ public class Program
 
                 // Services
                 services.AddSingleton<ICommandModule, CommandModule>();
-                services.AddSingleton<IDatabaseModule, DatabaseModule>();
-                services.AddSingleton<IWorldModule, WorldModule>();
-                services.AddSingleton<IScriptingModule, ScriptModule>();
-                services.AddSingleton<IMapModule, MapModule>();
                 services.AddSingleton<INetworkModule, NetworkModule>();
                 services.AddSingleton<IGameModule, GameModule>();
                 services.AddSingleton<INotificationModule, NotificationModule>();

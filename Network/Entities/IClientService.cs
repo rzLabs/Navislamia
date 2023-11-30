@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Auth;
 using Network;
 
 namespace Navislamia.Network.Entities;

@@ -14,5 +14,5 @@ public interface IRepository
 
     public IEnumerable<T> GetData<T>();
 
-    public async Task<IRepository> Load() => null;
+    public IRepository Load() => null;
 }

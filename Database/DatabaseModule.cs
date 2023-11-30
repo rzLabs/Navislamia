@@ -36,6 +36,16 @@ namespace Navislamia.Database
 
         public IDbConnection PlayerConnection => playerDbContext.CreateConnection();
 
+        public async Task<IDataReader> ExecuteReaderAsync(string command, IDbConnection connection, DbContextType type = DbContextType.World)
+        {
+            return await connection.ExecuteReaderAsync(command);
+        }
+
+        public async Task<IEnumerable<T>> ExecuteQueryAsync<T>(string command, IDbConnection connection, DbContextType type = DbContextType.World)
+        {
+            return await connection.QueryAsync<T>(command);
+        }
+
         public async Task<int> ExecuteScalar(string command, DbContextType type = DbContextType.Player)
         {
             using IDbConnection dbConnection = (type == DbContextType.Player) ? playerDbContext.CreateConnection() : worldDbContext.CreateConnection();

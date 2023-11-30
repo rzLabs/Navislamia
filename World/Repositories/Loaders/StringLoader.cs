@@ -16,7 +16,7 @@ namespace Navislamia.World.Repositories.Loaders
 
         public List<IRepository> Init()
         {
-            Tasks.Add(Task.Run(() => new StringRepository(dbSVC.WorldConnection).Load()));
+            Tasks.Add(Task.Run(() => new StringRepository(dbSVC).Load()));
 
             if (!Execute())
                 return null;

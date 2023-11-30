@@ -5,6 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Navislamia.Network.Enums;
+using System.Threading;
+using Newtonsoft.Json.Linq;
+using System.Drawing;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
 namespace Navislamia.Network.Packets.Auth
 {
     /// <summary>

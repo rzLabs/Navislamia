@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using Navislamia.Database;
 using Navislamia.World.Repositories.Entities;
 
 namespace Navislamia.World.Repositories
@@ -13,7 +14,7 @@ namespace Navislamia.World.Repositories
     {
         const string query = "select [code],[name],[value] from dbo.StringResource with (nolock)";
 
-        IDbConnection dbConnection;
+        IDatabaseModule _databaseModule;
 
         IEnumerable<StringResource> Data;
 
@@ -21,13 +22,15 @@ namespace Navislamia.World.Repositories
 
         public int Count => Data?.Count() ?? 0;
 
-        public StringRepository(IDbConnection connection) => dbConnection = connection;
+        public StringRepository(IDatabaseModule databaseModule) => _databaseModule = databaseModule;
 
         public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
-        public async Task<IRepository> Load()
+        public IRepository Load()
         {
-            Data = await dbConnection.QueryAsync<StringResource>(query);
+            using IDbConnection dbConn = _databaseModule.WorldConnection;
+
+            Data = _databaseModule.ExecuteQueryAsync<StringResource>(query, dbConn).Result;
 
             return this;
         }

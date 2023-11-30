@@ -313,7 +313,9 @@ namespace Navislamia.Network.Entities
                     var msgBuffer = clientData.Slice(0, msgLength).ToArray();
                     var header = Header.GetPacketHeader(msgBuffer);
 
-                    if (!Enum.IsDefined(typeof(GamePackets), header.ID))
+                    if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), header.ID) ||
+                        Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), header.ID) ||
+                        Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), header.ID))
                     {
                         _notificationSvc.WriteWarning(
                             $"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}");
@@ -384,7 +386,20 @@ namespace Navislamia.Network.Entities
             {
                 if (type == QueueType.Send)
                 {
-                    var clientTag = $"{Entity.Type.EnumToString()} Server";
+                    var clientTag = Entity.Type.EnumToString();
+
+                    switch (Entity.Type)
+                    {
+                        case ClientType.Auth:
+                        case ClientType.Upload:
+                            clientTag += " server";
+                            break;
+
+                        case ClientType.Game:
+                            clientTag += " client";
+                            break;
+                    }
+
                     var sendBuffer = queuedMsg.Data;
 
                     if (Entity.Type is ClientType.Game)
