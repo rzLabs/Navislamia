@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
@@ -150,11 +151,8 @@ namespace Navislamia.Network
                 var screenshotUrl = _serverOptions.ScreenshotUrl;
                 var isAdultServer = _serverOptions.IsAdultServer;
                 
-                // TODO: Nexitis here 
-                var Oldmsg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
-                var msg = new EX_TS_GA_LOGIN(index, name, screenshotUrl, 0, ip, port);
+                var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
-                // TODO: Nexitis put a break here so you can inspect the messages. Old is origin packet msg is new packet
                 _authService.SendMessage(msg);
             }
             catch (Exception ex)

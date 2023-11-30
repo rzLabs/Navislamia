@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Navislamia.Network.Enums;
-using MemoryPack;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using System.Drawing;
@@ -91,106 +90,6 @@ namespace Navislamia.Network.Packets.Auth
         public void Deserialize()
         {
             throw new NotImplementedException();
-        }
-    }
-
-    // TODO: Nexitis here
-    public interface IExPacket
-    {
-        public byte[] HeaderData { get; set; }
-
-        public byte[] PacketData { get; set; }
-
-        public byte[] MessageData { get;}
-    }
-
-    public class ExPacket : IExPacket
-    {
-        [MemoryPackIgnore]
-        public int Length { get; set; }
-
-        [MemoryPackIgnore]
-        public ushort ID { get; set; }
-
-        [MemoryPackIgnore]
-        public byte Checksum { get; set; }
-
-        [MemoryPackIgnore]
-        public byte[] HeaderData { get; set; }
-
-        [MemoryPackIgnore]
-        public byte[] PacketData { get; set; }
-
-        [MemoryPackIgnore]
-        public byte[] MessageData
-        {
-            get
-            {
-                int headerLen = HeaderData?.Length ?? 0;
-                int dataLen = PacketData?.Length ?? 0;
-
-                if (headerLen == 0 && dataLen == 0)
-                    return new byte[0];
-
-                byte[] _buffer = new byte[headerLen + dataLen];
-
-                Buffer.BlockCopy(HeaderData, 0, _buffer, 0, HeaderData.Length);
-                Buffer.BlockCopy(PacketData, 0, _buffer, 7, PacketData.Length);
-
-                return _buffer;
-            }
-        }
-
-        public void Serialize<T>(ushort id, T entity)
-        {
-            PacketData = MemoryPackSerializer.Serialize<T>(entity);
-
-            ID = id;
-            Length = PacketData.Length + 7;
-            Checksum = Packets.Checksum.Calculate(this);
-
-            HeaderData = new byte[7];
-            Buffer.BlockCopy(BitConverter.GetBytes(Length), 0, HeaderData, 0, 4);
-            Buffer.BlockCopy(BitConverter.GetBytes(ID), 0, HeaderData, 4, 2);
-
-            HeaderData[6] = Checksum;
-        }
-
-        public object Deserialize<T>(byte[] data)
-        {
-            // Copy the message data into header and data buffers
-            Buffer.BlockCopy(data, 0, HeaderData, 0, 7);
-            Buffer.BlockCopy(data, 7, PacketData, 0, data.Length - 7);
-
-            // Parse the HeaderData
-            Length = BitConverter.ToInt32(HeaderData, 0);
-            ID = BitConverter.ToUInt16(HeaderData, 4);
-            Checksum = HeaderData[6];
-
-            return MemoryPackSerializer.Deserialize<T>(PacketData);
-        }
-    }
-
-    [MemoryPackable]
-    public partial class EX_TS_GA_LOGIN : ExPacket
-    {
-        public ushort ServerIndex;
-        public string ServerName;
-        public string ServerScreenshotURL;
-        public byte IsAdultServer;
-        public string ServerIP;
-        public ushort ServerPort;
-        
-        public EX_TS_GA_LOGIN(ushort serverIndex, string serverName, string serverScreenshotURL, byte isAdultServer, string serverIP, ushort serverPort)
-        {
-            ServerIndex = serverIndex;
-            ServerName = $"{serverName,-21}";
-            ServerScreenshotURL = $"{serverScreenshotURL,-256}";
-            IsAdultServer = isAdultServer;
-            ServerIP = $"{serverIP,-16}";
-            ServerPort = serverPort;
-
-            Serialize((ushort)AuthPackets.TS_GA_LOGIN, this);
         }
     }
 }

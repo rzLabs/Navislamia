@@ -16,7 +16,6 @@ using Navislamia.Notification;
 using Navislamia.Scripting;
 
 using Navislamia.Network.Packets;
-using MemoryPack;
 using Navislamia.Network.Packets.Auth;
 
 namespace DevConsole;
