@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
@@ -8,8 +7,6 @@ using Navislamia.Notification;
 using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Scripting;
-using Navislamia.Data.Loaders;
-using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Game
 {
@@ -21,8 +18,6 @@ namespace Navislamia.Game
         private readonly INetworkModule _networkModule;
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
-
-        private List<IEfRepository> _worldRepositories;
 
         public GameModule() { }
 
@@ -36,7 +31,6 @@ namespace Navislamia.Game
 
             _scriptContent = new ScriptContent(_notificationModule);
             _mapContent = new MapContent(mapOptions, _notificationModule, _scriptContent);
-            _worldRepositories = new List<IEfRepository>();
         }
 
         public void Start(string ip, int port, int backlog)
@@ -46,8 +40,6 @@ namespace Navislamia.Game
 
             if (!LoadMaps(_mapOptions.SkipLoading))
                 return; 
-
-            LoadDbRepositories();
 
             _networkModule.Initialize();
             
@@ -88,36 +80,6 @@ namespace Navislamia.Game
             }
 
             return _scriptContent.Init();
-        }
-
-        private void LoadDbRepositories()
-        {
-            var loaders = new List<IRepositoryLoader>
-            {
-                new MonsterLoader(_notificationModule),
-                new PetLoader(_notificationModule),
-                new ItemLoader(_notificationModule),
-                new NPCLoader(_notificationModule),
-                new ETCLoader(_notificationModule),
-                new StringLoader(_notificationModule)
-            };
-
-            foreach (var loader in loaders)
-            {
-                try
-                {
-                    loader.Init();
-                }
-                catch (Exception e)
-                {
-                    _notificationModule.WriteError($"{loader.GetType().Name} failed to load![/]{e.Message}");
-                    throw new Exception($"{loader.GetType().Name} failed to load!");
-                }
-
-                _worldRepositories.AddRange(loader.Repositories);
-            }
-
-            _notificationModule.WriteNewLine();
         }
     }
 }

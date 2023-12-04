@@ -1,7 +1,7 @@
 using DevConsole.Models.Arcadia;
 using Microsoft.EntityFrameworkCore;
 
-namespace Navislamia.Database.Contexts;
+namespace Navislamia.Game.Contexts;
 
 public class ArcadiaContext : DbContext
 {

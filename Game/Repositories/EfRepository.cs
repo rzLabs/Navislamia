@@ -1,39 +1,64 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Navislamia.Database.Contexts;
+using Navislamia.Game.Contexts;
 
-namespace Navislamia.Game.Entities.Data.Interfaces;
+namespace Navislamia.Game.Repositories;
 
-public class EfRepository<T> : IEfRepository<T>
+public class EfRepository<T> : IEfRepository<T> where T : class
 {
     private readonly ArcadiaContext _context;
-    public EfRepository(ArcadiaContext context)
+    private readonly ILogger<EfRepository<T>> _logger;
+    
+    public EfRepository(ArcadiaContext context, ILogger<EfRepository<T>> logger)
     {
         _context = context;
+        _logger = logger;
     }
     
-    public Task GetAsync(int id)
+    public async Task<T> GetAsync(int id)
     {
-        _context
-        throw new System.NotImplementedException();
+        return await _context.Set<T>().FindAsync(id);
     }
 
-    public Task GetAllAsync()
+    public IEnumerable<T> GetAllAsync()
     {
-        throw new System.NotImplementedException();
+        return _context.Set<T>().ToList();
     }
 
-    public Task CreateAsync(T entity)
+    public async Task<T> CreateAsync(T entity)
     {
-        throw new System.NotImplementedException();
+        return (await _context.Set<T>().AddAsync(entity)).Entity;
     }
 
-    public Task UpdateAsync(int id, T entity)
+    public async Task<T> UpdateAsync(int id, T entity)
     {
-        throw new System.NotImplementedException();
+        var entityToUpdate = await GetAsync(id);
+        if (entityToUpdate == null)
+        {
+            _logger.LogWarning("Could not update entity {entityType} with ID {entityID}: Not Found", nameof(entity), id);
+            return null;
+        }
+        
+        return _context.Set<T>().Update(entity).Entity;
     }
 
-    public Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        throw new System.NotImplementedException();
+        var entityToDelete = await GetAsync(id);
+        if (entityToDelete == null)
+        {
+            _logger.LogWarning("Could not delete entity with ID {entityID}: Not Found", id);
+            return;
+        }
+
+        _context.Set<T>().Remove(entityToDelete);
+    }
+    
+    public void DeleteAsync(T entity)
+    {
+        _context.Set<T>().Remove(entity);
     }
 }

@@ -13,7 +13,6 @@
     <ProjectReference Include="..\Network\Network.csproj" />
     <ProjectReference Include="..\Notification\Notification.csproj" />
     <ProjectReference Include="..\Objects\Objects.csproj" />
-    <ProjectReference Include="..\DevConsole\DevConsole.csproj" />
   </ItemGroup>
 
   <ItemGroup>

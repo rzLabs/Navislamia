@@ -1,15 +1,17 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Navislamia.Game.Entities.Data.Interfaces;
+namespace Navislamia.Game.Repositories;
 /// <summary>
 /// Base repository for EF Core interactions
 /// </summary>
 /// <typeparam name="T">Entity type</typeparam>
-public interface IEfRepository<in T>
+public interface IEfRepository<T>
 {
-    public Task GetAsync(int id);
-    public Task GetAllAsync();
-    public Task CreateAsync(T entity);
-    public Task UpdateAsync(int id, T entity);
+    public Task<T> GetAsync(int id);
+    public IEnumerable<T> GetAllAsync();
+    public Task<T> CreateAsync(T entity);
+    public Task<T> UpdateAsync(int id, T entity);
     public Task DeleteAsync(int id);
+    public void DeleteAsync(T entity);
 }
