@@ -10,16 +10,14 @@ namespace Navislamia.Data.Loaders;
 
 public class PetLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public PetLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule)
+    public PetLoader(INotificationModule notificationModule) : base(notificationModule)
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
-        Tasks.Add(new PetRepository(_dbConnectionManager.WorldConnection).Load());
+        // Tasks.Add(new PetRepository(_dbConnectionManager.WorldConnection).Load());
 
         if (!Execute())
             return null;

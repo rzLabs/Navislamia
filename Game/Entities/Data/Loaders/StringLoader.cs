@@ -11,16 +11,14 @@ namespace Navislamia.Data.Loaders;
 
 public class StringLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public StringLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule) 
+    public StringLoader(INotificationModule notificationModule) : base(notificationModule) 
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
-        Tasks.Add(Task.Run(() => new StringRepository(_dbConnectionManager.WorldConnection).Load()));
+        // Tasks.Add(Task.Run(() => new StringRepository(_dbConnectionManager.WorldConnection).Load()));
 
         if (!Execute())
             return null;

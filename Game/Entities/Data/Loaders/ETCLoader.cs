@@ -14,18 +14,16 @@ namespace Navislamia.Data.Loaders;
 
 public class ETCLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public ETCLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule)
+    public ETCLoader(INotificationModule notificationModule) : base(notificationModule)
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
 
         // TODO: MarketData
-        Tasks.Add(Task.Run(() => new LevelExpRepository(_dbConnectionManager.WorldConnection).Load()));
+        // Tasks.Add(Task.Run(() => new LevelExpRepository(_dbConnectionManager.WorldConnection).Load()));
         // TODO: SummonLevelUpTable
         // TODO: Job
         // TODO: State

@@ -13,18 +13,16 @@ namespace Navislamia.Data.Loaders;
 
 public class MonsterLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public MonsterLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule) 
+    public MonsterLoader(INotificationModule notificationModule) : base(notificationModule) 
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
-        Tasks.Add(new MonsterSkillRepository(_dbConnectionManager.WorldConnection).Load());
-        Tasks.Add(new MonsterItemDropRepository(_dbConnectionManager.WorldConnection).Load());
-        Tasks.Add(new MonsterRepository(_dbConnectionManager.WorldConnection).Load());
+    //     Tasks.Add(new MonsterSkillRepository(_dbConnectionManager.WorldConnection).Load());
+    //     Tasks.Add(new MonsterItemDropRepository(_dbConnectionManager.WorldConnection).Load());
+    //     Tasks.Add(new MonsterRepository(_dbConnectionManager.WorldConnection).Load());
 
         if (!Execute())
             return null;

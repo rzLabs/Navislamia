@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using DevConsole.Properties;
 using Navislamia.Game;
@@ -32,7 +34,7 @@ namespace DevConsole
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _notificationModule.WriteString($"\n{Resources.arcadia}");
+            // _notificationModule.WriteString($"\n{Resources.arcadia}");
             _notificationModule.WriteString("Navislamia starting...\n");
             _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 
@@ -44,7 +46,7 @@ namespace DevConsole
             {
                 throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }
-
+            
             try
             {
                 _gameModule.Start(ip, port, backlog);
@@ -53,8 +55,8 @@ namespace DevConsole
             }
             catch (Exception e)
             {
-                StopAsync(cancellationToken);
                 _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
+                StopAsync(cancellationToken);
             }
 
             _commandModule.Init();

@@ -14,16 +14,14 @@ namespace Navislamia.Data.Loaders;
 
 public class NPCLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public NPCLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule)
+    public NPCLoader(INotificationModule notificationModule) : base(notificationModule)
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
-        Tasks.Add(Task.Run(() => new NPCRepository(_dbConnectionManager.WorldConnection).Load()));
+        // Tasks.Add(Task.Run(() => new NPCRepository(_dbConnectionManager.WorldConnection).Load()));
 
         if (!Execute())
             return null;

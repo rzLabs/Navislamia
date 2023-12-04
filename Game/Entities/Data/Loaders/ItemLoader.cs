@@ -11,17 +11,15 @@ namespace Navislamia.Data.Loaders;
 
 public class ItemLoader : RepositoryLoader, IRepositoryLoader
 {
-    DbConnectionManager _dbConnectionManager;
 
-    public ItemLoader(INotificationModule notificationModule, DbConnectionManager dbConnectionManager) : base(notificationModule)
+    public ItemLoader(INotificationModule notificationModule) : base(notificationModule)
     {
-        _dbConnectionManager = dbConnectionManager;
     }
 
     public List<IRepository> Init()
     {
-        Tasks.Add(new ItemEffectRepository(_dbConnectionManager.WorldConnection).Load());
-        Tasks.Add(new SetItemEffectRepository(_dbConnectionManager.WorldConnection).Load());
+        // Tasks.Add(new ItemEffectRepository(_dbConnectionManager.WorldConnection).Load());
+        // Tasks.Add(new SetItemEffectRepository(_dbConnectionManager.WorldConnection).Load());
 
         if (!Execute())
             return null;
