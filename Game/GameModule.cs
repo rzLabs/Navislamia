@@ -4,19 +4,17 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
-using Navislamia.Database;
 using Navislamia.Notification;
 using Navislamia.Maps;
 using Navislamia.Network;
 using Navislamia.Scripting;
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Loaders;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Game
 {
     public class GameModule : IGameModule
     {
-        private readonly DbConnectionManager _dbConnectionManager;
         private readonly ScriptContent _scriptContent;
         private readonly INotificationModule _notificationModule;
         private readonly MapContent _mapContent;
@@ -24,22 +22,21 @@ namespace Navislamia.Game
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
 
-        private List<IRepository> _worldRepositories;
+        private List<IEfRepository> _worldRepositories;
 
         public GameModule() { }
 
         public GameModule(INotificationModule notificationModule, INetworkModule networkModule, 
-            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IOptions<WorldOptions> worldOptions, IOptions<PlayerOptions> playerOptions)
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _notificationModule = notificationModule;            
             _networkModule = networkModule;
 
-            _dbConnectionManager = new DbConnectionManager(worldOptions, playerOptions);
             _scriptContent = new ScriptContent(_notificationModule);
             _mapContent = new MapContent(mapOptions, _notificationModule, _scriptContent);
-            _worldRepositories = new List<IRepository>();
+            _worldRepositories = new List<IEfRepository>();
         }
 
         public void Start(string ip, int port, int backlog)
@@ -97,12 +94,12 @@ namespace Navislamia.Game
         {
             var loaders = new List<IRepositoryLoader>
             {
-                new MonsterLoader(_notificationModule, _dbConnectionManager),
-                new PetLoader(_notificationModule, _dbConnectionManager),
-                new ItemLoader(_notificationModule, _dbConnectionManager),
-                new NPCLoader(_notificationModule, _dbConnectionManager),
-                new ETCLoader(_notificationModule, _dbConnectionManager),
-                new StringLoader(_notificationModule, _dbConnectionManager)
+                new MonsterLoader(_notificationModule),
+                new PetLoader(_notificationModule),
+                new ItemLoader(_notificationModule),
+                new NPCLoader(_notificationModule),
+                new ETCLoader(_notificationModule),
+                new StringLoader(_notificationModule)
             };
 
             foreach (var loader in loaders)

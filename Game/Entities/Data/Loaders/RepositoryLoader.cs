@@ -3,26 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Navislamia.Game.Entities.Data.Interfaces;
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
 
 namespace Navislamia.Data.Loaders;
 
 public interface IRepositoryLoader
 {
-    public List<IRepository> Init() => null;
+    public List<IEfRepository> Init() => null;
 
-    public List<IRepository> Repositories { get; set; }
+    public List<IEfRepository> Repositories { get; set; }
 }
 
 public class RepositoryLoader : IRepositoryLoader
 {
     INotificationModule notificationSVC;
 
-    public List<Task<IRepository>> Tasks = new List<Task<IRepository>>();
+    public List<Task<IEfRepository>> Tasks = new List<Task<IEfRepository>>();
 
-    public List<IRepository> Repositories { get; set; } = new List<IRepository>();
+    public List<IEfRepository> Repositories { get; set; } = new List<IEfRepository>();
 
     public RepositoryLoader(INotificationModule notificationModule)
     {
@@ -45,7 +44,7 @@ public class RepositoryLoader : IRepositoryLoader
                 return false;
             }
 
-            IRepository repo = task.Result;
+            IEfRepository repo = task.Result;
 
             Repositories.Add(repo);
 

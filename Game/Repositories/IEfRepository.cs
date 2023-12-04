@@ -1,8 +1,11 @@
 ﻿using System.Threading.Tasks;
 
 namespace Navislamia.Game.Entities.Data.Interfaces;
-
-public interface IEfRepository<T>
+/// <summary>
+/// Base repository for EF Core interactions
+/// </summary>
+/// <typeparam name="T">Entity type</typeparam>
+public interface IEfRepository<in T>
 {
     public Task GetAsync(int id);
     public Task GetAllAsync();

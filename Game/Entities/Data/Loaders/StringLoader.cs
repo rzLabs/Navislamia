@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Data;
-
-using Navislamia.Database;
+using Navislamia.Game.Entities.Data.Interfaces;
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
-using Navislamia.Data.Repositories;
 
 namespace Navislamia.Data.Loaders;
 
@@ -16,7 +11,7 @@ public class StringLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
         // Tasks.Add(Task.Run(() => new StringRepository(_dbConnectionManager.WorldConnection).Load()));
 

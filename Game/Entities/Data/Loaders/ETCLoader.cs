@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Navislamia.Database;
+﻿using System.Collections.Generic;
+using Navislamia.Game.Entities.Data.Interfaces;
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
-using Navislamia.Data.Repositories;
-using System.Data;
 
 namespace Navislamia.Data.Loaders;
 
@@ -19,7 +11,7 @@ public class ETCLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
 
         // TODO: MarketData

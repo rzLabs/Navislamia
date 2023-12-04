@@ -3,11 +3,10 @@ using System.Data;
 using System.Threading.Tasks;
 
 
-using Navislamia.Database;
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Entities;
 using Navislamia.Data.Repositories;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Data.Loaders;
 
@@ -18,7 +17,7 @@ public class MonsterLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
     //     Tasks.Add(new MonsterSkillRepository(_dbConnectionManager.WorldConnection).Load());
     //     Tasks.Add(new MonsterItemDropRepository(_dbConnectionManager.WorldConnection).Load());

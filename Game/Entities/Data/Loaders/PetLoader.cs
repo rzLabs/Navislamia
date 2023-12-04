@@ -2,9 +2,8 @@
 using System.Data;
 
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Repositories;
-using Navislamia.Database;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Data.Loaders;
 
@@ -15,7 +14,7 @@ public class PetLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
         // Tasks.Add(new PetRepository(_dbConnectionManager.WorldConnection).Load());
 

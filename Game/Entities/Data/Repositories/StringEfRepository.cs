@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Navislamia.Data.Entities;
-using Navislamia.Data.Interfaces;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Game.Entities.Data.Repositories;
 

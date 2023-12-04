@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-
-using Navislamia.Database;
 using Navislamia.Notification;
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Entities;
 using Navislamia.Data.Repositories;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Data.Loaders;
 
@@ -16,7 +14,7 @@ public class ItemLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
         // Tasks.Add(new ItemEffectRepository(_dbConnectionManager.WorldConnection).Load());
         // Tasks.Add(new SetItemEffectRepository(_dbConnectionManager.WorldConnection).Load());

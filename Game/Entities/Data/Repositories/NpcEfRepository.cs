@@ -6,9 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Dapper;
-
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Entities;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Data.Repositories;
 

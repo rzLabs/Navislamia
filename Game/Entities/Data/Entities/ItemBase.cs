@@ -55,80 +55,6 @@ public enum ItemGroup
     EQUIPMENT_ON_BELT = 140
 }
 
-public enum ItemClass
-{
-    ETC = 0,
-
-    DOUBLE_AXE = 95,   
-    DOUBLE_SWORD = 96,
-    DOUBLE_DAGGER = 98,
-    EVERY_WEAPON = 99,
-    ETCWEAPON = 100,      
-    ONEHAND_SWORD = 101,      
-    TWOHAND_SWORD = 102,      
-    DAGGER = 103,
-    TWOHAND_SPEAR = 104,    
-    TWOHAND_AXE = 105,       
-    ONEHAND_MACE = 106,       
-    TWOHAND_MACE = 107,       
-    HEAVY_BOW = 108,     
-    LIGHT_BOW = 109,      
-    CROSSBOW = 110,       
-    ONEHAND_STAFF = 111,     
-    TWOHAND_STAFF = 112,      
-    ONEHAND_AXE = 113,        
-                                   
-    ARMOR = 200,    
-    FIGHTER_ARMOR = 201,      
-    HUNTER_ARMOR = 202,      
-    MAGICIAN_ARMOR = 203,     
-    SUMMONER_ARMOR = 204, 
-
-    SHIELD = 210,    
-    HELM = 220,      
-    BOOTS = 230,     
-    GLOVE = 240,      
-    BELT = 250,      
-    MANTLE = 260,
-
-    ETC_ACCESSORY = 300,
-    RING = 301,      
-    EARRING = 302, 
-    ARMULET = 303, 
-    EYEGLASS = 304,
-    MASK = 305, 
-    CUBE = 306,
-
-    BOOST_CHIP = 400,
-
-    SOULSTONE = 401,
-    CREATURE_FOOD = 402,
-    FARM_PASS = 403,
-
-    ETHEREAL_STONE = 451,
-
-    DECO_SHIELD = 601, 
-    DECO_ARMOR = 602, 
-    DECO_HELM = 603, 
-    DECO_GLOVE = 604,
-    DECO_BOOTS = 605, 
-    DECO_MALTLE = 606, 
-    DECO_SHOULDER = 607, 
-    DECO_HAIR = 608,  
-    DECO_ONEHAND_SWORD = 609, 
-    DECO_TWOHAND_SWORD = 610, 
-    DECO_DAGGER = 611, 
-    DECO_TWOHAND_SPEAR = 612, 
-    DECO_TWOHAND_AXE = 613,
-    DECO_ONEHAND_MACE = 614,  
-    DECO_TWOHAND_MACE = 615, 
-    DECO_HEAVY_BOW = 616, 
-    DECO_LIGHT_BOW = 617,
-    DECO_CROSSBOW = 618, 
-    DECO_ONEHAND_STAFF = 619, 
-    DECO_TWOHAND_STAFF = 620, 
-    DECO_ONEHAND_AXE = 621
-}
 
 public enum ItemWearType
 {
@@ -246,7 +172,7 @@ public class ItemBase
     public int NameID;
     public ItemType Type;
     public ItemGroup Group;
-    public ItemClass Class;
+    // public ItemClass ClassDeprecated;
     public int SetID;
     public int SetPartFlag;
     public byte Grade;

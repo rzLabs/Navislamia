@@ -4,14 +4,13 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Entities;
+using Navislamia.Game.Entities.Data.Interfaces;
 using Navislamia.World.Entities;
 
 namespace Navislamia.Data.Repositories;
 
-internal class ItemEffectRepository : IRepository
+internal class ItemEffectEfRepository : IEfRepository
 {
     const string query = "select * from dbo.ItemEffectResource ORDER BY id, ordinal_id";
 
@@ -25,9 +24,9 @@ internal class ItemEffectRepository : IRepository
 
     public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
-    public ItemEffectRepository(IDbConnection connection) => dbConnection = connection;
+    public ItemEffectEfRepository(IDbConnection connection) => dbConnection = connection;
 
-    public async Task<IRepository> Load()
+    public async Task<IEfRepository> Load()
     {
         var itemEffects = new List<EffectInfo>();
 

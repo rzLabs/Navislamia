@@ -6,13 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Dapper;
-
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Entities;
+using Navislamia.Game.Entities.Data.Interfaces;
 
 namespace Navislamia.Data.Repositories;
 
-public class LevelExpRepository : IRepository
+public class LevelExpEfRepository : IEfRepository
 {
     const string query = "select * from dbo.LevelResource";
 
@@ -24,11 +23,11 @@ public class LevelExpRepository : IRepository
 
     public int Count => Data?.Count() ?? 0;
 
-    public LevelExpRepository(IDbConnection dbConnection) => _dbConnection = dbConnection;
+    public LevelExpEfRepository(IDbConnection dbConnection) => _dbConnection = dbConnection;
 
     public IEnumerable<T> GetData<T>() => (IEnumerable<T>)Data;
 
-    public async Task<IRepository> Load()
+    public async Task<IEfRepository> Load()
     {
         var levelExps = new List<LevelExp>();
 

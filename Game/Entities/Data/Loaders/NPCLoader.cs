@@ -4,10 +4,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using Navislamia.Database;
-using Navislamia.Data.Interfaces;
 using Navislamia.Data.Repositories;
+using Navislamia.Game.Entities.Data.Interfaces;
 using Navislamia.Notification;
 
 namespace Navislamia.Data.Loaders;
@@ -19,7 +17,7 @@ public class NPCLoader : RepositoryLoader, IRepositoryLoader
     {
     }
 
-    public List<IRepository> Init()
+    public List<IEfRepository> Init()
     {
         // Tasks.Add(Task.Run(() => new NPCRepository(_dbConnectionManager.WorldConnection).Load()));
 

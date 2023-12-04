@@ -1,6 +1,9 @@
-﻿namespace Navislamia.Game.Services;
+﻿using DevConsole.Models.Arcadia;
+using Navislamia.Game.Entities.Data.Interfaces;
 
-public class LevelResourceRepository
+namespace Navislamia.Game.Services;
+
+public class LevelResourceRepository : EfRepository<LevelResourceEntity>
 {
     
 }
