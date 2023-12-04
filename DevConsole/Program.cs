@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Extensions;
-using DevConsole.Models.Arcadia;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +11,7 @@ using Navislamia.Command;
 using Navislamia.Configuration.Options;
 using Navislamia.Database.Contexts;
 using Navislamia.Game;
+using Navislamia.Game.Contexts;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
 using Navislamia.Notification;
@@ -75,6 +75,10 @@ public class Program
                 services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
                 
                 // Data access
+                
+                // services.AddDbContext<ArcadiaContext>(options =>
+                //     options.UseNpgsql(context.Configuration.GetSection("Database").Get<DatabaseOptions>().ConnectionString()));
+                //
                 services.AddDbContext<ArcadiaContext>((serviceProvider, builder) =>
                 {
                     var config = serviceProvider.GetService<IConfiguration>();
