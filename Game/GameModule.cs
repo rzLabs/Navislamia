@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
+using Navislamia.Game.Models.Navislamia;
+using Navislamia.Game.Repositories;
 using Navislamia.Notification;
 using Navislamia.Maps;
 using Navislamia.Network;
@@ -19,15 +21,19 @@ namespace Navislamia.Game
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
 
-        public GameModule() { }
+        private readonly IWorldRepository _worldRepository;
+        private readonly WorldEntity _worldEntity;
 
-        public GameModule(INotificationModule notificationModule, INetworkModule networkModule, 
-            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions)
+        public GameModule(INotificationModule notificationModule, INetworkModule networkModule,
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _notificationModule = notificationModule;            
             _networkModule = networkModule;
+            _worldRepository = worldRepository;
+
+            _worldEntity = worldRepository.LoadWorldIntoMemory();
 
             _scriptContent = new ScriptContent(_notificationModule);
             _mapContent = new MapContent(mapOptions, _notificationModule, _scriptContent);

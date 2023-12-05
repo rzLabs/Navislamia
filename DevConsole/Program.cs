@@ -12,6 +12,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Database.Contexts;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
+using Navislamia.Game.Repositories;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
 using Navislamia.Notification;
@@ -71,12 +72,9 @@ public class Program
                 services.AddSingleton<INotificationModule, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
                 services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+                services.AddSingleton<IWorldRepository, WorldRepository>();
                 
                 // Data access
-                
-                // services.AddDbContext<ArcadiaContext>(options =>
-                //     options.UseNpgsql(context.Configuration.GetSection("Database").Get<DatabaseOptions>().ConnectionString()));
-                //
                 services.AddDbContext<ArcadiaContext>((serviceProvider, builder) =>
                 {
                     var config = serviceProvider.GetService<IConfiguration>();
