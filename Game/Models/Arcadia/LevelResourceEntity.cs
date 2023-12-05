@@ -1,8 +1,9 @@
-﻿namespace DevConsole.Models.Arcadia;
-
-public class LevelResourceEntity
+﻿namespace Navislamia.Game.Models.Arcadia
 {
-    public int Level { get; set; }
-    public long NormalExp { get; set; }
-    public int[] Jl { get; set; } = new int[4];
+    public class LevelResourceEntity
+    {
+        public int Level { get; set; }
+        public long NormalExp { get; set; }
+        public int[] Jl { get; set; } = new int[4];
+    }
 }

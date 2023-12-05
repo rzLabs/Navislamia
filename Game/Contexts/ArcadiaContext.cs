@@ -1,5 +1,5 @@
-using DevConsole.Models.Arcadia;
 using Microsoft.EntityFrameworkCore;
+using Navislamia.Game.Models.Arcadia;
 
 namespace Navislamia.Game.Contexts;
 
@@ -58,8 +58,11 @@ public class ArcadiaContext : DbContext
 
     private static void ConfigureSetItemEffectResources(ModelBuilder modelBuilder)
     {
-
         modelBuilder.Entity<SetItemEffectResourceEntity>().HasKey(s => new { s.SetId, s.SetParts }); // composite key
+        modelBuilder.Entity<SetItemEffectResourceEntity>().Property(i => i.BaseType).HasMaxLength(2);
+        modelBuilder.Entity<SetItemEffectResourceEntity>().Property(i => i.BaseVar).HasMaxLength(8).HasPrecision(12, 2); // 2 x 4 matrix
+        modelBuilder.Entity<SetItemEffectResourceEntity>().Property(i => i.OptType).HasMaxLength(2);
+        modelBuilder.Entity<SetItemEffectResourceEntity>().Property(i => i.OptVar).HasMaxLength(8).HasPrecision(12, 2);  // 2 x 4 matrix
     }
     
     
@@ -118,11 +121,18 @@ public class ArcadiaContext : DbContext
 
     private static void ConfigureSummonResources(ModelBuilder modelBuilder)
     {
-
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.Size).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.TargetFxSize).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.Scale).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.AttackRange).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.TargetX).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.TargetY).HasPrecision(10, 2);
+        modelBuilder.Entity<SummonResourceEntity>().Property(i => i.TargetZ).HasPrecision(10, 2);
     }
     
     private static void ConfigureEffectResources(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ItemEffectResourceEntity>().Property(i => i.Value).HasMaxLength(20).HasPrecision(12, 2);
 
     }
 }

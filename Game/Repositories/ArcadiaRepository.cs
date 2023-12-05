@@ -2,17 +2,16 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Navislamia.Database.Contexts;
 using Navislamia.Game.Contexts;
 
 namespace Navislamia.Game.Repositories;
 
-public class EfRepository<T> : IEfRepository<T> where T : class
+public class ArcadiaRepository<T> : IArcadiaRepository<T> where T : class
 {
     private readonly ArcadiaContext _context;
-    private readonly ILogger<EfRepository<T>> _logger;
+    private readonly ILogger<ArcadiaRepository<T>> _logger;
     
-    public EfRepository(ArcadiaContext context, ILogger<EfRepository<T>> logger)
+    public ArcadiaRepository(ArcadiaContext context, ILogger<ArcadiaRepository<T>> logger)
     {
         _context = context;
         _logger = logger;

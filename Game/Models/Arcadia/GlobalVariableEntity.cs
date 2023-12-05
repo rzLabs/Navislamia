@@ -1,7 +1,8 @@
-namespace DevConsole.Models.Arcadia;
-
-public class GlobalVariableEntity
+namespace Navislamia.Game.Models.Arcadia
 {
-    public string Name { get; set; }
-    public string Value { get; set; }
+    public class GlobalVariableEntity
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+    }
 }

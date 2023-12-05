@@ -32,8 +32,6 @@ public class Program
             await arcadia.Database.MigrateAsync();
             await telecaster.Database.MigrateAsync();
             
-
-            
             Log.Logger.Information("Applied Arcadia migrations: {Migrations}", await arcadia.Database.GetAppliedMigrationsAsync());
             Log.Logger.Information("Applied Telecaster migrations: {Migrations}", await telecaster.Database.GetAppliedMigrationsAsync());
         }

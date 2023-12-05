@@ -1,8 +1,9 @@
-﻿namespace DevConsole.Models.Arcadia.Enums;
-
-public enum FailResultType
+﻿namespace Navislamia.Game.Models.Arcadia.Enums
 {
-    Fail = 1,
-    SkillCard = 2,
-    Accessory = 3,
+    public enum FailResultType
+    {
+        Fail = 1,
+        SkillCard = 2,
+        Accessory = 3,
+    }
 }

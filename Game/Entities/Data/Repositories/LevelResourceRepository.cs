@@ -6,18 +6,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Dapper;
-using DevConsole.Models.Arcadia;
 using Microsoft.Extensions.Logging;
 using Navislamia.Data.Entities;
 using Navislamia.Database.Contexts;
 using Navislamia.Game.Contexts;
+using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Repositories;
 
 namespace Navislamia.Data.Repositories;
 
-public class LevelResourceRepository : EfRepository<LevelResourceEntity>
+public class LevelResourceRepository : ArcadiaRepository<LevelResourceEntity>
 {
-    public LevelResourceRepository(ArcadiaContext context, ILogger<EfRepository<LevelResourceEntity>> logger) : base(context, logger)
+    public LevelResourceRepository(ArcadiaContext context, ILogger<ArcadiaRepository<LevelResourceEntity>> logger) : base(context, logger)
     {
     }
 

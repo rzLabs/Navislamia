@@ -65,8 +65,4 @@
     </None>
     <None Remove="DevConsole\**" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
 </Project>

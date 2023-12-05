@@ -9,7 +9,7 @@
 //
 // namespace Navislamia.Data.Repositories;
 //
-// public class MonsterEfRepository : IEfRepository
+// public class MonsterEfRepository : 
 // {
 //     const string query = "select * from dbo.MonsterResource with (nolock)";
 //

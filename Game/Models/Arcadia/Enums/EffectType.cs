@@ -1,10 +1,11 @@
-﻿namespace DevConsole.Models.Arcadia.Enums;
-
-public enum EffectType
+﻿namespace Navislamia.Game.Models.Arcadia.Enums
 {
-    EffectTypeUnknown = 0,
-    EffectTypeBasic = 1,
-    EffectTypeOptional = 2,
-    EffectTypeState = 3,
-    EffectTypeEnhance = 4,
+    public enum EffectType
+    {
+        Unknown = 0,
+        Basic = 1,
+        Optional = 2,
+        State = 3,
+        Enhance = 4,
+    }
 }

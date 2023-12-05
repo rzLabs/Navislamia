@@ -2,11 +2,8 @@
 using System.Threading.Tasks;
 
 namespace Navislamia.Game.Repositories;
-/// <summary>
-/// Base repository for EF Core interactions
-/// </summary>
-/// <typeparam name="T">Entity type</typeparam>
-public interface IEfRepository<T>
+
+public interface IArcadiaRepository<T>
 {
     public Task<T> GetAsync(int id);
     public IEnumerable<T> GetAllAsync();

@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DevConsole.Models.Arcadia;
-
-public class Entity
+namespace Navislamia.Game.Models.Arcadia
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public class Entity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
     
-    // TODO SoftDeletable (DeltedOn) + ModfiedOn + CreatedOn
+        // TODO SoftDeletable (DeltedOn) + ModfiedOn + CreatedOn
+    }
 }

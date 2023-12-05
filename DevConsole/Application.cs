@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading;
-using DevConsole.Properties;
 using Navislamia.Game;
 using Navislamia.Notification;
 using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Exceptions;
+using DevConsole.Properties;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Navislamia.Command;
@@ -34,7 +32,7 @@ namespace DevConsole
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            // _notificationModule.WriteString($"\n{Resources.arcadia}");
+            _notificationModule.WriteString($"\n{Resources.arcadia}");
             _notificationModule.WriteString("Navislamia starting...\n");
             _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
 

@@ -2,13 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Navislamia.Database.Contexts;
 using Navislamia.Game.Contexts;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DevConsole.Migrations
+namespace Navislamia.Game.Migrations
 {
     [DbContext(typeof(ArcadiaContext))]
     partial class ArcadiaContextModelSnapshot : ModelSnapshot
@@ -22,7 +21,7 @@ namespace DevConsole.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.ChannelResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ChannelResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +49,7 @@ namespace DevConsole.Migrations
                     b.ToTable("ChannelResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.EffectResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EffectResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,7 +65,7 @@ namespace DevConsole.Migrations
                     b.ToTable("EffectResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.EnhanceResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EnhanceResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -99,7 +98,7 @@ namespace DevConsole.Migrations
                     b.ToTable("EnhanceResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.GlobalVariableEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.GlobalVariableEntity", b =>
                 {
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -112,7 +111,7 @@ namespace DevConsole.Migrations
                     b.ToTable("GlobalVariables");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.ItemEffectResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemEffectResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -136,6 +135,8 @@ namespace DevConsole.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int[]>("Value")
+                        .HasMaxLength(20)
+                        .HasPrecision(12, 2)
                         .HasColumnType("integer[]");
 
                     b.HasKey("Id");
@@ -143,7 +144,7 @@ namespace DevConsole.Migrations
                     b.ToTable("ItemEffectResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.ItemResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -154,9 +155,9 @@ namespace DevConsole.Migrations
                     b.Property<int>("AvailablePeriod")
                         .HasColumnType("integer");
 
-                    b.Property<int[]>("BaseType")
+                    b.Property<short[]>("BaseType")
                         .HasMaxLength(2)
-                        .HasColumnType("integer[]");
+                        .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("BaseVar")
                         .HasMaxLength(8)
@@ -217,9 +218,6 @@ namespace DevConsole.Migrations
                     b.Property<short>("JobDepth")
                         .HasColumnType("smallint");
 
-                    b.Property<short>("JobRestriction")
-                        .HasColumnType("smallint");
-
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
@@ -229,9 +227,9 @@ namespace DevConsole.Migrations
                     b.Property<int>("NameId")
                         .HasColumnType("integer");
 
-                    b.Property<int[]>("OptType")
+                    b.Property<short[]>("OptType")
                         .HasMaxLength(2)
-                        .HasColumnType("integer[]");
+                        .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("OptVar")
                         .HasMaxLength(8)
@@ -247,6 +245,9 @@ namespace DevConsole.Migrations
 
                     b.Property<int>("Rank")
                         .HasColumnType("integer");
+
+                    b.Property<short>("Restriction")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("ScriptText")
                         .HasColumnType("text");
@@ -308,7 +309,7 @@ namespace DevConsole.Migrations
                     b.ToTable("ItemResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.LevelResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.LevelResourceEntity", b =>
                 {
                     b.Property<int>("Level")
                         .ValueGeneratedOnAdd()
@@ -327,7 +328,7 @@ namespace DevConsole.Migrations
                     b.ToTable("LevelResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.SetItemEffectResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SetItemEffectResourceEntity", b =>
                 {
                     b.Property<int>("SetId")
                         .HasColumnType("integer");
@@ -335,19 +336,25 @@ namespace DevConsole.Migrations
                     b.Property<short>("SetParts")
                         .HasColumnType("smallint");
 
-                    b.Property<int[]>("BaseType")
-                        .HasColumnType("integer[]");
+                    b.Property<short[]>("BaseType")
+                        .HasMaxLength(2)
+                        .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("BaseVar")
+                        .HasMaxLength(8)
+                        .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
                     b.Property<int>("EffectId")
                         .HasColumnType("integer");
 
-                    b.Property<int[]>("OptType")
-                        .HasColumnType("integer[]");
+                    b.Property<short[]>("OptType")
+                        .HasMaxLength(2)
+                        .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("OptVar")
+                        .HasMaxLength(8)
+                        .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
                     b.Property<int>("TextId")
@@ -361,7 +368,7 @@ namespace DevConsole.Migrations
                     b.ToTable("SetItemEffectResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.SkillResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SkillResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -487,8 +494,8 @@ namespace DevConsole.Migrations
                     b.Property<int>("EffectType")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Elemental")
-                        .HasColumnType("text");
+                    b.Property<bool>("Elemental")
+                        .HasColumnType("boolean");
 
                     b.Property<short>("HateBasic")
                         .HasColumnType("smallint");
@@ -517,23 +524,23 @@ namespace DevConsole.Migrations
                     b.Property<int>("IconId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("IsCorpse")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsCorpse")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("IsHarmful")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsHarmful")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("IsNeedTarget")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsPassive")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("IsPassive")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsPhysicalAct")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("IsPhysicalAct")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsToggle")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("IsToggle")
-                        .HasColumnType("text");
+                    b.Property<int>("IsValid")
+                        .HasColumnType("integer");
 
                     b.Property<int>("NeedHavoc")
                         .HasColumnType("integer");
@@ -551,6 +558,9 @@ namespace DevConsole.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("NeedStateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NeedTarget")
                         .HasColumnType("integer");
 
                     b.Property<short>("Percentage")
@@ -708,7 +718,7 @@ namespace DevConsole.Migrations
                     b.ToTable("SkillResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.StatResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StatResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -742,7 +752,7 @@ namespace DevConsole.Migrations
                     b.ToTable("StatResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.StateResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StateResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -862,7 +872,7 @@ namespace DevConsole.Migrations
                     b.ToTable("StateResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.StringResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StringResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -881,7 +891,7 @@ namespace DevConsole.Migrations
                     b.ToTable("StringResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.SummonResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SummonResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -893,7 +903,8 @@ namespace DevConsole.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("AttackRange")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<int>("CameraX")
                         .HasColumnType("integer");
@@ -907,10 +918,10 @@ namespace DevConsole.Migrations
                     b.Property<int>("CardId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("EvolutionStage")
+                    b.Property<int>("EvolveTargetId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("EvolveTargetId")
+                    b.Property<int>("EvolveType")
                         .HasColumnType("integer");
 
                     b.Property<string>("FaceFileName")
@@ -921,6 +932,9 @@ namespace DevConsole.Migrations
 
                     b.Property<string>("IllustFileName")
                         .HasColumnType("text");
+
+                    b.Property<int>("IsRidingOnly")
+                        .HasColumnType("integer");
 
                     b.Property<int>("LocalFlag")
                         .HasColumnType("integer");
@@ -953,13 +967,15 @@ namespace DevConsole.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Scale")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<string>("ScriptText")
                         .HasColumnType("text");
 
                     b.Property<decimal>("Size")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<int>("Skill1Id")
                         .HasColumnType("integer");
@@ -1004,16 +1020,20 @@ namespace DevConsole.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TargetFxSize")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<decimal>("TargetX")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<decimal>("TargetY")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<decimal>("TargetZ")
-                        .HasColumnType("numeric");
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<int>("TextFeatureId")
                         .HasColumnType("integer");
@@ -1040,9 +1060,9 @@ namespace DevConsole.Migrations
                     b.ToTable("SummonResources");
                 });
 
-            modelBuilder.Entity("DevConsole.Models.Arcadia.SummonResourceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SummonResourceEntity", b =>
                 {
-                    b.HasOne("DevConsole.Models.Arcadia.SummonResourceEntity", "EvolveTarget")
+                    b.HasOne("Navislamia.Game.Models.Arcadia.SummonResourceEntity", "EvolveTarget")
                         .WithMany()
                         .HasForeignKey("EvolveTargetId")
                         .OnDelete(DeleteBehavior.Cascade)

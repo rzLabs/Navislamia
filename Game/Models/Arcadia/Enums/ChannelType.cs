@@ -1,8 +1,9 @@
-namespace DevConsole.Models.Arcadia.Enums;
-
-public enum ChannelType
+namespace Navislamia.Game.Models.Arcadia.Enums
 {
-    None,
-    UserLimit,
-    Dungeon
+    public enum ChannelType
+    {
+        None,
+        UserLimit,
+        Dungeon
+    }
 }
