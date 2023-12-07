@@ -20,4 +20,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build
+    - name: Test with the dotnet CLI
+      run: dotnet test
