@@ -83,6 +83,7 @@ public class Program
                 
                     var connectionString = dbOptions.ConnectionString();
                     builder
+                            // TODO Delete me im just trying to merge this pr
                         // .UseLazyLoadingProxies()
                         .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
                         // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
