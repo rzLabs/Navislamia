@@ -1,22 +1,22 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Configuration;
+using DevConsole.Extensions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Navislamia.Command;
-using Navislamia.Command.Commands;
 using Navislamia.Configuration.Options;
-using Navislamia.Database;
+using Navislamia.Database.Contexts;
 using Navislamia.Game;
+using Navislamia.Game.Contexts;
+using Navislamia.Game.Repositories;
 using Navislamia.Network;
 using Navislamia.Network.Entities;
 using Navislamia.Notification;
-using Navislamia.Scripting;
-
-using Navislamia.Network.Packets;
-using Navislamia.Network.Packets.Auth;
+using Serilog;
 
 namespace DevConsole;
 
@@ -25,6 +25,18 @@ public class Program
     public static async Task Main(string[] args)
     {
         var host = CreateHostBuilder(args).Build();
+        var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
+        using (var scope = scopeFactory.CreateScope())
+        {
+            var arcadia = scope.ServiceProvider.GetService<ArcadiaContext>();
+            var telecaster = scope.ServiceProvider.GetService<TelecasterContext>();
+            await arcadia.Database.MigrateAsync();
+            await telecaster.Database.MigrateAsync();
+            
+            Log.Logger.Information("Applied Arcadia migrations: {Migrations}", await arcadia.Database.GetAppliedMigrationsAsync());
+            Log.Logger.Information("Applied Telecaster migrations: {Migrations}", await telecaster.Database.GetAppliedMigrationsAsync());
+        }
+
         await host.RunAsync();
     }
 
@@ -45,8 +57,6 @@ public class Program
                 //Options
                 services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
                 services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
-                services.Configure<WorldOptions>(context.Configuration.GetSection("Database:World"));
-                services.Configure<PlayerOptions>(context.Configuration.GetSection("Database:Player"));
                 services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
                 services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));
                 services.Configure<GameOptions>(context.Configuration.GetSection("Network:Game"));
@@ -62,8 +72,41 @@ public class Program
                 services.AddSingleton<INotificationModule, NotificationModule>();
                 services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
                 services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+                services.AddSingleton<IWorldRepository, WorldRepository>();
+                
+                // Data access
+                services.AddDbContext<ArcadiaContext>((serviceProvider, builder) =>
+                {
+                    var config = serviceProvider.GetService<IConfiguration>();
+                    var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+                    dbOptions.InitialCatalog = "Arcadia";
+                
+                    var connectionString = dbOptions.ConnectionString();
+                    builder
+                            // TODO Delete me im just trying to merge this pr
+                        // .UseLazyLoadingProxies()
+                        .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
+                        // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+                        .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
+                });
+                
+                services.AddDbContext<TelecasterContext>((serviceProvider, builder) =>
+                {
+                    var config = serviceProvider.GetService<IConfiguration>();
+                    var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+                    dbOptions.InitialCatalog = "Telecaster";
+
+                    var connectionString = dbOptions.ConnectionString();
+                    builder
+                        // .UseLazyLoadingProxies()
+                        .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
+                        // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+                        .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
+                });
             })
             .ConfigureLogging((context, logging) => {
+                Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
+                    .WriteTo.Console().CreateLogger();
                 logging.AddConfiguration(context.Configuration.GetSection("Logging"));
                 logging.AddConsole();
             })
