@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Navislamia.Data.Entities;
-using Navislamia.Database.Contexts;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Repositories;

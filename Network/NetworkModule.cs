@@ -144,15 +144,23 @@ namespace Navislamia.Network
         {
             try
             {
-                var index = _serverOptions.Index;
-                var ip = _networkOptions.Game.Ip;
-                var port = _networkOptions.Game.Port;
-                var name = _serverOptions.Name;
-                var screenshotUrl = _serverOptions.ScreenshotUrl;
-                var isAdultServer = _serverOptions.IsAdultServer;
+                // var index = _serverOptions.Index;
+                // var ip = _networkOptions.Game.Ip;
+                // var port = _networkOptions.Game.Port;
+                // var name = _serverOptions.Name;
+                // var screenshotUrl = _serverOptions.ScreenshotUrl;
+                // var isAdultServer = _serverOptions.IsAdultServer;
+                
+                ushort index = 1;
+                var ip = "127.0.0.1\0".PadRight(16, '\0');
+                ushort port  = 4502;
+                var name = "Navislamia\0".PadRight(21, '\0');
+                var screenshotUrl = "about:new\0".PadRight(256, '\0');
+                bool isAdultServer = true;
                 
                 var msg = new TS_GA_LOGIN(index, ip, port, name, screenshotUrl, isAdultServer);
 
+                
                 _authService.SendMessage(msg);
             }
             catch (Exception ex)

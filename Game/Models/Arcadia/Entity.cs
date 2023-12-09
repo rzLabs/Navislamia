@@ -5,7 +5,7 @@ namespace Navislamia.Game.Models.Arcadia
     public class Entity
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public long Id { get; set; }
     
         // TODO SoftDeletable (DeltedOn) + ModfiedOn + CreatedOn
     }

@@ -9,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Navislamia.Command;
 using Navislamia.Configuration.Options;
-using Navislamia.Database.Contexts;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Repositories;
