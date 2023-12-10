@@ -8,7 +8,7 @@ public class AuctionEntity : Entity
     public long ItemId { get; set; }
     public virtual ItemEntity Item { get; set; }
 
-    public int SellerId { get; set; }
+    public long SellerId { get; set; }
     public virtual CharacterEntity Seller { get; set; }
     
     /// <summary>
@@ -17,11 +17,11 @@ public class AuctionEntity : Entity
     /// </summary>
     public string SellerName { get; set; } 
     
-    public bool IsHiddenVillage { get; set; }
+    public bool IsHiddenVillageOnly { get; set; } // check usage -> leftover of premium "vip" content
     public DateTime EndTime { get; set; }
     public long InstantPurchasePrice { get; set; }
-    public long RegistrationTax { get; set; } // check usage maybe transfor to decimal? e..g 0.18 = 18% tax
-    public long[] BidderList { get; set; } // Referred from previous usage: List of character ids 
+    public long RegistrationTax { get; set; } // short, mid, longterm => decimal * factor 10000 -> refactor to decimal? e..g 0.18 = 18% tax 18 /100 
+    public long[] BiddersIds { get; set; } // Referred from previous usage: List of character ids 
     public long HighestBiddingPrice { get; set; }
     
     public long HighestBidderId { get; set; }

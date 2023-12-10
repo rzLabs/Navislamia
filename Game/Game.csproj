@@ -26,4 +26,9 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\Arcadia\" />
+    <Folder Include="Migrations\Telecaster\" />
+  </ItemGroup>
+
 </Project>

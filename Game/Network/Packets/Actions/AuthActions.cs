@@ -2,7 +2,8 @@
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
-using Navislamia.Network.Entities;
+using Navislamia.Game.Network;
+using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Packets.Auth;
 
 namespace Navislamia.Network.Packets.Actions

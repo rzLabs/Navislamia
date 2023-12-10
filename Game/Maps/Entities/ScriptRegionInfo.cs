@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class ScriptRegionInfo
 {

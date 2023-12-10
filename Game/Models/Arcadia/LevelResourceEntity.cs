@@ -4,6 +4,6 @@
     {
         public int Level { get; set; }
         public long NormalExp { get; set; }
-        public int[] Jl { get; set; } = new int[4];
+        public int[] Jlvls { get; set; } = new int[4];
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using Navislamia.Network.Entities;
+using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Packets.Actions;
 
-namespace Navislamia.Network
+namespace Navislamia.Game.Network
 {
     public interface INetworkModule
     {

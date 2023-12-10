@@ -2,7 +2,6 @@
 {
     public class StringResourceEntity : Entity
     {
-        // TODO Id used to be named "code" remove comment once Stage-1 is completed
         public string Name { get; set; }
         public string Value { get; set; }
 

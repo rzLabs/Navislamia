@@ -1,26 +1,23 @@
-﻿using Navislamia.Network.Packets;
-using Navislamia.Notification;
-using System.Net.Sockets;
-using System.Net;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Enums;
+using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
+using Navislamia.Notification;
 using Navislamia.Utilities;
 using Network.Security;
-
-using static Navislamia.Network.Packets.PacketExtensions;
 using static Navislamia.Network.NetworkExtensions;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
-namespace Navislamia.Network.Entities
+namespace Navislamia.Game.Network.Entities
 {
     // TODO: Poll connections by configuration interval
     // TODO: Disconnect/Destroy

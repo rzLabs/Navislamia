@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.Network.Entities;
+using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions;
@@ -13,7 +13,7 @@ using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
 
-namespace Navislamia.Network
+namespace Navislamia.Game.Network
 {
     public class NetworkModule : INetworkModule
     {
@@ -61,10 +61,10 @@ namespace Navislamia.Network
 
         public void Initialize()
         {
-            ConnectToAuth();
-            ConnectToUpload();
-            SendGsInfoToAuth();
-            SendInfoToUpload();
+            // ConnectToAuth();
+            // ConnectToUpload();
+            // SendGsInfoToAuth();
+            // SendInfoToUpload();
         }
         public void Shutdown()
         {

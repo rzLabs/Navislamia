@@ -1,5 +1,4 @@
-﻿using Navislamia.Network.Entities;
-using Navislamia.Network.Packets.Auth;
+﻿using Navislamia.Network.Packets.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;

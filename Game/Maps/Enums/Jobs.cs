@@ -1,7 +1,6 @@
 using System;
 
-namespace Navislamia.Maps.Enums;
-
+namespace Navislamia.Game.Maps.Enums;
 [Flags]
 public enum Jobs
 {

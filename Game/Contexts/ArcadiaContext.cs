@@ -25,7 +25,7 @@ public class ArcadiaContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         ConfigureGlobalVariable(modelBuilder);
         ConfigureItemEffectResources(modelBuilder);
         ConfigureStringResource(modelBuilder);

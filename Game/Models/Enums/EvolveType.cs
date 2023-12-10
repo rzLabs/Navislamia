@@ -1,10 +1,9 @@
-﻿namespace Navislamia.Game.Models.Arcadia.Enums
+﻿namespace Navislamia.Game.Models.Enums;
+
+public enum EvolveType
 {
-    public enum EvolveType
-    {
-        None,
-        Normal,
-        Growth,
-        Evolve
-    }
+    None,
+    Normal,
+    Growth,
+    Evolve
 }

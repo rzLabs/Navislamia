@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Navislamia.Maps.Enums;
+using Navislamia.Game.Maps.Enums;
 using Navislamia.Utilities;
-using static Navislamia.Utilities.StringExtensions;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class TerrainPropInfo
 {
@@ -68,7 +67,7 @@ public class TerrainPropInfo
             }
 
             string content;
-            if ((content = GetStringContent(line, PropNameHeader)) != null)
+            if ((content = line.GetStringContent(PropNameHeader)) != null)
             {
                 var vString = content.Split(",");
 
@@ -116,7 +115,7 @@ public class TerrainPropInfo
                         currentVisibleRatio, strPropName, shadowFlag);
                 }
             }
-            else if ((content = GetStringContent(line, CategoryHeader)) != null)
+            else if ((content = line.GetStringContent(CategoryHeader)) != null)
             {
                 if (content.Length <= 0)
                 {
@@ -145,7 +144,7 @@ public class TerrainPropInfo
                 currentCategory = _categoryNames.Count - 1;
             }
             
-            if ((content = GetStringContent(line, VisibleRatioHeader)) != null)
+            if ((content = line.GetStringContent(VisibleRatioHeader)) != null)
             {
                 currentVisibleRatio = float.Parse(content);
 
@@ -155,7 +154,7 @@ public class TerrainPropInfo
                 }
             }
 
-            if ((content = GetStringContent(line, RenderTypeHeader)) == null)
+            if ((content = line.GetStringContent(RenderTypeHeader)) == null)
             {
                 continue;
             }

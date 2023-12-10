@@ -7,7 +7,7 @@ namespace Navislamia.Game.Models.Telecaster;
 
 public class ItemEntity : Entity
 {
-    public int CharacterId { get; set; }
+    public long CharacterId { get; set; }
     public virtual CharacterEntity Character { get; set; }
     
     // relation not possible since you can't create a realation cross multiple contexts
@@ -19,12 +19,13 @@ public class ItemEntity : Entity
     
     public int AuctionId { get; set; } 
     public virtual AuctionEntity Auction { get; set; }
+    public virtual AuctionEntity RelatedAuction { get; set; }
     
     public int StorageId { get; set; }  // relation required
-    public virtual ItemStorageEntity ItemStorageEntity { get; set; }
+    public virtual ItemStorageEntity ItemStorage { get; set; }
     
     public int Idx { get; set; } // probably for sorting e.g. Item place in warehouse rename to slot/uiSlot?
-    public int ItemId { get; set; } 
+    public int ItemResourceId { get; set; } 
     public long Amount { get; set; }
     public int Level { get; set; }
     public int Enhance { get; set; }
@@ -33,10 +34,7 @@ public class ItemEntity : Entity
     public ItemFlag Flag { get; set; }
     public ItemGenerateSource GenerateBySource { get; set; }
     public ItemWearType WearInfo { get; set; }
-    public int Socket0 { get; set; }
-    public int Socket1 { get; set; }
-    public int Socket2 { get; set; }
-    public int Socket3 { get; set; }
+    public long[] SocketItemIds { get; set; }
     public int RemainTime { get; set; } // could be refactored into "ExpiresAt" -> using Datetime 
     public ElementalType ElementalEffectType { get; set; }
     public DateTime ElementalEffectExpireTime { get; set; }
@@ -45,4 +43,6 @@ public class ItemEntity : Entity
     public DateTime CreateTime { get; set; } // TODO introduce CreatedOn into DbContext as part of softdeletion @Nexitis
     public DateTime UpdateTime { get; set; } // TODO introduce ModifiedOn into DbContext as part of softdeletion @Nexitis
     
+    public virtual PetEntity PetItem { get; set; }
+    public virtual ItemStorageEntity RelatedItemStorage { get; set; }
 }

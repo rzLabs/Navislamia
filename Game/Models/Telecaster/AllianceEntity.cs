@@ -6,7 +6,7 @@ public class AllianceEntity : Entity
 {
     public string Name { get; set; }
     
-    public int LeadGuildId { get; set; }
+    public long LeadGuildId { get; set; }
     public virtual GuildEntity LeadGuild { get; set; }
     
     public int MaxAllianceCount { get; set; }
