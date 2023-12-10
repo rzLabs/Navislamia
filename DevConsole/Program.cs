@@ -74,7 +74,7 @@ public class Program
                 services.AddSingleton<IWorldRepository, WorldRepository>();
                 
                 // Data access
-                services.AddDbContext<ArcadiaContext>((serviceProvider, builder) =>
+                services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>
                 {
                     var config = serviceProvider.GetService<IConfiguration>();
                     var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
@@ -82,14 +82,12 @@ public class Program
                 
                     var connectionString = dbOptions.ConnectionString();
                     builder
-                            // TODO Delete me im just trying to merge this pr
-                        // .UseLazyLoadingProxies()
                         .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
                         // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
                         .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
                 });
                 
-                services.AddDbContext<TelecasterContext>((serviceProvider, builder) =>
+                services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
                 {
                     var config = serviceProvider.GetService<IConfiguration>();
                     var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
@@ -97,7 +95,6 @@ public class Program
 
                     var connectionString = dbOptions.ConnectionString();
                     builder
-                        // .UseLazyLoadingProxies()
                         .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
                         // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
                         .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
