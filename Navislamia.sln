@@ -14,11 +14,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification", "Notificatio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Objects", "Objects\Objects.csproj", "{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Network", "Network\Network.csproj", "{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Game", "Game\Game.csproj", "{1C1B438A-9255-45CC-85BB-730BAFFE4D7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{8BD11344-88EB-401A-AD74-D30F8A0465F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{8BD11344-88EB-401A-AD74-D30F8A0465F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,14 +74,6 @@ Global
 		{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}.Release|x64.ActiveCfg = Release|Any CPU
 		{F6595EE8-2E3A-4484-9F9F-EEC7546E3100}.Release|x64.Build.0 = Release|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Debug|x64.Build.0 = Debug|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|x64.ActiveCfg = Release|Any CPU
-		{938938EB-CDA7-4C1A-B70E-1F7F315FE43E}.Release|x64.Build.0 = Release|Any CPU
 		{1C1B438A-9255-45CC-85BB-730BAFFE4D7E}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{1C1B438A-9255-45CC-85BB-730BAFFE4D7E}.Debug|Any CPU.Build.0 = Debug|x64
 		{1C1B438A-9255-45CC-85BB-730BAFFE4D7E}.Debug|x64.ActiveCfg = Debug|x64
