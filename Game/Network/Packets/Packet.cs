@@ -1,6 +1,7 @@
 ﻿using Navislamia.Network.Entities;
 using System;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 
@@ -18,7 +19,9 @@ namespace Navislamia.Network.Packets
 
         public S GetDataStruct<S>();
 
-        public string StructName { get;  }
+        public string DumpStructToString();
+
+        public string DumpDataToHexString();
     }
 
     public class Packet<T> : IPacket where T : new()
@@ -65,8 +68,6 @@ namespace Navislamia.Network.Packets
 
         public S GetDataStruct<S>() => (S)(object)DataStruct;
 
-        public string StructName => DataStruct.GetType().Name;
-
         private void serialize()
         {
             HeaderStruct.Length = (uint)(Data.Length);
@@ -100,6 +101,79 @@ namespace Navislamia.Network.Packets
             DataStruct = Marshal.PtrToStructure<T>(ptr);
 
             Marshal.FreeHGlobal(ptr);
+        }
+
+        public string DumpStructToString()
+        {
+            string output = $"[orchid]Packet Info:[/]\n\nName: {DataStruct.GetType().Name}\n\nHeader:\n\n- [steelblue3]ID:[/] {ID}\n- [steelblue3]Length:[/] {Length}\n- [steelblue3]Checksum:[/] {Checksum}\n\nProperties:\n\n";
+
+            foreach (var field in DataStruct.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                string str = $"- [steelblue3]{field.Name}[/] [deeppink4_2]({field.FieldType.Name})[/]: ";
+                var value = field.GetValue(DataStruct);
+
+                if (value is byte[])
+                    continue;
+
+                output += $"{str += value}\n";
+            }
+
+            return output;
+        }
+
+        public string DumpDataToHexString()
+        {
+            Span<byte> buffer = Data;
+
+            int maxWidth = Math.Min(16, buffer.Length);
+            int rowHeader = 0;
+
+            string outStr = null;
+            string curRowStr = null;
+            int curCol = 0;
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                string byteStr = $"{buffer[i]:x2}";
+                curRowStr += $"{byteStr} ";
+                curCol++;
+
+                if (curCol == maxWidth)
+                {
+                    rowHeader += 10;
+
+                    Span<byte> lineBuffer = buffer.Slice(i + 1 - maxWidth, maxWidth).ToArray();
+                    string lineBufferStr = string.Empty;
+
+                    foreach (byte b in lineBuffer)
+                    {
+                        if (b == 0)
+                            lineBufferStr += ".";
+                        else
+                            lineBufferStr += System.Text.Encoding.Default.GetString(new byte[] { b });
+                    }
+
+                    if (maxWidth < 16) // There was not 16 bytes of data, so we must pad the rest to keep output aligned
+                    {
+                        int remainder = 16 - maxWidth;
+
+                        for (int j = 0; j < remainder; j++)
+                        {
+                            curRowStr += "00 ";
+                            lineBufferStr += ".";
+                        }
+                    }
+
+                    outStr += $"{rowHeader.ToString("D8")}: {curRowStr}  {lineBufferStr}\n";
+                    curRowStr = null;
+                    curCol = 0;
+
+                    if (buffer.Length - i < maxWidth)
+                        maxWidth = buffer.Length - (i + 1);
+                }
+            }
+
+            return outStr;
         }
     }
 }

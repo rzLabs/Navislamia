@@ -78,7 +78,7 @@ namespace Navislamia.Network.Entities
                     if (_sendCollection.IsCompleted)
                         _sendCollection = new BlockingCollection<IPacket>(_sendQueue);
 
-                    Thread.Sleep(100); // TODO research required processing speed
+                    Thread.Sleep(50); // TODO research required processing speed
                 }
             }, cancellationToken);
 
@@ -97,7 +97,7 @@ namespace Navislamia.Network.Entities
                     if (_recvCollection.IsCompleted)
                         _recvCollection = new BlockingCollection<IPacket>(_recvQueue);
 
-                    Thread.Sleep(100); // TODO research required processing speed
+                    Thread.Sleep(50); // TODO research required processing speed
                 }
             }, cancellationToken);
 
@@ -156,7 +156,7 @@ namespace Navislamia.Network.Entities
 
             Entity.Socket.Disconnect(false);
 
-            _notificationSvc.WriteSuccess($"{Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port} has been disconnected!");
+            _notificationSvc.WriteSuccess($"{clientTag} @{Entity.IP}:{Entity.Port} has been disconnected!");
 
             Entity.Socket.Dispose();
 
@@ -304,7 +304,7 @@ namespace Navislamia.Network.Entities
                 // If the message length is invalid ignore this message and advance the buffer by 4 bytes
                 if (msgLength < 0 || msgLength > Entity.DataOffset)
                 {
-                    _notificationSvc.WriteWarning($"Invalid message received from {Entity.Type.EnumToString()} client @ {Entity.IP}:{Entity.Port}!!! Packet Length: {msgLength} @ DataOffset: {Entity.DataOffset}");
+                    _notificationSvc.WriteWarning($"Invalid message received from {clientTag} @{Entity.IP}:{Entity.Port} !!! Packet Length: {msgLength} @ DataOffset: {Entity.DataOffset}");
                     _notificationSvc.WriteString(data.ByteArrayToString()[..count]);
 
                     // if msgLength is below 0, set it to 4, if it above offset, set to 4
@@ -319,40 +319,42 @@ namespace Navislamia.Network.Entities
                         Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), header.ID) ||
                         Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), header.ID))
                     {
-                        _notificationSvc.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}");
+                        _notificationSvc.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {clientTag} @{Entity.IP}:{Entity.Port}");
                     }
 
                     if (header.ID == (ushort)GamePackets.TM_NONE)
                     {
                         _notificationSvc.WriteWarning($"TM_NONE ({header.Length} bytes) received from client {Entity.IP}:{Entity.Port}");
                     }
-                    else
+
+                    IPacket msg = header.ID switch
                     {
-                        IPacket msg = header.ID switch
-                        {
-                            // Auth
-                            (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
-                            (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
+                        // Auth
+                        (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
+                        (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
 
-                            // Game
-                            (ushort)GamePackets.TM_NONE => null,
-                            (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
-                            (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
-                            (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
-                            (ushort)GamePackets.TS_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
+                        // Game
+                        (ushort)GamePackets.TM_NONE => null,
+                        (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
+                        (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
+                        (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
+                        (ushort)GamePackets.TS_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
 
-                            // Upload
-                            (ushort)UploadPackets.TS_US_LOGIN_RESULT => new Packet<TS_US_LOGIN_RESULT>(msgBuffer),
+                        // Upload
+                        (ushort)UploadPackets.TS_US_LOGIN_RESULT => new Packet<TS_US_LOGIN_RESULT>(msgBuffer),
 
-                            _ => throw new Exception("Unknown Packet Type")
-                        };
+                        _ => throw new Exception("Unknown Packet Type")
+                    };
 
+                    if (msg is not null)
+                    {
                         if (_logOptions.PacketDebug)
                         {
-                            var packetDmp = msg.ToHexString();
+                            var structDump = msg.DumpStructToString();
+                            var dataDump = msg.DumpDataToHexString();
 
-                            _notificationSvc.WriteMarkup($"[bold orange3]Received {msg.StructName} ({msg.Length} bytes) from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}[/]\n");
-                            _notificationSvc.WriteString(packetDmp);
+                            _notificationSvc.WriteMarkup($"[bold orange3]Received ({msg.Length} bytes) from {clientTag} @{Entity.IP}:{Entity.Port}[/]\n\n{structDump}");
+                            _notificationSvc.WriteString(dataDump);
                         }
 
                         PendReceive(msg);
@@ -390,20 +392,6 @@ namespace Navislamia.Network.Entities
             {
                 if (type == QueueType.Send)
                 {
-                    var clientTag = Entity.Type.EnumToString();
-
-                    switch (Entity.Type)
-                    {
-                        case ClientType.Auth:
-                        case ClientType.Upload:
-                            clientTag += " server";
-                            break;
-
-                        case ClientType.Game:
-                            clientTag += " client";
-                            break;
-                    }
-
                     var sendBuffer = queuedMsg.Data;
 
                     if (Entity.Type is ClientType.Game)
@@ -411,9 +399,11 @@ namespace Navislamia.Network.Entities
 
                     if (_logOptions.PacketDebug)
                     {
-                        var packetDmp = queuedMsg.ToHexString();
+                        var structDump = queuedMsg.DumpStructToString();
+                        var dataDump = queuedMsg.DumpDataToHexString();
 
-                        _notificationSvc.WriteMarkup($"[bold orange3]Sending {queuedMsg.StructName} ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{packetDmp}");
+                        _notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}");
+                        _notificationSvc.WriteString(dataDump);
                     }
 
                     Send(sendBuffer);
@@ -448,6 +438,28 @@ namespace Navislamia.Network.Entities
             else
             {
                 _recvProcessing = false;
+            }
+        }
+
+        private string clientTag
+        {
+            get
+            {
+                var clientTag = Entity.Type.EnumToString();
+
+                switch (Entity.Type)
+                {
+                    case ClientType.Auth:
+                    case ClientType.Upload:
+                        clientTag += " server";
+                        break;
+
+                    case ClientType.Game:
+                        clientTag += " client";
+                        break;
+                }
+
+                return clientTag;
             }
         }
     }      
