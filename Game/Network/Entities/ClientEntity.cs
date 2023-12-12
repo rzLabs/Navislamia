@@ -51,7 +51,7 @@ namespace Navislamia.Network.Entities
 
         public byte[] Data;
 
-        public int DataOffset;
+        public int PendingDataLength;
 
         public byte[] MessageBuffer;
         
