@@ -29,5 +29,7 @@ namespace Navislamia.Notification
 
         public void WriteException(Exception exception, LogEventLevel level = LogEventLevel.Error);
 
+        public string EscapeString(string message);
+
     }
 }

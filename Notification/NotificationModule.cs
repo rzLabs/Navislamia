@@ -102,5 +102,7 @@ namespace Navislamia.Notification
             AnsiConsole.Write(renderable);
             Log.Write(level, renderable.ToString().RemoveFormatting());
         }
+
+        public string EscapeString(string message) => Spectre.Console.Markup.Escape(message);
     }
 }

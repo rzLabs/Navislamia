@@ -1,24 +1,25 @@
-﻿using Navislamia.Network.Packets;
-using Navislamia.Notification;
-using System.Net.Sockets;
-using System.Net;
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Configuration;
+using System.Runtime.InteropServices;
+using System.Net;
+using System.Net.Sockets;
 using Microsoft.Extensions.Options;
+
+using Configuration;
+
+using Navislamia.Notification;
 using Navislamia.Configuration.Options;
 using Navislamia.Network.Enums;
+using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
-using Navislamia.Utilities;
 using Network.Security;
 
 using static Navislamia.Network.Packets.PacketExtensions;
-using static Navislamia.Network.NetworkExtensions;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Navislamia.Network.Entities
 {
@@ -40,12 +41,8 @@ namespace Navislamia.Network.Entities
         private readonly XRC4Cipher _sendCipher = new();
 
         private readonly ConcurrentQueue<IPacket> _sendQueue = new();
-        private readonly ConcurrentQueue<IPacket> _recvQueue = new();
         private BlockingCollection<IPacket> _sendCollection;
-        private BlockingCollection<IPacket> _recvCollection;
-
         private readonly CancellationTokenSource _sendCancelSource = new();
-        private readonly CancellationTokenSource _receiveCancelSource = new();
 
         public T Entity;
 
@@ -60,10 +57,8 @@ namespace Navislamia.Network.Entities
             _sendCipher.SetKey(_networkOptions.CipherKey);
 
             _sendCollection = new BlockingCollection<IPacket>(_sendQueue);
-            _recvCollection = new BlockingCollection<IPacket>(_recvQueue);
 
             ProcessSendQueue(_sendCancelSource.Token);
-            ProcessReceiveQueue(_receiveCancelSource.Token);
         }
 
         private Task ProcessSendQueue(CancellationToken cancellationToken)
@@ -72,32 +67,28 @@ namespace Navislamia.Network.Entities
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (_sendCollection.IsAddingCompleted && !_sendProcessing)
-                        ProcessQueue(QueueType.Send);
+                    IPacket queuedMsg;
 
-                    if (_sendCollection.IsCompleted)
-                        _sendCollection = new BlockingCollection<IPacket>(_sendQueue);
+                    while (_sendCollection.TryTake(out queuedMsg))
+                    {
 
-                    Thread.Sleep(100); // TODO research required processing speed
-                }
-            }, cancellationToken);
+                        var sendBuffer = queuedMsg.Data;
 
-            return null;
-        }
+                        if (Entity.Type is ClientType.Game)
+                            _sendCipher.Encode(queuedMsg.Data, sendBuffer, sendBuffer.Length);
 
-        private Task ProcessReceiveQueue(CancellationToken cancellationToken)
-        {
-            Task.Run(() =>
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    if (_recvCollection.IsAddingCompleted && !_recvProcessing)
-                        ProcessQueue(QueueType.Receive);
+                        if (_logOptions.PacketDebug)
+                        {
+                            var structDump = queuedMsg.DumpStructToString();
+                            var dataDump = _notificationSvc.EscapeString(queuedMsg.DumpDataToHexString());
 
-                    if (_recvCollection.IsCompleted)
-                        _recvCollection = new BlockingCollection<IPacket>(_recvQueue);
+                            _notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}\n{dataDump}");
+                        }
 
-                    Thread.Sleep(100); // TODO research required processing speed
+                        Send(sendBuffer);
+                    }
+
+                    Thread.Sleep(50); // TODO: research required processing speed
                 }
             }, cancellationToken);
 
@@ -156,12 +147,11 @@ namespace Navislamia.Network.Entities
 
             Entity.Socket.Disconnect(false);
 
-            _notificationSvc.WriteSuccess($"{Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port} has been disconnected!");
+            _notificationSvc.WriteSuccess($"{clientTag} @{Entity.IP}:{Entity.Port} has been disconnected!");
 
             Entity.Socket.Dispose();
 
             _sendCancelSource.Cancel();
-            _receiveCancelSource.Cancel();
         }
 
         public void Send(byte[] data)
@@ -218,124 +208,50 @@ namespace Navislamia.Network.Entities
             {
                 int availableBytes = entity.Socket.EndReceive(ar);
 
-                if (availableBytes == 0)
+                if (availableBytes > 0)
                 {
-                    Listen();
-                }
+                    Entity.PendingDataLength = availableBytes;
 
-                ProcessClientData(entity.MessageBuffer, availableBytes);
-            }
-            catch (Exception ex)
-            {
-                _notificationSvc.WriteError($"An error occured while attempting to read data from connection! {Entity.IP}:{Entity.Port}");
-                _notificationSvc.WriteException(ex);
-            }
-        }
+                    // If we are receiving data from a Game Client we must decode it
+                    if (Entity.Type is ClientType.Game)
+                        _recvCipher.Decode(Entity.MessageBuffer, Entity.MessageBuffer, Entity.PendingDataLength);
 
-        private void Finalize(QueueType type)
-        {
-            switch (type)
-            {
-                case QueueType.Send:
-                    _sendCollection.CompleteAdding();
-                    break;
-                case QueueType.Receive:
-                    _recvCollection.CompleteAdding();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not finalise type {type}");
-            }
-        }
-
-        private void PendSend(IPacket msg)
-        {
-            if (!_sendCollection.TryAdd(msg))
-            {
-                _notificationSvc.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
-            }
-        }
-
-        private void PendReceive(IPacket msg)
-        {
-            if (!_recvCollection.TryAdd(msg))
-            {
-                _notificationSvc.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
-            }
-        }
-
-        public void SendMessage(IPacket msg)
-        {
-            PendSend(msg);
-            Finalize(QueueType.Send);
-        }
-
-        public void SendResult(ushort id, ushort result, int value = 0)
-        {
-            SendMessage(new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new(id, result, value)));
-        }
-
-        private void ProcessClientData(byte[] data, int count)
-        {
-            if (Entity.Type is ClientType.Game)
-            {
-                var buffer = new byte[count];
-
-                _recvCipher.Decode(data, buffer, count);
-
-                Buffer.BlockCopy(buffer, 0, Entity.Data, Entity.DataOffset, count);
-            }
-            else
-            {
-                Buffer.BlockCopy(data, 0, Entity.Data, Entity.DataOffset, count);
-            }
-
-            // increase the offset by the amount of bytes we wrote to the client data
-            Entity.DataOffset += count;
-
-            // Process and queue messages to be read from the data
-            while (Entity.DataOffset >= 4)
-            {
-                // Get a pointer to the client data
-                Span<byte> clientData = Entity.Data;
-
-                // Read the message length
-                var msgLength = BitConverter.ToInt32(clientData[..4]);
-
-                // If the message length is invalid ignore this message and advance the buffer by 4 bytes
-                if (msgLength < 0 || msgLength > Entity.DataOffset)
-                {
-                    _notificationSvc.WriteWarning($"Invalid message received from {Entity.Type.EnumToString()} client @ {Entity.IP}:{Entity.Port}!!! Packet Length: {msgLength} @ DataOffset: {Entity.DataOffset}");
-                    _notificationSvc.WriteString(data.ByteArrayToString()[..count]);
-
-                    // if msgLength is below 0, set it to 4, if it above offset, set to 4
-                    msgLength = Math.Max(4, Math.Min(4, Math.Min(msgLength, Entity.DataOffset)));
-                }
-                else // process and queue the message data
-                {
-                    var msgBuffer = clientData.Slice(0, msgLength).ToArray();
-                    var header = msgBuffer.PeekHeader();
-
-                    if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), header.ID) ||
-                        Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), header.ID) ||
-                        Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), header.ID))
+                    while (Entity.PendingDataLength > Marshal.SizeOf<Header>())
                     {
-                        _notificationSvc.WriteWarning($"Undefined packet {header.ID} (Checksum: {header.Checksum}, Length: {header.Length}) received from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}");
-                    }
+                        Header _header = Entity.MessageBuffer.PeekHeader();
 
-                    if (header.ID == (ushort)GamePackets.TM_NONE)
-                    {
-                        _notificationSvc.WriteWarning($"TM_NONE ({header.Length} bytes) received from client {Entity.IP}:{Entity.Port}");
-                    }
-                    else
-                    {
-                        IPacket msg = header.ID switch
+                        // If the packet length is more than the available packet this is obviously a bad read
+                        if (_header.Length > Entity.PendingDataLength)
+                            return;
+
+                        // Check for packets that haven't been defined yet (development)
+                        if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
+                            Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), _header.ID) ||
+                            Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), _header.ID))
+                        {
+                            _notificationSvc.WriteWarning($"Undefined packet {_header.ID} (Checksum: {_header.Checksum}, Length: {_header.Length}) received from {clientTag} @{Entity.IP}:{Entity.Port}");
+                        }
+
+                        // Get the data from the front of the Entity.MessageBuffer
+                        byte[] msgBuffer = new byte[_header.Length];
+                        Buffer.BlockCopy(Entity.MessageBuffer, 0, msgBuffer, 0, (int)_header.Length);
+
+                        // Reduce the available data length and move the rest of the available data to the front of the buffer
+                        Entity.PendingDataLength -= (int)_header.Length;
+                        Buffer.BlockCopy(Entity.MessageBuffer, (int)_header.Length, Entity.MessageBuffer, 0, Entity.MessageBuffer.Length - (int)_header.Length);
+
+                        // TM_NONE is a dummy packet sent by the client for...."reasons"
+                        if (_header.ID == (ushort)GamePackets.TM_NONE)
+                            continue;
+
+                        IPacket msg = _header.ID switch
                         {
                             // Auth
                             (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
                             (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
 
                             // Game
-                            (ushort)GamePackets.TM_NONE => null,
+                            //(ushort)GamePackets.TM_NONE => null,
                             (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
                             (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
                             (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
@@ -349,105 +265,74 @@ namespace Navislamia.Network.Entities
 
                         if (_logOptions.PacketDebug)
                         {
-                            var packetDmp = msg.ToHexString();
+                            var structDump = msg.DumpStructToString();
+                            var dataDump = _notificationSvc.EscapeString(msg.DumpDataToHexString());
 
-                            _notificationSvc.WriteMarkup($"[bold orange3]Received {msg.StructName} ({msg.Length} bytes) from {Entity.Type.EnumToString()} client {Entity.IP}:{Entity.Port}[/]\n");
-                            _notificationSvc.WriteString(packetDmp);
+                            _notificationSvc.WriteMarkup($"[bold orange3]Received ({msg.Length} bytes) from {clientTag} @{Entity.IP}:{Entity.Port}[/]\n\n{structDump}\n{dataDump}");
                         }
 
-                        PendReceive(msg);
+                        switch (Entity.Type)
+                        {
+                            case ClientType.Auth:
+                                _networkModule.AuthActions.Execute(this as ClientService<AuthClientEntity>, msg);
+                                break;
+                            case ClientType.Game:
+                                _networkModule.GameActions.Execute(this as ClientService<GameClientEntity>, msg);
+                                break;
+                            case ClientType.Upload:
+                                _networkModule.UploadActions.Execute(this as ClientService<UploadClientEntity>, msg);
+                                break;
+                            case ClientType.Unknown:
+
+                            default:
+                                {
+                                    throw new ArgumentOutOfRangeException(nameof(ClientType), Entity.Type, $"Could not execute action for {clientTag}");
+                                }
+                        }
                     }
                 }
 
-                // move the remaining bytes to the front of client data
-                Buffer.BlockCopy(Entity.Data, msgLength, Entity.Data, 0, Entity.Data.Length - msgLength);
-
-                // Reduce the data offset by the amount of bytes we have dropped from client data
-                Entity.DataOffset -= msgLength;
+                Listen();
             }
-
-            Finalize(QueueType.Receive);
+            catch (Exception ex)
+            {
+                _notificationSvc.WriteError($"An error occured while attempting to read data from connection! {Entity.IP}:{Entity.Port}");
+                _notificationSvc.WriteException(ex);
+            }
         }
 
-        private void ProcessQueue(QueueType type)
+        public void SendMessage(IPacket msg)
         {
-            var queue = type == QueueType.Send ? _sendCollection : _recvCollection;
-
-            if (type == QueueType.Send)
+            if (!_sendCollection.TryAdd(msg))
             {
-                _sendProcessing = true;
+                _notificationSvc.WriteError($"Failed to add msg to send queue! ID: {msg.ID}");
             }
-            else
+        }
+
+        public void SendResult(ushort id, ushort result, int value = 0)
+        {
+            SendMessage(new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new(id, result, value)));
+        }
+
+        private string clientTag
+        {
+            get
             {
-                _recvProcessing = true;
-            }
+                var clientTag = Entity.Type.EnumToString();
 
-            queue.CompleteAdding();
-
-            IPacket queuedMsg;
-
-            while (queue.TryTake(out queuedMsg))
-            {
-                if (type == QueueType.Send)
+                switch (Entity.Type)
                 {
-                    var clientTag = Entity.Type.EnumToString();
+                    case ClientType.Auth:
+                    case ClientType.Upload:
+                        clientTag += " server";
+                        break;
 
-                    switch (Entity.Type)
-                    {
-                        case ClientType.Auth:
-                        case ClientType.Upload:
-                            clientTag += " server";
-                            break;
-
-                        case ClientType.Game:
-                            clientTag += " client";
-                            break;
-                    }
-
-                    var sendBuffer = queuedMsg.Data;
-
-                    if (Entity.Type is ClientType.Game)
-                        _sendCipher.Encode(queuedMsg.Data, sendBuffer, sendBuffer.Length);
-
-                    if (_logOptions.PacketDebug)
-                    {
-                        var packetDmp = queuedMsg.ToHexString();
-
-                        _notificationSvc.WriteMarkup($"[bold orange3]Sending {queuedMsg.StructName} ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{packetDmp}");
-                    }
-
-                    Send(sendBuffer);
+                    case ClientType.Game:
+                        clientTag += " client";
+                        break;
                 }
-                else
-                {
-                    switch (Entity.Type)
-                    {
-                        case ClientType.Auth:
-                            _networkModule.AuthActions.Execute(this as ClientService<AuthClientEntity>, queuedMsg);
-                            break;
-                        case ClientType.Game:
-                            _networkModule.GameActions.Execute(this as ClientService<GameClientEntity>, queuedMsg);
-                            break;
-                        case ClientType.Upload:
-                            _networkModule.UploadActions.Execute(this as ClientService<UploadClientEntity>, queuedMsg);
-                            break;
-                        case ClientType.Unknown:
 
-                        default:
-                            {
-                                throw new ArgumentOutOfRangeException(nameof(type), type, $"Could not execute action for {type} client");
-                            }
-                    }
-                }
-            }
-
-            if (type == QueueType.Send)
-            {
-                _sendProcessing = false;
-            }
-            else
-            {
-                _recvProcessing = false;
+                return clientTag;
             }
         }
     }      
