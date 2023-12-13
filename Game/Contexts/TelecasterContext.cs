@@ -93,7 +93,7 @@ public class TelecasterContext : DbContext
             .HasForeignKey<CharacterEntity>(c => c.PetId);
         
         modelBuilder.Entity<CharacterEntity>().Property(c => c.Position).HasMaxLength(3);
-        modelBuilder.Entity<CharacterEntity>().Property(c => c.Jobs).HasMaxLength(3);
+        modelBuilder.Entity<CharacterEntity>().Property(c => c.PreviousJobs).HasMaxLength(3);
         modelBuilder.Entity<CharacterEntity>().Property(c => c.JobLvs).HasMaxLength(3);
         modelBuilder.Entity<CharacterEntity>().Property(c => c.Models).HasMaxLength(5);
         modelBuilder.Entity<CharacterEntity>().Property(c => c.BeltItemIds).HasMaxLength(6);
