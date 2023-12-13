@@ -20,6 +20,9 @@ namespace Navislamia.Notification
                 startIdx = outString.IndexOf('[');
                 endIdx = outString.IndexOf(']') + 1;
 
+                if (endIdx == 0)
+                    endIdx = startIdx + 1;
+
                 if (startIdx >= 0 && endIdx >= 0)
                     outString = outString.Remove(startIdx, (endIdx - startIdx));
                 else

@@ -11,11 +11,9 @@ namespace Navislamia.Network.Packets.Game
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct TS_SC_RESULT
     {
-        public ushort RequestMsgID { get; set; }
-
-        public ushort Result { get; set; }
-
-        public int Value { get; set; }
+        public ushort RequestMsgID;
+        public ushort Result;
+        public int Value;
 
         public TS_SC_RESULT(ushort id, ushort result, int value = 0)
         {
