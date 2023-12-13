@@ -1,26 +1,29 @@
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using Navislamia.Game.Contexts;
+using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Models.Navislamia;
 
 namespace Navislamia.Game.Repositories;
 
 public class WorldRepository : IWorldRepository
 {
-    private readonly ArcadiaContext _arcadiaContext;
+    private readonly DbContextOptions<ArcadiaContext> _options;
 
-    public WorldRepository(ArcadiaContext arcadiaContext)
+    public WorldRepository(DbContextOptions<ArcadiaContext> options)
     {
-        _arcadiaContext = arcadiaContext;
-        LoadWorldIntoMemory();
+        _options = options;
     }
     
     public WorldEntity LoadWorldIntoMemory()
     {
+        using var arcadiaContext = new ArcadiaContext(_options);
         return new WorldEntity
         {
-            ItemResources = _arcadiaContext.ItemResources,
-            LevelResources = _arcadiaContext.LevelResources,
-            ItemEffectResources = _arcadiaContext.ItemEffectResources,
-            SetItemEffectResources = _arcadiaContext.SetItemEffectResources
+            ItemResources = new List<ItemResourceEntity>(arcadiaContext.ItemResources),
+            LevelResources =  new List<LevelResourceEntity>(arcadiaContext.LevelResources),
+            ItemEffectResources = new List<ItemEffectResourceEntity>(arcadiaContext.ItemEffectResources),
+            SetItemEffectResources =  new List<SetItemEffectResourceEntity>(arcadiaContext.SetItemEffectResources)
         };
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Models.Enums;
 
 namespace Navislamia.Game.Models.Arcadia
 {
@@ -28,7 +29,7 @@ namespace Navislamia.Game.Models.Arcadia
 		public int AttackMotionSpeed { get; set; } // check enum from rdb (values 0 - 3)
 		public EvolveType EvolveType { get; set; } 
 		public int EvolveTargetId { get; set; } // Evolve into <SummonID>
-		public virtual SummonResourceEntity EvolveTarget { get; set; }
+		// public virtual SummonResourceEntity EvolveTarget { get; set; }
 	
 		public int CameraX { get; set; }
 		public int CameraY { get; set; }

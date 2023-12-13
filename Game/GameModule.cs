@@ -4,9 +4,11 @@ using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Models.Navislamia;
+using Navislamia.Game.Network;
 using Navislamia.Game.Repositories;
 using Navislamia.Notification;
-using Navislamia.Maps;
+using Navislamia.Game.Maps;
+using Navislamia.Game.Scripting;
 using Navislamia.Network;
 using Navislamia.Scripting;
 
@@ -36,6 +38,7 @@ namespace Navislamia.Game
             _worldEntity = worldRepository.LoadWorldIntoMemory();
 
             _scriptContent = new ScriptContent(_notificationModule);
+            
             _mapContent = new MapContent(mapOptions, _notificationModule, _scriptContent);
         }
 

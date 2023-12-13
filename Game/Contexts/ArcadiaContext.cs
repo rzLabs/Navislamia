@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Navislamia.Game.Models;
 using Navislamia.Game.Models.Arcadia;
 
 namespace Navislamia.Game.Contexts;
@@ -24,7 +25,7 @@ public class ArcadiaContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         ConfigureGlobalVariable(modelBuilder);
         ConfigureItemEffectResources(modelBuilder);
         ConfigureStringResource(modelBuilder);

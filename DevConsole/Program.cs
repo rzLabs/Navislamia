@@ -1,20 +1,19 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Navislamia.Command;
 using Navislamia.Configuration.Options;
-using Navislamia.Database.Contexts;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
+using Navislamia.Game.Network;
+using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Repositories;
-using Navislamia.Network;
-using Navislamia.Network.Entities;
 using Navislamia.Notification;
 using Serilog;
 
@@ -54,55 +53,9 @@ public class Program
             {
                 services.AddHostedService<Application>();
 
-                //Options
-                services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
-                services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
-                services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
-                services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));
-                services.Configure<GameOptions>(context.Configuration.GetSection("Network:Game"));
-                services.Configure<UploadOptions>(context.Configuration.GetSection("Network:Upload"));
-                services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
-                services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
-                services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
-
-                // Services
-                services.AddSingleton<ICommandModule, CommandModule>();
-                services.AddSingleton<INetworkModule, NetworkModule>();
-                services.AddSingleton<IGameModule, GameModule>();
-                services.AddSingleton<INotificationModule, NotificationModule>();
-                services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
-                services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
-                services.AddSingleton<IWorldRepository, WorldRepository>();
-                
-                // Data access
-                services.AddDbContext<ArcadiaContext>((serviceProvider, builder) =>
-                {
-                    var config = serviceProvider.GetService<IConfiguration>();
-                    var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
-                    dbOptions.InitialCatalog = "Arcadia";
-                
-                    var connectionString = dbOptions.ConnectionString();
-                    builder
-                            // TODO Delete me im just trying to merge this pr
-                        // .UseLazyLoadingProxies()
-                        .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
-                        // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-                        .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
-                });
-                
-                services.AddDbContext<TelecasterContext>((serviceProvider, builder) =>
-                {
-                    var config = serviceProvider.GetService<IConfiguration>();
-                    var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
-                    dbOptions.InitialCatalog = "Telecaster";
-
-                    var connectionString = dbOptions.ConnectionString();
-                    builder
-                        // .UseLazyLoadingProxies()
-                        .ConfigureWarnings(wb => wb.Ignore(CoreEventId.DetachedLazyLoadingWarning))
-                        // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-                        .UseNpgsql(connectionString, options => options.EnableRetryOnFailure());
-                });
+                ConfigureOptions(services, context);
+                ConfigureServices(services);
+                ConfigureDataAccess(services);
             })
             .ConfigureLogging((context, logging) => {
                 Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
@@ -111,6 +64,58 @@ public class Program
                 logging.AddConsole();
             })
             .UseConsoleLifetime();
+    }
+
+    private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
+    {
+        services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
+        services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
+        services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
+        services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));
+        services.Configure<GameOptions>(context.Configuration.GetSection("Network:Game"));
+        services.Configure<UploadOptions>(context.Configuration.GetSection("Network:Upload"));
+        services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
+        services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
+        services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<ICommandModule, CommandModule>();
+        services.AddSingleton<INetworkModule, NetworkModule>();
+        services.AddSingleton<IGameModule, GameModule>();
+        services.AddSingleton<INotificationModule, NotificationModule>();
+        services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
+        services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+        services.AddSingleton<IWorldRepository, WorldRepository>();
+    }
+    
+    private static void ConfigureDataAccess(IServiceCollection services)
+    {
+        services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>
+        {
+            var config = serviceProvider.GetService<IConfiguration>();
+            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+            dbOptions.InitialCatalog = "Arcadia";
+                
+            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+            builder
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        });
+                
+        services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
+        {
+            var config = serviceProvider.GetService<IConfiguration>();
+            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+            dbOptions.InitialCatalog = "Telecaster";
+
+            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+            builder
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
+        });
     }
 }
 

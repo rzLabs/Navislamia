@@ -3,7 +3,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Navislamia.Game.Migrations
+namespace Navislamia.Game.Migrations.Arcadia
 {
     /// <inheritdoc />
     public partial class Version0001_TheBeginning : Migration
@@ -15,7 +15,7 @@ namespace Navislamia.Game.Migrations
                 name: "ChannelResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Left = table.Column<int>(type: "integer", nullable: false),
                     Top = table.Column<int>(type: "integer", nullable: false),
@@ -32,7 +32,7 @@ namespace Navislamia.Game.Migrations
                 name: "EffectResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     FileName = table.Column<string>(type: "text", nullable: true)
                 },
@@ -45,7 +45,7 @@ namespace Navislamia.Game.Migrations
                 name: "EnhanceResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     EnhanceType = table.Column<int>(type: "integer", nullable: false),
                     FailResult = table.Column<int>(type: "integer", nullable: false),
@@ -75,7 +75,7 @@ namespace Navislamia.Game.Migrations
                 name: "ItemEffectResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     OrdinalId = table.Column<int>(type: "integer", nullable: false),
                     TooltipId = table.Column<int>(type: "integer", nullable: false),
@@ -93,7 +93,7 @@ namespace Navislamia.Game.Migrations
                 name: "ItemResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ItemBaseType = table.Column<int>(type: "integer", nullable: false),
                     ItemType = table.Column<int>(type: "integer", nullable: false),
@@ -155,7 +155,7 @@ namespace Navislamia.Game.Migrations
                     Level = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     NormalExp = table.Column<long>(type: "bigint", nullable: false),
-                    Jl = table.Column<int[]>(type: "integer[]", nullable: true)
+                    Jlvls = table.Column<int[]>(type: "integer[]", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -185,7 +185,7 @@ namespace Navislamia.Game.Migrations
                 name: "SkillResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TextId = table.Column<int>(type: "integer", nullable: false),
                     DescId = table.Column<int>(type: "integer", nullable: false),
@@ -301,7 +301,7 @@ namespace Navislamia.Game.Migrations
                 name: "StateResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TextId = table.Column<int>(type: "integer", nullable: false),
                     TooltipId = table.Column<int>(type: "integer", nullable: false),
@@ -347,15 +347,15 @@ namespace Navislamia.Game.Migrations
                 name: "StatResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Str = table.Column<int>(type: "integer", nullable: false),
-                    Vit = table.Column<int>(type: "integer", nullable: false),
-                    Dex = table.Column<int>(type: "integer", nullable: false),
-                    Agi = table.Column<int>(type: "integer", nullable: false),
-                    Int = table.Column<int>(type: "integer", nullable: false),
-                    Men = table.Column<int>(type: "integer", nullable: false),
-                    Luk = table.Column<int>(type: "integer", nullable: false)
+                    Strength = table.Column<int>(type: "integer", nullable: false),
+                    Vitality = table.Column<int>(type: "integer", nullable: false),
+                    Dexterity = table.Column<int>(type: "integer", nullable: false),
+                    Agility = table.Column<int>(type: "integer", nullable: false),
+                    Intelligence = table.Column<int>(type: "integer", nullable: false),
+                    Wisdom = table.Column<int>(type: "integer", nullable: false),
+                    Luck = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -366,7 +366,7 @@ namespace Navislamia.Game.Migrations
                 name: "StringResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: true),
                     Value = table.Column<string>(type: "text", nullable: true)
@@ -380,7 +380,7 @@ namespace Navislamia.Game.Migrations
                 name: "SummonResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ModelId = table.Column<int>(type: "integer", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
@@ -435,18 +435,7 @@ namespace Navislamia.Game.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SummonResources", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_SummonResources_SummonResources_EvolveTargetId",
-                        column: x => x.EvolveTargetId,
-                        principalTable: "SummonResources",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SummonResources_EvolveTargetId",
-                table: "SummonResources",
-                column: "EvolveTargetId");
         }
 
         /// <inheritdoc />

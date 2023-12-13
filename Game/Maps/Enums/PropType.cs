@@ -1,5 +1,4 @@
-namespace Navislamia.Maps.Enums;
-
+namespace Navislamia.Game.Maps.Enums;
 public enum PropType
 {
     UNUSED,

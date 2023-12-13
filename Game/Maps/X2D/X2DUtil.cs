@@ -1,6 +1,6 @@
-﻿using Navislamia.Maps.Enums;
+﻿using Navislamia.Game.Maps.Enums;
 
-namespace Navislamia.Maps.X2D
+namespace Navislamia.Game.Maps.X2D
 {
     public static class X2DUtil
     {

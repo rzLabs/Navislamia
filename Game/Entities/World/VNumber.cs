@@ -17,7 +17,7 @@ public class VNumber
     public long Value;
 
     public float AsFloat => Convert.ToSingle(Value / factor);
-
+    
     public double AsDouble => Convert.ToDouble(Value / factor);
 
     public long AsInt64 => Convert.ToInt64(Value / factor);

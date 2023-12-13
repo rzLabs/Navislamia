@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Navislamia.Maps.Enums;
+using Navislamia.Game.Maps.Enums;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class PropContactScriptInfo
 {

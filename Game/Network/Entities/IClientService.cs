@@ -1,9 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
-
 using Navislamia.Network.Packets;
 
-namespace Navislamia.Network.Entities;
+namespace Navislamia.Game.Network.Entities;
 
 public interface IClientService<T>
 {

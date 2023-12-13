@@ -1,4 +1,4 @@
-﻿namespace Navislamia.Maps.X2D
+﻿namespace Navislamia.Game.Maps.X2D
 {
     public class Point
     {

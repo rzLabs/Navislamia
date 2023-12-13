@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
-using Navislamia.Network.Entities;
+using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions;
@@ -14,7 +13,7 @@ using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
 
-namespace Navislamia.Network
+namespace Navislamia.Game.Network
 {
     public class NetworkModule : INetworkModule
     {
@@ -62,10 +61,10 @@ namespace Navislamia.Network
 
         public void Initialize()
         {
-            ConnectToAuth();
-            ConnectToUpload();
-            SendGsInfoToAuth();
-            SendInfoToUpload();
+            // ConnectToAuth();
+            // ConnectToUpload();
+            // SendGsInfoToAuth();
+            // SendInfoToUpload();
         }
         public void Shutdown()
         {
@@ -154,7 +153,7 @@ namespace Navislamia.Network
                 var port = _networkOptions.Game.Port;
 
                 var msg = new Packet<TS_GA_LOGIN>((ushort)AuthPackets.TS_GA_LOGIN, new(index, name, screenshotUrl, (byte)isAdultServer, ip, port));
-
+                
                 _authService.SendMessage(msg);
             }
             catch (Exception ex)

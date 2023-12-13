@@ -2,12 +2,12 @@
 {
     public class StatResourceEntity : Entity
     {
-        public int Str { get; set; }
-        public int Vit { get; set; }
-        public int Dex { get; set; }
-        public int Agi { get; set; }
-        public int Int { get; set; }
-        public int Men { get; set; } // TODO rename to Wisdom?
-        public int Luk { get; set; }
+        public int Strength { get; set; }
+        public int Vitality { get; set; }
+        public int Dexterity { get; set; }
+        public int Agility { get; set; }
+        public int Intelligence { get; set; }
+        public int Wisdom { get; set; }
+        public int Luck { get; set; }
     }
 }

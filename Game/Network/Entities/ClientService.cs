@@ -1,6 +1,7 @@
-﻿
 using System;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
@@ -17,11 +18,13 @@ using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
+using Navislamia.Notification;
+using Navislamia.Utilities;
 using Network.Security;
-
+using static Navislamia.Network.NetworkExtensions;
 using static Navislamia.Network.Packets.PacketExtensions;
 
-namespace Navislamia.Network.Entities
+namespace Navislamia.Game.Network.Entities
 {
     // TODO: Poll connections by configuration interval
     // TODO: Disconnect/Destroy

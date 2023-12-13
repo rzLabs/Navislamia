@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using Navislamia.Maps.X2D;
-using static Navislamia.Maps.X2D.X2DUtil;
+using Navislamia.Game.Maps.X2D;
+using static Navislamia.Game.Maps.X2D.X2DUtil;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class Node
 {

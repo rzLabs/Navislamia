@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Navislamia.Network.Enums;
 
-namespace Navislamia.Network.Entities
+namespace Navislamia.Game.Network.Entities
 {
     public class ClientEntity
     {

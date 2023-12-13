@@ -1,9 +1,9 @@
-using Navislamia.Network.Entities;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
+using Navislamia.Game.Network.Entities;
 
 namespace Navislamia.Network.Packets.Actions
 {

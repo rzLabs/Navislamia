@@ -1,4 +1,4 @@
-namespace Navislamia.Network.Entities;
+namespace Navislamia.Game.Network.Entities;
 
 public class GameClientEntity : ClientEntity
 {
