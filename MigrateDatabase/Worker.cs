@@ -34,14 +34,8 @@ public class Worker : BackgroundService
     {
         Log.Logger.Warning("Starting transfer from MSSQL to PSQL");
         
-        // await TransferArcadia(token);
+        await TransferArcadia(token);
         await SeedTelecaster(token);
-
-        // Log.Logger.Warning("Transferred and/or updated tables:");
-        // _finishedTransfers.ForEach(f => Log.Logger.Information(f));
-        //
-        // Log.Logger.Warning("Seeded and/or updated tables:");
-        // _finishedSeeds.ForEach(f => Log.Logger.Information(f));
         
         Log.Logger.Warning("Done. You can now close this window.");
 
