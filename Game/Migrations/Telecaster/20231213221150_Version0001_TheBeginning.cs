@@ -60,9 +60,9 @@ namespace Navislamia.Game.Migrations.Telecaster
                     CharacterName = table.Column<string>(type: "text", nullable: true),
                     AccountName = table.Column<string>(type: "text", nullable: true),
                     AccountId = table.Column<long>(type: "bigint", nullable: false),
-                    PartyId = table.Column<long>(type: "bigint", nullable: false),
-                    GuildId = table.Column<long>(type: "bigint", nullable: false),
-                    PreviousGuildId = table.Column<long>(type: "bigint", nullable: false),
+                    PartyId = table.Column<long>(type: "bigint", nullable: true),
+                    GuildId = table.Column<long>(type: "bigint", nullable: true),
+                    PreviousGuildId = table.Column<long>(type: "bigint", nullable: true),
                     Slot = table.Column<int>(type: "integer", nullable: false),
                     Permission = table.Column<int>(type: "integer", nullable: false),
                     Position = table.Column<int[]>(type: "integer[]", maxLength: 3, nullable: true),
@@ -77,13 +77,13 @@ namespace Navislamia.Game.Migrations.Telecaster
                     Mp = table.Column<int>(type: "integer", nullable: false),
                     Stamina = table.Column<int>(type: "integer", nullable: false),
                     Havoc = table.Column<int>(type: "integer", nullable: false),
-                    Job = table.Column<int>(type: "integer", nullable: false),
+                    CurrentJob = table.Column<int>(type: "integer", nullable: false),
+                    PreviousJobs = table.Column<int[]>(type: "integer[]", maxLength: 3, nullable: true),
                     JobDepth = table.Column<short>(type: "smallint", nullable: false),
                     Jlv = table.Column<int>(type: "integer", nullable: false),
                     Jp = table.Column<long>(type: "bigint", nullable: false),
                     TotalJp = table.Column<long>(type: "bigint", nullable: false),
                     TalentPoint = table.Column<int>(type: "integer", nullable: false),
-                    Jobs = table.Column<int[]>(type: "integer[]", maxLength: 3, nullable: true),
                     JobLvs = table.Column<int[]>(type: "integer[]", maxLength: 3, nullable: true),
                     ImmoralPoint = table.Column<decimal>(type: "numeric", nullable: false),
                     Charisma = table.Column<int>(type: "integer", nullable: false),
@@ -102,10 +102,10 @@ namespace Navislamia.Game.Migrations.Telecaster
                     TextureId = table.Column<int>(type: "integer", nullable: false),
                     BeltItemIds = table.Column<long[]>(type: "bigint[]", maxLength: 6, nullable: true),
                     SummonSlotItemIds = table.Column<long[]>(type: "bigint[]", maxLength: 6, nullable: true),
-                    MainSummonId = table.Column<long>(type: "bigint", nullable: false),
-                    SubSummonId = table.Column<long>(type: "bigint", nullable: false),
+                    MainSummonId = table.Column<long>(type: "bigint", nullable: true),
+                    SubSummonId = table.Column<long>(type: "bigint", nullable: true),
                     RemainSummonTime = table.Column<int>(type: "integer", nullable: false),
-                    PetId = table.Column<long>(type: "bigint", nullable: false),
+                    PetId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DeletedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LoginTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -121,7 +121,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     OtpValue = table.Column<int>(type: "integer", nullable: false),
                     OtpVerifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     FlagList = table.Column<string[]>(type: "text[]", nullable: true),
-                    ClientInfo2 = table.Column<string[]>(type: "text[]", nullable: true)
+                    ClientInfo = table.Column<string[]>(type: "text[]", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -134,12 +134,12 @@ namespace Navislamia.Game.Migrations.Telecaster
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CharacterId = table.Column<long>(type: "bigint", nullable: false),
-                    AccountId = table.Column<int>(type: "integer", nullable: false),
-                    EquippedBySummonId = table.Column<int>(type: "integer", nullable: false),
-                    AuctionId = table.Column<int>(type: "integer", nullable: false),
+                    CharacterId = table.Column<long>(type: "bigint", nullable: true),
+                    AccountId = table.Column<int>(type: "integer", nullable: true),
+                    EquippedBySummonId = table.Column<int>(type: "integer", nullable: true),
+                    AuctionId = table.Column<int>(type: "integer", nullable: true),
                     RelatedAuctionId = table.Column<long>(type: "bigint", nullable: true),
-                    StorageId = table.Column<int>(type: "integer", nullable: false),
+                    StorageId = table.Column<int>(type: "integer", nullable: true),
                     Idx = table.Column<int>(type: "integer", nullable: false),
                     ItemResourceId = table.Column<int>(type: "integer", nullable: false),
                     Amount = table.Column<long>(type: "bigint", nullable: false),
@@ -151,13 +151,13 @@ namespace Navislamia.Game.Migrations.Telecaster
                     GenerateBySource = table.Column<int>(type: "integer", nullable: false),
                     WearInfo = table.Column<int>(type: "integer", nullable: false),
                     SocketItemIds = table.Column<long[]>(type: "bigint[]", maxLength: 4, nullable: true),
-                    RemainTime = table.Column<int>(type: "integer", nullable: false),
+                    RemainingTime = table.Column<int>(type: "integer", nullable: false),
                     ElementalEffectType = table.Column<int>(type: "integer", nullable: false),
-                    ElementalEffectExpireTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ElementalEffectExpireTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ElementalEffectAttackPoint = table.Column<int>(type: "integer", nullable: false),
                     ElementalEffectMagicPoint = table.Column<int>(type: "integer", nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -171,8 +171,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                         name: "FK_Items_Characters_CharacterId",
                         column: x => x.CharacterId,
                         principalTable: "Characters",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -315,8 +314,8 @@ namespace Navislamia.Game.Migrations.Telecaster
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OwnerGuildId = table.Column<long>(type: "bigint", nullable: false),
-                    RaidGuildId = table.Column<long>(type: "bigint", nullable: false),
+                    OwnerGuildId = table.Column<long>(type: "bigint", nullable: true),
+                    RaidGuildId = table.Column<long>(type: "bigint", nullable: true),
                     BestRaidTime = table.Column<int>(type: "integer", nullable: false),
                     LastDungeonSiegeFinishTime = table.Column<int>(type: "integer", nullable: false),
                     LastDungeonRaidWrapUpTime = table.Column<int>(type: "integer", nullable: false),
@@ -526,56 +525,49 @@ namespace Navislamia.Game.Migrations.Telecaster
                 table: "Characters",
                 column: "GuildId",
                 principalTable: "Guilds",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Guilds_PreviousGuildId",
                 table: "Characters",
                 column: "PreviousGuildId",
                 principalTable: "Guilds",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Parties_PartyId",
                 table: "Characters",
                 column: "PartyId",
                 principalTable: "Parties",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Pets_PetId",
                 table: "Characters",
                 column: "PetId",
                 principalTable: "Pets",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Summons_MainSummonId",
                 table: "Characters",
                 column: "MainSummonId",
                 principalTable: "Summons",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Characters_Summons_SubSummonId",
                 table: "Characters",
                 column: "SubSummonId",
                 principalTable: "Summons",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Dungeons_Guilds_RaidGuildId",
                 table: "Dungeons",
                 column: "RaidGuildId",
                 principalTable: "Guilds",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />

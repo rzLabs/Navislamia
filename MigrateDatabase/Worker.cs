@@ -5,7 +5,9 @@ using MigrateDatabase.MssqlEntities.Arcadia;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Models;
 using Navislamia.Game.Models.Arcadia;
+using Navislamia.Game.Models.Arcadia.Enums;
 using Navislamia.Game.Models.Enums;
+using Navislamia.Game.Models.Telecaster;
 using Serilog;
 
 namespace MigrateDatabase;
@@ -13,15 +15,18 @@ namespace MigrateDatabase;
 public class Worker : BackgroundService
 {
     private readonly DbContextOptions<MssqlArcadiaContext> _mssqlOptions;
-    private readonly DbContextOptions<ArcadiaContext> _psqlOptions;
+    private readonly DbContextOptions<ArcadiaContext> _psqlArcadiaContext;
+    private readonly DbContextOptions<TelecasterContext> _psqlTelecasterContext;
     private readonly IMapper _mapper;
     
     private readonly List<string> _finishedTransfers = new();
+    private readonly List<string> _finishedSeeds = new();
     
-    public Worker(DbContextOptions<MssqlArcadiaContext> mssqlOptions, DbContextOptions<ArcadiaContext> psqlOptions, IMapper mapper)
+    public Worker(DbContextOptions<MssqlArcadiaContext> mssqlOptions, DbContextOptions<ArcadiaContext> psqlArcadiaContext, DbContextOptions<TelecasterContext> psqlTelecasterContext, IMapper mapper)
     {
         _mssqlOptions = mssqlOptions;
-        _psqlOptions = psqlOptions;
+        _psqlArcadiaContext = psqlArcadiaContext;
+        _psqlTelecasterContext = psqlTelecasterContext;
         _mapper = mapper;
     }
     
@@ -29,6 +34,405 @@ public class Worker : BackgroundService
     {
         Log.Logger.Warning("Starting transfer from MSSQL to PSQL");
         
+        await TransferArcadia(token);
+        await SeedTelecaster(token);
+        
+        Log.Logger.Warning("Done. You can now close this window.");
+
+    }
+
+    private async Task SeedTelecaster(CancellationToken token)
+    {
+        await SeedDungeons(token);
+        await SeedCharacters(token);
+        await SeedItems(token);
+    }
+
+    private async Task SeedDungeons(CancellationToken token)
+    {
+        var entities = new List<DungeonEntity>
+        {
+            new() { Id = 120700, TaxRate = 5 },
+            new() { Id = 121000, TaxRate = 5 },
+            new() { Id = 122000, TaxRate = 5 },
+            new() { Id = 123000, TaxRate = 5 },
+            new() { Id = 130000, TaxRate = 5 },
+            new() { Id = 130300, TaxRate = 5 },
+            new() { Id = 130400, TaxRate = 5 },
+            new() { Id = 130500, TaxRate = 5 },
+            new() { Id = 130600, TaxRate = 5 },
+            new() { Id = 130700, TaxRate = 5 },
+            new() { Id = 130800, TaxRate = 5 },
+            new() { Id = 130900, TaxRate = 5 }
+        };
+        
+        await using var context = new TelecasterContext(_psqlTelecasterContext);
+        
+        Log.Logger.Information("Seeding {type}: {amount}", nameof(DungeonEntity), entities.Count);
+
+        var processed = 1;
+        foreach (var entity in entities)
+        {
+            Log.Information("Processing... {processed}/{amount}", processed, entities.Count);
+
+            if (token.IsCancellationRequested)
+            {
+                Log.Logger.Warning("Stopping...");
+                return;
+            }
+            
+            var existingEntity = context.Dungeons.FirstOrDefault(d => d.Id == entity.Id);
+            if (existingEntity != null)
+            {
+                context.Dungeons.Update(entity);
+            }
+            else
+            {
+                context.Dungeons.Add(entity);
+            }
+                
+            await context.SaveChangesAsync(token);
+            
+            processed++;
+            ClearCurrentConsoleLine();
+        }
+        
+        _finishedSeeds.Add(nameof(DungeonEntity));
+    }
+    
+    private async Task SeedCharacters(CancellationToken token)
+    {
+        var entities = new List<CharacterEntity>
+        {
+            new()
+            {
+                Id = 1,
+                CharacterName = "Aodai",
+                AccountName = "admin",
+                AccountId = 1,
+                Position = new[] { 153307, 77343, 0 },
+                Race = 5,
+                Sex = 2,
+                Lv = 30,
+                MaxReachedLv = 30,
+                Exp = 130000,
+                Hp = 1253,
+                Mp = 1290,
+                Stamina = 5000,
+                CurrentJob = Jobs.Strider,
+                PreviousJobs = new[] { Jobs.Stepper },
+                Jlv = 50,
+                Jp = 500000,
+                JobLvs = new[] { 10 },
+                HuntaholicEnterCount = 10,
+                Gold = 100000000,
+                Chaos = 500,
+                Models = new[] { 104, 210, 301, 401, 501 },
+                HairColorIndex = 2,
+                TextureId = 10,
+                CreatedOn = DateTime.UtcNow,
+                FlagList = new[] { "rx:168339", "ry:55413", "wbx:168356", "lvup_armor:1", "wby:55399", "lvup_weapon:1" },
+                ClientInfo = new[]
+                {
+                    "QS2=0,2,0", "QS2=1,2,2", "QS2=11,2,1", "QS2=24,2,7", "QS2=25,2,8", "QS2=35,2,28",
+                    "KMT=0,0,0,0,192", "KMT=1,0,0,0,73", "KMT=2,0,0,0,83", "KMT=3,0,0,0,67", "KMT=4,0,0,0,89",
+                    "KMT=5,0,0,0,69", "KMT=6,0,0,0,82", "KMT=7,0,0,0,70", "KMT=8,0,0,0,71", "KMT=9,0,0,0,80",
+                    "KMT=10,0,0,0,81", "KMT=11,0,0,0,77", "KMT=12,0,0,0,84", "KMT=13,0,0,0,72", "KMT=14,0,0,0,90",
+                    "KMT=15,0,0,0,79", "KMT=16,0,0,0,88", "KMT=17,0,0,0,86", "KMT=18,0,0,0,78", "KMT=19,0,0,1,115",
+                    "KMT=20,0,0,1,70", "KMT=21,0,0,1,72", "KMT=22,0,0,1,219", "KMT=23,0,0,1,221", "KMT=24,0,0,1,80",
+                    "KMT=25,0,0,0,9", "KMT=26,0,0,0,32", "KMT=27,0,0,0,49", "KMT=28,0,0,0,50", "KMT=29,0,0,0,51",
+                    "KMT=30,0,0,0,52", "KMT=31,0,0,0,53", "KMT=32,0,0,0,54", "KMT=33,0,0,0,55", "KMT=34,0,0,0,56",
+                    "KMT=35,0,0,0,57", "KMT=36,0,0,0,48", "KMT=37,0,0,0,189", "KMT=38,0,0,0,187", "KMT=39,0,1,0,49",
+                    "KMT=40,0,1,0,50", "KMT=41,0,1,0,51", "KMT=42,0,1,0,52", "KMT=43,0,1,0,53", "KMT=44,0,1,0,54",
+                    "KMT=45,0,1,0,55", "KMT=46,0,1,0,56", "KMT=47,0,1,0,57", "KMT=48,0,1,0,48", "KMT=49,0,1,0,189",
+                    "KMT=50,0,1,0,187", "KMT=51,0,0,1,49", "KMT=52,0,0,1,50", "KMT=53,0,0,1,51", "KMT=54,0,0,1,52",
+                    "KMT=55,0,0,1,53", "KMT=56,0,0,1,54", "KMT=57,0,0,1,55", "KMT=58,0,0,1,56", "KMT=59,0,0,1,57",
+                    "KMT=60,0,0,1,48", "KMT=61,0,0,1,189", "KMT=62,0,0,1,187", "KMT=63,0,0,0,49", "KMT=64,0,0,0,50",
+                    "KMT=65,0,0,0,51", "KMT=66,0,0,0,52", "KMT=67,0,0,0,53", "KMT=68,0,0,0,54", "KMT=69,0,0,0,55",
+                    "KMT=70,0,0,0,56", "KMT=71,0,0,0,57", "KMT=72,0,0,0,48", "KMT=73,0,0,0,189", "KMT=74,0,0,0,220",
+                    "KMT=75,0,0,0,0", "KMT=76,0,0,0,0", "KMT=77,0,0,0,0", "KMT=78,0,0,0,0", "KMT=79,0,0,0,0",
+                    "KMT=80,0,0,0,0", "KMT=81,0,0,0,0", "KMT=82,0,0,0,0", "KMT=83,0,0,0,0", "KMT=84,0,0,0,0",
+                    "KMT=85,0,0,0,0", "KMT=86,0,0,0,0", "KMT=87,0,0,0,0", "KMT=88,0,0,0,0", "KMT=89,0,0,0,0",
+                    "KMT=90,0,0,0,0", "KMT=91,0,0,0,0", "KMT=92,0,0,0,0", "KMT=93,0,0,0,0", "KMT=94,0,0,0,0",
+                    "KMT=95,0,0,0,0", "KMT=96,0,0,0,0", "KMT=97,0,0,0,0", "KMT=98,0,0,0,0", "KMT=99,0,0,0,0",
+                    "KMT=100,0,0,0,0", "KMT=101,0,0,0,0", "KMT=102,0,0,0,0", "KMT=103,0,0,0,0", "KMT=104,0,0,0,0",
+                    "KMT=105,0,0,0,0", "KMT=106,0,0,0,0", "KMT=107,0,0,0,0", "KMT=108,0,0,0,0", "KMT=109,0,0,0,0",
+                    "KMT=110,0,0,0,0", "KMT=111,0,0,0,0", "KMT=112,0,0,0,0", "KMT=113,0,0,0,0", "KMT=114,0,0,0,0",
+                    "KMT=115,0,0,0,0", "KMT=116,0,0,0,0", "KMT=117,0,0,0,0", "KMT=118,0,0,0,0", "KMT=119,0,0,0,0",
+                    "KMT=120,0,0,0,0", "KMT=121,0,0,0,0", "KMT=122,0,0,0,0", "KMT=123,0,0,0,66", "KMT=124,0,0,0,68",
+                    "KMT=125,0,0,0,85", "KMT=126,0,0,0,74", "KMT=127,0,0,0,75", "KMT=128,0,0,0,76", "ENTERCHATMODE=1",
+                    "ENTERCHATMODE2=1", "PREVINSTANCEGAME=0", "CLIENTVER=1"
+                }
+            },
+            new()
+            {
+                Id = 2,
+                CharacterName = "iSmokeDrow",
+                AccountName = "admin",
+                AccountId = 1,
+                Position = new[] { 152456, 76550, 0 },
+                Race = 3,
+                Sex = 1,
+                Lv = 30,
+                MaxReachedLv = 30,
+                Exp = 130000,
+                Hp = 1682,
+                Mp = 2086,
+                Stamina = 5000,
+                CurrentJob = Jobs.Kahuna,
+                PreviousJobs = new[] { Jobs.Rogue },
+                Jlv = 50,
+                Jp = 500000,
+                JobLvs = new[] { 10 },
+                HuntaholicEnterCount = 10,
+                Gold = 100000000,
+                Chaos = 500,
+                Models = new[] { 102, 209, 301, 401, 501 },
+                HairColorIndex = 2,
+                TextureId = 20,
+                CreatedOn = DateTime.UtcNow,
+                FlagList =
+                    new[] { "rx:164325", "ry:49528", "wbx:164335", "lvup_armor:1", "wby:49510", "lvup_weapon:1" },
+                ClientInfo = new[]
+                {
+                    "QS2=0,2,0", "QS2=1,2,2", "QS2=11,2,1", "QS2=24,2,7", "QS2=25,2,8", "QS2=35,2,28",
+                    "KMT=0,0,0,0,192", "KMT=1,0,0,0,73", "KMT=2,0,0,0,83", "KMT=3,0,0,0,67", "KMT=4,0,0,0,89",
+                    "KMT=5,0,0,0,69", "KMT=6,0,0,0,82", "KMT=7,0,0,0,70", "KMT=8,0,0,0,71", "KMT=9,0,0,0,80",
+                    "KMT=10,0,0,0,81", "KMT=11,0,0,0,77", "KMT=12,0,0,0,84", "KMT=13,0,0,0,72", "KMT=14,0,0,0,90",
+                    "KMT=15,0,0,0,79", "KMT=16,0,0,0,88", "KMT=17,0,0,0,86", "KMT=18,0,0,0,78", "KMT=19,0,0,1,115",
+                    "KMT=20,0,0,1,70", "KMT=21,0,0,1,72", "KMT=22,0,0,1,219", "KMT=23,0,0,1,221", "KMT=24,0,0,1,80",
+                    "KMT=25,0,0,0,9", "KMT=26,0,0,0,32", "KMT=27,0,0,0,49", "KMT=28,0,0,0,50", "KMT=29,0,0,0,51",
+                    "KMT=30,0,0,0,52", "KMT=31,0,0,0,53", "KMT=32,0,0,0,54", "KMT=33,0,0,0,55", "KMT=34,0,0,0,56",
+                    "KMT=35,0,0,0,57", "KMT=36,0,0,0,48", "KMT=37,0,0,0,189", "KMT=38,0,0,0,187", "KMT=39,0,1,0,49",
+                    "KMT=40,0,1,0,50", "KMT=41,0,1,0,51", "KMT=42,0,1,0,52", "KMT=43,0,1,0,53", "KMT=44,0,1,0,54",
+                    "KMT=45,0,1,0,55", "KMT=46,0,1,0,56", "KMT=47,0,1,0,57", "KMT=48,0,1,0,48", "KMT=49,0,1,0,189",
+                    "KMT=50,0,1,0,187", "KMT=51,0,0,1,49", "KMT=52,0,0,1,50", "KMT=53,0,0,1,51", "KMT=54,0,0,1,52",
+                    "KMT=55,0,0,1,53", "KMT=56,0,0,1,54", "KMT=57,0,0,1,55", "KMT=58,0,0,1,56", "KMT=59,0,0,1,57",
+                    "KMT=60,0,0,1,48", "KMT=61,0,0,1,189", "KMT=62,0,0,1,187", "KMT=63,0,0,0,49", "KMT=64,0,0,0,50",
+                    "KMT=65,0,0,0,51", "KMT=66,0,0,0,52", "KMT=67,0,0,0,53", "KMT=68,0,0,0,54", "KMT=69,0,0,0,55",
+                    "KMT=70,0,0,0,56", "KMT=71,0,0,0,57", "KMT=72,0,0,0,48", "KMT=73,0,0,0,189", "KMT=74,0,0,0,220",
+                    "KMT=75,0,0,0,0", "KMT=76,0,0,0,0", "KMT=77,0,0,0,0", "KMT=78,0,0,0,0", "KMT=79,0,0,0,0",
+                    "KMT=80,0,0,0,0", "KMT=81,0,0,0,0", "KMT=82,0,0,0,0", "KMT=83,0,0,0,0", "KMT=84,0,0,0,0",
+                    "KMT=85,0,0,0,0", "KMT=86,0,0,0,0", "KMT=87,0,0,0,0", "KMT=88,0,0,0,0", "KMT=89,0,0,0,0",
+                    "KMT=90,0,0,0,0", "KMT=91,0,0,0,0", "KMT=92,0,0,0,0", "KMT=93,0,0,0,0", "KMT=94,0,0,0,0",
+                    "KMT=95,0,0,0,0", "KMT=96,0,0,0,0", "KMT=97,0,0,0,0", "KMT=98,0,0,0,0", "KMT=99,0,0,0,0",
+                    "KMT=100,0,0,0,0", "KMT=101,0,0,0,0", "KMT=102,0,0,0,0", "KMT=103,0,0,0,0", "KMT=104,0,0,0,0",
+                    "KMT=105,0,0,0,0", "KMT=106,0,0,0,0", "KMT=107,0,0,0,0", "KMT=108,0,0,0,0", "KMT=109,0,0,0,0",
+                    "KMT=110,0,0,0,0", "KMT=111,0,0,0,0", "KMT=112,0,0,0,0", "KMT=113,0,0,0,0", "KMT=114,0,0,0,0",
+                    "KMT=115,0,0,0,0", "KMT=116,0,0,0,0", "KMT=117,0,0,0,0", "KMT=118,0,0,0,0", "KMT=119,0,0,0,0",
+                    "KMT=120,0,0,0,0", "KMT=121,0,0,0,0", "KMT=122,0,0,0,0", "KMT=123,0,0,0,66", "KMT=124,0,0,0,68",
+                    "KMT=125,0,0,0,85", "KMT=126,0,0,0,74", "KMT=127,0,0,0,75", "KMT=128,0,0,0,76", "ENTERCHATMODE=1",
+                    "ENTERCHATMODE2=1", "PREVINSTANCEGAME=0", "CLIENTVER=1"
+                }
+            },
+            new()
+            {
+                Id = 3,
+                CharacterName = "Nexitis",
+                AccountName = "admin",
+                AccountId = 1,
+                Position = new[] { 153375, 77314, 0 },
+                Race = 4,
+                Sex = 2,
+                Lv = 30,
+                MaxReachedLv = 30,
+                Exp = 130000,
+                Hp = 914,
+                Mp = 992,
+                Stamina = 5000,
+                CurrentJob = Jobs.Tamer,
+                PreviousJobs = new[] { Jobs.Guide },
+                Jlv = 50,
+                Jp = 500000,
+                JobLvs = new[] { 10 },
+                HuntaholicEnterCount = 10,
+                Gold = 100000000,
+                Chaos = 500,
+                Models = new[] { 101, 210, 301, 401, 501 },
+                HairColorIndex = 2,
+                TextureId = 2,
+                CreatedOn = DateTime.UtcNow,
+                FlagList = new[] { "rx:164482", "ry:52951", "wbx:164464", "lvup_armor:1", "wby:52942", "lvup_weapon:1" },
+                ClientInfo = new[]
+                {
+                    "QS2=0,2,0", "QS2=1,2,2", "QS2=11,2,1", "QS2=24,2,7", "QS2=25,2,8", "QS2=35,2,28",
+                    "KMT=0,0,0,0,192", "KMT=1,0,0,0,73", "KMT=2,0,0,0,83", "KMT=3,0,0,0,67", "KMT=4,0,0,0,89",
+                    "KMT=5,0,0,0,69", "KMT=6,0,0,0,82", "KMT=7,0,0,0,70", "KMT=8,0,0,0,71", "KMT=9,0,0,0,80",
+                    "KMT=10,0,0,0,81", "KMT=11,0,0,0,77", "KMT=12,0,0,0,84", "KMT=13,0,0,0,72", "KMT=14,0,0,0,90",
+                    "KMT=15,0,0,0,79", "KMT=16,0,0,0,88", "KMT=17,0,0,0,86", "KMT=18,0,0,0,78", "KMT=19,0,0,1,115",
+                    "KMT=20,0,0,1,70", "KMT=21,0,0,1,72", "KMT=22,0,0,1,219", "KMT=23,0,0,1,221", "KMT=24,0,0,1,80",
+                    "KMT=25,0,0,0,9", "KMT=26,0,0,0,32", "KMT=27,0,0,0,49", "KMT=28,0,0,0,50", "KMT=29,0,0,0,51",
+                    "KMT=30,0,0,0,52", "KMT=31,0,0,0,53", "KMT=32,0,0,0,54", "KMT=33,0,0,0,55", "KMT=34,0,0,0,56",
+                    "KMT=35,0,0,0,57", "KMT=36,0,0,0,48", "KMT=37,0,0,0,189", "KMT=38,0,0,0,187", "KMT=39,0,1,0,49",
+                    "KMT=40,0,1,0,50", "KMT=41,0,1,0,51", "KMT=42,0,1,0,52", "KMT=43,0,1,0,53", "KMT=44,0,1,0,54",
+                    "KMT=45,0,1,0,55", "KMT=46,0,1,0,56", "KMT=47,0,1,0,57", "KMT=48,0,1,0,48", "KMT=49,0,1,0,189",
+                    "KMT=50,0,1,0,187", "KMT=51,0,0,1,49", "KMT=52,0,0,1,50", "KMT=53,0,0,1,51", "KMT=54,0,0,1,52",
+                    "KMT=55,0,0,1,53", "KMT=56,0,0,1,54", "KMT=57,0,0,1,55", "KMT=58,0,0,1,56", "KMT=59,0,0,1,57",
+                    "KMT=60,0,0,1,48", "KMT=61,0,0,1,189", "KMT=62,0,0,1,187", "KMT=63,0,0,0,49", "KMT=64,0,0,0,50",
+                    "KMT=65,0,0,0,51", "KMT=66,0,0,0,52", "KMT=67,0,0,0,53", "KMT=68,0,0,0,54", "KMT=69,0,0,0,55",
+                    "KMT=70,0,0,0,56", "KMT=71,0,0,0,57", "KMT=72,0,0,0,48", "KMT=73,0,0,0,189", "KMT=74,0,0,0,220",
+                    "KMT=75,0,0,0,0", "KMT=76,0,0,0,0", "KMT=77,0,0,0,0", "KMT=78,0,0,0,0", "KMT=79,0,0,0,0",
+                    "KMT=80,0,0,0,0", "KMT=81,0,0,0,0", "KMT=82,0,0,0,0", "KMT=83,0,0,0,0", "KMT=84,0,0,0,0",
+                    "KMT=85,0,0,0,0", "KMT=86,0,0,0,0", "KMT=87,0,0,0,0", "KMT=88,0,0,0,0", "KMT=89,0,0,0,0",
+                    "KMT=90,0,0,0,0", "KMT=91,0,0,0,0", "KMT=92,0,0,0,0", "KMT=93,0,0,0,0", "KMT=94,0,0,0,0",
+                    "KMT=95,0,0,0,0", "KMT=96,0,0,0,0", "KMT=97,0,0,0,0", "KMT=98,0,0,0,0", "KMT=99,0,0,0,0",
+                    "KMT=100,0,0,0,0", "KMT=101,0,0,0,0", "KMT=102,0,0,0,0", "KMT=103,0,0,0,0", "KMT=104,0,0,0,0",
+                    "KMT=105,0,0,0,0", "KMT=106,0,0,0,0", "KMT=107,0,0,0,0", "KMT=108,0,0,0,0", "KMT=109,0,0,0,0",
+                    "KMT=110,0,0,0,0", "KMT=111,0,0,0,0", "KMT=112,0,0,0,0", "KMT=113,0,0,0,0", "KMT=114,0,0,0,0",
+                    "KMT=115,0,0,0,0", "KMT=116,0,0,0,0", "KMT=117,0,0,0,0", "KMT=118,0,0,0,0", "KMT=119,0,0,0,0",
+                    "KMT=120,0,0,0,0", "KMT=121,0,0,0,0", "KMT=122,0,0,0,0", "KMT=123,0,0,0,66", "KMT=124,0,0,0,68",
+                    "KMT=125,0,0,0,85", "KMT=126,0,0,0,74", "KMT=127,0,0,0,75", "KMT=128,0,0,0,76", "ENTERCHATMODE=1",
+                    "ENTERCHATMODE2=1", "PREVINSTANCEGAME=0", "CLIENTVER=1"
+                }
+            }
+        };
+        
+        await using var context = new TelecasterContext(_psqlTelecasterContext);
+        
+        Log.Logger.Information("Seeding {type}: {amount}", nameof(CharacterEntity), entities.Count);
+
+        var processed = 1;
+        foreach (var entity in entities)
+        {
+            Log.Information("Processing... {processed}/{amount}", processed, entities.Count);
+
+            if (token.IsCancellationRequested)
+            {
+                Log.Logger.Warning("Stopping...");
+                return;
+            }
+            
+            var existingEntity = context.Characters.FirstOrDefault(d => d.Id == entity.Id);
+            if (existingEntity != null)
+            {
+                context.Characters.Update(entity);
+            }
+            else
+            {
+                context.Characters.Add(entity);
+            }
+                
+            await context.SaveChangesAsync(token);
+            
+            processed++;
+            ClearCurrentConsoleLine();
+        }
+        
+        _finishedSeeds.Add(nameof(CharacterEntity));
+    }
+    
+    private async Task SeedItems(CancellationToken token)
+    {
+
+        var entities = new List<ItemEntity>();
+
+        var ids = new []
+            { 2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 };
+        var characterIds = new[]
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 2 };
+        var accountids = new[]
+            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+        var index = new[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 11 };
+        var itemResourceIds = new[]
+        {
+            103100, 230100, 490001, 3600118, 3600168, 3600172, 3600176, 3600164, 3600094, 3600094, 3600102, 540071,
+            112100, 240109, 490001, 3600136, 3600168, 3600172, 3600176, 3600164, 3600189, 540049, 106100, 220109,
+            490001, 3600149, 3600168, 3600172, 3600176, 3600164, 3600110, 0, 403101
+        };
+        var amounts = new[]
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 };
+        var levels = new[]
+        {
+            1, 1, 1, 10, 10, 10, 10, 10, 10, 10, 10, 1, 1, 1, 1, 10, 10, 10, 10, 10, 10, 1, 1, 1, 1, 10, 10, 10, 10, 10,
+            10, 0, 1
+        };
+        var enhanced = new[]
+        {
+            0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 10, 10, 10, 10, 10,
+            10, 0, 0
+        };
+        var flag = new[]
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2147483648, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2147483648, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0
+        };
+        var gcode = new[]
+            { 6, 6, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 6, 6, 3, 3, 3, 3, 3, 3, 3, 6, 6, 6, 3, 3, 3, 3, 3, 3, 126, 1 };
+        var wearinfos = new[]
+        {
+            -1, -1, 23, 2, 5, 4, 3, 6, 0, 1, -1, -1, -1, -1, 23, 2, 5, 4, 3, 6, 0, -1, -1, -1, 23, 2, 5, 4, 3, 6, 0, -1,
+            8
+        };
+        var sockets = new long[]
+            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        var remainTime = new[]
+        {
+            0, 0, 0, 1703715848, 1703715848, 1703715848, 1703715848, 1703715848, 1703715852, 1703715852, 1703715852, 0,
+            0, 0, 0, 1703716142, 1703716142, 1703716142, 1703716142, 1703716142, 1703716146, 0, 0, 0, 0, 1703716425,
+            1703716425, 1703716425, 1703716425, 1703716425, 1703716429, 0, 0
+        };
+        
+        for (var i = 0; i <= 32; i++)
+        {
+            entities.Add(new ItemEntity
+            {
+                Id = ids[i],
+                CharacterId = characterIds[i] == 0 ? null : characterIds[i],
+                AccountId = accountids[i],
+                Idx = index[i],
+                ItemResourceId = itemResourceIds[i],
+                Amount = amounts[i],
+                Level = levels[i],
+                Enhance = enhanced[i],
+                Flag = (ItemFlag)flag[i],
+                GenerateBySource = (ItemGenerateSource)gcode[i],
+                WearInfo = (ItemWearType)wearinfos[i],
+                SocketItemIds = new [] { sockets[i] },
+                RemainingTime = remainTime[i],
+                ElementalEffectExpireTime = DateTime.UtcNow.AddYears(-5),
+                CreatedOn = DateTime.UtcNow
+            });
+        }
+        
+        Log.Logger.Information("Seeding {type}: {amount}", nameof(ItemEntity), entities.Count);
+        
+        var processed = 1;
+        foreach (var entity in entities)
+        {
+            Log.Information("Processing... {processed}/{amount}", processed, entities.Count);
+        
+            if (token.IsCancellationRequested)
+            {
+                Log.Logger.Warning("Stopping...");
+                return;
+            }
+            
+            await using var context = new TelecasterContext(_psqlTelecasterContext);
+            var existingEntity = context.Items.FirstOrDefault(d => d.Id == entity.Id);
+            if (existingEntity != null)
+            {
+                context.Items.Update(entity);
+            }
+            else
+            {
+                context.Items.Add(entity);
+            }
+                
+            await context.SaveChangesAsync(token);
+            
+            processed++;
+            ClearCurrentConsoleLine();
+        }
+        
+        _finishedSeeds.Add(nameof(ItemEntity));
+    }
+    
+    
+    
+    
+    private async Task TransferArcadia(CancellationToken token)
+    {
         await TransferItemResource(token);
         await TransferLevelResource(token);
         await TransferStringResource(token);
@@ -42,11 +446,8 @@ public class Worker : BackgroundService
         await TransferEnhanceResource(token);
         await TransferSkillResource(token);
         await TransferStateResource(token);
-        
-        Log.Logger.Warning("Transfer finished. You can now close this window.");
-
     }
-
+    
     private async Task TransferItemResource(CancellationToken token)
     {
         await using var context = new MssqlArcadiaContext(_mssqlOptions);
@@ -94,7 +495,6 @@ public class Worker : BackgroundService
                 { item.enhance_1_01, item.enhance_1_02, item.enhance_1_03, item.enhance_1_04 },
             };
     
-    
             var itemRaceRestriction = ItemRaceRestriction.None;
             if (item.limit_deva != "0")
             {
@@ -141,7 +541,7 @@ public class Worker : BackgroundService
             mappedItem.EnhanceValues = enhanceValues;
             mappedItem.EnhanceIds = enhanceIds.ToArray().Length != 0 ? enhanceIds.ToArray() : null;
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.ItemResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -183,7 +583,7 @@ public class Worker : BackgroundService
             var mappedItem = _mapper.Map<LevelResourceEntity>(item);
             
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.LevelResources.FirstOrDefault(i => i.Level == item.level);
                 if (existingEntity != null)
@@ -226,7 +626,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<StringResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.StringResources.FirstOrDefault(i => i.Id == item.code);
                 if (existingEntity != null)
@@ -267,7 +667,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<StatResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.StatResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -307,7 +707,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<ChannelResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.StatResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -348,7 +748,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<GlobalVariableEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.GlobalVariables.FirstOrDefault(i => i.Id == item.sid);
                 if (existingEntity != null)
@@ -389,7 +789,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<EffectResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.EffectResources.FirstOrDefault(i => i.Id == item.resource_effect_file_id);
@@ -431,7 +831,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<ItemEffectResourceEntity>(item);
 
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.ItemEffectResources.FirstOrDefault(i => i.Id == item.id);
@@ -473,7 +873,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<SummonResourceEntity>(item);
 
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.SummonResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -535,7 +935,7 @@ public class Worker : BackgroundService
             mappedItem.OptTypes = optTypes;
             mappedItem.OptValues = optValues;
 
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.SetItemEffectResources.FirstOrDefault(i => i.SetId == item.set_id && (int)i.SetParts == item.set_part_id);
@@ -579,7 +979,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.EnhanceResources.FirstOrDefault(i => i.Id == item.enhance_id && (int)i.LocalFlag == item.local_flag);
                 if (existingEntity != null)
@@ -621,7 +1021,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<SkillResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.SkillResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -664,7 +1064,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<StateResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.StateResources.FirstOrDefault(i => i.Id == item.state_id);
@@ -692,6 +1092,7 @@ public class Worker : BackgroundService
     {
         Console.Clear();
         _finishedTransfers.ForEach(l => Log.Logger.Information("Finished transferring {name}", l));
+        _finishedTransfers.ForEach(l => Log.Logger.Information("Finished seeding {name}", l));
     }
 
     private static void ClearCurrentConsoleLine()

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Navislamia.Game.Migrations.Telecaster
 {
     [DbContext(typeof(TelecasterContext))]
-    [Migration("20231210172734_Version0001_TheBeginning")]
+    [Migration("20231213221150_Version0001_TheBeginning")]
     partial class Version0001_TheBeginning
     {
         /// <inheritdoc />
@@ -139,11 +139,14 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("ChatBlockTime")
                         .HasColumnType("integer");
 
-                    b.Property<string[]>("ClientInfo2")
+                    b.Property<string[]>("ClientInfo")
                         .HasColumnType("text[]");
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentJob")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
@@ -166,7 +169,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<DateTime>("GuildBlockTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("GuildId")
+                    b.Property<long?>("GuildId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("HairColorIndex")
@@ -196,17 +199,10 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Jlv")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Job")
-                        .HasColumnType("integer");
-
                     b.Property<short>("JobDepth")
                         .HasColumnType("smallint");
 
                     b.Property<int[]>("JobLvs")
-                        .HasMaxLength(3)
-                        .HasColumnType("integer[]");
-
-                    b.Property<int[]>("Jobs")
                         .HasMaxLength(3)
                         .HasColumnType("integer[]");
 
@@ -231,7 +227,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Lv")
                         .HasColumnType("integer");
 
-                    b.Property<long>("MainSummonId")
+                    b.Property<long?>("MainSummonId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("MaxReachedLv")
@@ -250,13 +246,13 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<DateTime>("OtpVerifiedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PartyId")
+                    b.Property<long?>("PartyId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Permission")
                         .HasColumnType("integer");
 
-                    b.Property<long>("PetId")
+                    b.Property<long?>("PetId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("PkCount")
@@ -272,8 +268,12 @@ namespace Navislamia.Game.Migrations.Telecaster
                         .HasMaxLength(3)
                         .HasColumnType("integer[]");
 
-                    b.Property<long>("PreviousGuildId")
+                    b.Property<long?>("PreviousGuildId")
                         .HasColumnType("bigint");
+
+                    b.Property<int[]>("PreviousJobs")
+                        .HasMaxLength(3)
+                        .HasColumnType("integer[]");
 
                     b.Property<int>("Race")
                         .HasColumnType("integer");
@@ -293,7 +293,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Stamina")
                         .HasColumnType("integer");
 
-                    b.Property<long>("SubSummonId")
+                    b.Property<long?>("SubSummonId")
                         .HasColumnType("bigint");
 
                     b.Property<long[]>("SummonSlotItemIds")
@@ -349,10 +349,10 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("LastDungeonSiegeFinishTime")
                         .HasColumnType("integer");
 
-                    b.Property<long>("OwnerGuildId")
+                    b.Property<long?>("OwnerGuildId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("RaidGuildId")
+                    b.Property<long?>("RaidGuildId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("TaxRate")
@@ -463,25 +463,25 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("AccountId")
+                    b.Property<int?>("AccountId")
                         .HasColumnType("integer");
 
                     b.Property<long>("Amount")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("AuctionId")
+                    b.Property<int?>("AuctionId")
                         .HasColumnType("integer");
 
-                    b.Property<long>("CharacterId")
+                    b.Property<long?>("CharacterId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreateTime")
+                    b.Property<DateTime?>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ElementalEffectAttackPoint")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("ElementalEffectExpireTime")
+                    b.Property<DateTime?>("ElementalEffectExpireTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ElementalEffectMagicPoint")
@@ -496,7 +496,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Enhance")
                         .HasColumnType("integer");
 
-                    b.Property<int>("EquippedBySummonId")
+                    b.Property<int?>("EquippedBySummonId")
                         .HasColumnType("integer");
 
                     b.Property<int>("EtherealDurability")
@@ -520,17 +520,17 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<long?>("RelatedAuctionId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("RemainTime")
+                    b.Property<int>("RemainingTime")
                         .HasColumnType("integer");
 
                     b.Property<long[]>("SocketItemIds")
                         .HasMaxLength(4)
                         .HasColumnType("bigint[]");
 
-                    b.Property<int>("StorageId")
+                    b.Property<int?>("StorageId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdateTime")
+                    b.Property<DateTime?>("UpdateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("WearInfo")
@@ -767,39 +767,27 @@ namespace Navislamia.Game.Migrations.Telecaster
                 {
                     b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "Guild")
                         .WithMany("Members")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("GuildId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.SummonEntity", "MainSummon")
                         .WithOne("MainSummonsMaster")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "MainSummonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "MainSummonId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.PartyEntity", "Party")
                         .WithMany("PartyMembers")
-                        .HasForeignKey("PartyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PartyId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.PetEntity", "Pet")
                         .WithOne("Character")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "PetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "PetId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "PreviousGuild")
                         .WithMany("PreviousMembers")
-                        .HasForeignKey("PreviousGuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PreviousGuildId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.SummonEntity", "SubSummon")
                         .WithOne("SubSummonsMaster")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "SubSummonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "SubSummonId");
 
                     b.Navigation("Guild");
 
@@ -818,9 +806,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                 {
                     b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "RaidGuild")
                         .WithMany()
-                        .HasForeignKey("RaidGuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("RaidGuildId");
 
                     b.Navigation("RaidGuild");
                 });
@@ -848,9 +834,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                 {
                     b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "Character")
                         .WithMany("Items")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CharacterId");
 
                     b.HasOne("Navislamia.Game.Models.Telecaster.AuctionEntity", "RelatedAuction")
                         .WithMany()

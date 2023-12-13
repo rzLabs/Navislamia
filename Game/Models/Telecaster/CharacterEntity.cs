@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Models.Enums;
+using Jobs = Navislamia.Game.Models.Enums.Jobs;
 
 namespace Navislamia.Game.Models.Telecaster;
 
@@ -14,13 +15,13 @@ public class CharacterEntity : Entity
 	// (TelecasterContext => AuthContext)
 	public long AccountId { get; set; }
 	
-	public long PartyId { get; set; }
+	public long? PartyId { get; set; }
 	public virtual PartyEntity Party { get; set; }
 	
-	public long GuildId { get; set; }
+	public long? GuildId { get; set; }
 	public virtual GuildEntity Guild { get; set; }
 	
-	public long PreviousGuildId { get; set; }
+	public long? PreviousGuildId { get; set; }
 	public virtual GuildEntity PreviousGuild { get; set; }
 
 	public int Slot { get; set; }
@@ -37,13 +38,13 @@ public class CharacterEntity : Entity
 	public int Mp { get; set; }
 	public int Stamina { get; set; }
 	public int Havoc { get; set; } // check usage and remove if unused
-	public int Job { get; set; }
+	public Jobs CurrentJob { get; set; }
+	public Jobs[] PreviousJobs { get; set; } 
 	public JobDepth JobDepth { get; set; }
 	public int Jlv { get; set; }
 	public long Jp { get; set; }
 	public long TotalJp { get; set; }
 	public int TalentPoint { get; set; }
-	public int[] Jobs { get; set; } 
 	public int[] JobLvs { get; set; } 
 	public decimal ImmoralPoint { get; set; }
 	public int Charisma { get; set; } // used or not?
@@ -63,15 +64,15 @@ public class CharacterEntity : Entity
 	public long[] BeltItemIds { get; set; } // verify if item id or item resource id and create reference & navigational prop
 	public long[] SummonSlotItemIds { get; set; } // verify if item id or item resource id and create reference & navigational prop
 	
-	public long MainSummonId { get; set; }
+	public long? MainSummonId { get; set; }
 	public virtual SummonEntity MainSummon { get; set; }
 
-	public long SubSummonId { get; set; }
+	public long? SubSummonId { get; set; }
 	public virtual SummonEntity SubSummon { get; set; }
 	
 	public int RemainSummonTime { get; set; }
 	
-	public long PetId { get; set; } 
+	public long? PetId { get; set; } 
 	public virtual PetEntity Pet { get; set; }
 	
 	public DateTime CreatedOn { get; set; } // TODO introduce CreatedOn into DbContext as part of softdeletion @Nexitis
@@ -89,7 +90,7 @@ public class CharacterEntity : Entity
 	public int OtpValue { get; set; } // otp = one time password
 	public DateTime OtpVerifiedAt { get; set; }
 	public string[] FlagList { get; set; } // Lua stuff e.g.ry:49481...
-	public string[] ClientInfo2 { get; set; } // Client stuff e.g. KGM=02,1,3|AKA=2,513,3...
+	public string[] ClientInfo { get; set; } // Client stuff e.g. KGM=02,1,3|AKA=2,513,3...
 	
 	public virtual ICollection<ItemEntity> Items { get; set; }
 	public virtual ICollection<AuctionEntity> Sellers { get; set; }

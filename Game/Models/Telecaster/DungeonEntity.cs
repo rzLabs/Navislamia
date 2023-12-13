@@ -4,10 +4,10 @@ namespace Navislamia.Game.Models.Telecaster;
 
 public class DungeonEntity : Entity
 {
-    public long OwnerGuildId { get; set; }
+    public long? OwnerGuildId { get; set; }
     public virtual GuildEntity OwnerGuild { get; set; }
     
-    public long RaidGuildId { get; set; }
+    public long? RaidGuildId { get; set; }
     public GuildEntity RaidGuild { get; set; }
     
     public int BestRaidTime { get; set; }
