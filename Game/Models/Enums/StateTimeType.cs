@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Navislamia.Game.Models.Arcadia.Enums
+namespace Navislamia.Game.Models.Enums
 {
     [Flags]
     public enum StateTimeType : short

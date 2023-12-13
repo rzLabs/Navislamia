@@ -1,21 +1,23 @@
 ﻿using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Models.Enums;
 
 namespace Navislamia.Game.Models.Arcadia
 {
 	public class SkillResourceEntity : Entity
 	{
 		public int TextId { get; set; }
-		public int DescId { get; set; }
+		public int DescriptionId { get; set; }
 		public int TooltipId { get; set; }
 	
-		public bool Elemental { get; set; }
+		public ElementalType ElementalType { get; set; }
 		public bool IsPassive { get; set; }
 		public SkillState IsValid { get; set; }
 		public bool IsPhysicalAct { get; set; }
 		public bool IsHarmful { get; set; }
-		public SkillNeedTarget NeedTarget { get; set; } // values 0 1 2
+		public SkillRequiredTarget RequiredTarget { get; set; } 
 		public bool IsCorpse { get; set; }
 		public bool IsToggle { get; set; }
+		public bool IsProjectile { get; set; }
 		
 		// groups where only one skill in the group can be active
 		// e.g. Group 8 Unity of Force, Intelligence, Wisdom, Mentality, Vitality
@@ -47,31 +49,40 @@ namespace Navislamia.Game.Models.Arcadia
 		public int CostItemCount { get; set; }
 		public int CostItemCountPerSkl { get; set; }
 	
-		public int NeedLevel { get; set; }
-		public int NeedHp { get; set; }
-		public int NeedMp { get; set; }
-		public int NeedHavoc { get; set; }
-		public int NeedHavocBurst { get; set; }
-		public int NeedStateId { get; set; }
+		public int RequriedLevel { get; set; }
+		public int RequiredHp { get; set; }
+		public int RequiredMp { get; set; }
+		public int RequiredHavoc { get; set; }
+		public int RequiredHavocBurst { get; set; }
+		public int RequiredStateId { get; set; }
 	
-		public string VfOneHandSword { get; set; }
-		public string VfTwoHandSword { get; set; }
-		public string VfDoubleSword { get; set; }
-		public string VfDagger { get; set; }
-		public string VfDoubleDagger { get; set; }
-		public string VfSpear { get; set; }
-		public string VfAxe { get; set; }
-		public string VfOneHandAxe { get; set; }
-		public string VfDoubleAxe { get; set; }
-		public string VfOneHandMace { get; set; }
-		public string VfTwoHandMace { get; set; }
-		public string VfLightbow { get; set; }
-		public string VfHeavybow { get; set; }
-		public string VfCrossbow { get; set; }
-		public string VfOneHandStaff { get; set; }
-		public string VfTwoHandStaff { get; set; }
-		public string VfShieldOnly { get; set; }
-		public string VfIsNotNeedWeapon { get; set; }
+		public bool UseWithOneHandSword { get; set; }
+		public bool UseWithTwoHandSword { get; set; }
+		public bool UseWithDoubleSword { get; set; }
+		public bool UseWithDagger { get; set; }
+		public bool UseWithDoubleDagger { get; set; }
+		public bool UseWithSpear { get; set; }
+		public bool UseWithAxe { get; set; }
+		public bool UseWithOneHandAxe { get; set; }
+		public bool UseWithDoubleAxe { get; set; }
+		public bool UseWithOneHandMace { get; set; }
+		public bool UseWithTwoHandMace { get; set; }
+		public bool UseWithLightbow { get; set; }
+		public bool UseWithHeavybow { get; set; }
+		public bool UseWithCrossbow { get; set; }
+		public bool UseWithOneHandStaff { get; set; }
+		public bool UseWithTwoHandStaff { get; set; }
+		public bool UseWithShieldOnly { get; set; }
+		public bool UseWithWeaponNotRequired { get; set; }
+		public bool UseOnSelf { get; set; }
+		public bool UseOnParty { get; set; }
+		public bool UseOnGuild { get; set; }
+		public bool UseOnNeutral { get; set; }
+		public bool UseOnPurple { get; set; }
+		public bool UseOnEnemy { get; set; }
+		public bool UseOnCharacter { get; set; }
+		public bool UseOnSummon { get; set; }
+		public bool UseOnMonster { get; set; }
 	
 		public decimal DelayCast { get; set; } 
 		public decimal DelayCastPerSkl { get; set; } 
@@ -82,16 +93,6 @@ namespace Navislamia.Game.Models.Arcadia
 		public decimal DelayCooltimeModePerEnhance { get; set; } 
 		public int CoolTimeGroupId { get; set; }
 	
-		public string UfSelf { get; set; }
-		public string UfParty { get; set; }
-		public string UfGuild { get; set; }
-		public string UfNeutral { get; set; }
-		public string UfPurple { get; set; }
-		public string UfEnemy { get; set; }
-	
-		public string TfAvatar { get; set; }
-		public string TfSummon { get; set; }
-		public string TfMonster { get; set; }
 	
 		public string SkillLvupLimit { get; set; }
 		public SkillTarget Target { get; set; }
@@ -100,7 +101,7 @@ namespace Navislamia.Game.Models.Arcadia
 		public int StateId { get; set; }
 		public int StateLevelBase { get; set; }
 	
-		public decimal StateLevelPerSkl { get; set; } 
+		public decimal StateLevelPerSkill { get; set; } 
 		public decimal StateLevelPerEnhance { get; set; } 
 		public decimal StateSecond { get; set; } 
 		public decimal StateSecondPerLevel { get; set; } 
@@ -121,7 +122,7 @@ namespace Navislamia.Game.Models.Arcadia
 	
 		public int CriticalBonus { get; set; }
 		public int CriticalBonusPerSkl { get; set; }
-		public decimal[] Var { get; set; } = new decimal[20]; 
+		public decimal[] Values { get; set; } = new decimal[20]; 
 	
 		public int IconId { get; set; }
 		public string IconFileName { get; set; }

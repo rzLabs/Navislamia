@@ -5,7 +5,7 @@ namespace Navislamia.Game.Models.Arcadia
 {
 	public class SummonResourceEntity : Entity
 	{
-		public int ModelId { get; set; } // RDB?
+		public int ModelId { get; set; }
 	
 		public CreatureType Type { get; set; }
 		public ElementalType MagicType { get; set; }
@@ -16,7 +16,7 @@ namespace Navislamia.Game.Models.Arcadia
 	
 		public int StandardWalkSpeed { get; set; }
 		public int StandardRunSpeed { get; set; }
-		public int IsRidingOnly { get; set; }
+		public bool IsRidingOnly { get; set; }
 		public int RidingSpeed { get; set; }
 		public int RunSpeed { get; set; }
 		public int RidingMotionType { get; set; }
@@ -28,46 +28,29 @@ namespace Navislamia.Game.Models.Arcadia
 		public ItemType WeaponType { get; set; } 
 		public int AttackMotionSpeed { get; set; } // check enum from rdb (values 0 - 3)
 		public EvolveType EvolveType { get; set; } 
-		public int EvolveTargetId { get; set; } // Evolve into <SummonID>
+		public int EvolveIntoSummonId { get; set; }
 		// public virtual SummonResourceEntity EvolveTarget { get; set; }
 	
-		public int CameraX { get; set; }
-		public int CameraY { get; set; }
-		public int CameraZ { get; set; }
+		public int[] CameraPosition { get; set; } // X Y Z 
 	
-		public decimal TargetX { get; set; } 
-		public decimal TargetY { get; set; } 
-		public decimal TargetZ { get; set; }
+		public decimal[] TargetPosition { get; set; } // X Y Z
 		public string Model { get; set; }
 	
 		public int MotionFileId { get; set; }
 		public int FaceId { get; set; }
 		public string FaceFileName { get; set; }
 		public int CardId { get; set; }
-	
 		public string ScriptText { get; set; }
-
 		public string IllustFileName { get; set; }
 	
-		public int TextFeatureId { get; set; } // check usage, maybe Tooltip or Description would be a better name
-		public int TextNameId { get; set; } // unused? Is always 0 in SummonResource
+		public int TextFeatureId { get; set; } 
 
-		public int Skill1Id { get; set; }
-		public int Skill1TextId { get; set; }
-		public int Skill2Id { get; set; }
-		public int Skill2TextId { get; set; }
-		public int Skill3Id { get; set; }
-		public int Skill3TextId { get; set; }
-		public int Skill4Id { get; set; }
-		public int Skill4TextId { get; set; }
-		public int Skill5Id { get; set; }
-		public int Skill5TextId { get; set; }
+		public int[] SkillIds { get; set; } // 5
+		public int[] SkillTextIds { get; set; } // 5
 
 		public int StatId { get; set; }
 		public int NameId { get; set; }
-		public int TextureGroup { get; set; } // unused? all entities are set to -1 in SummonResource
-		public int LocalFlag { get; set; } // unused? all entities are set to 0 in SummonResource
-	
+		public int TextureGroup { get; set; } 
 
 		// public virtual StringResourceEntity Script { get; set; }
 		// public virtual ItemResourceEntity Card { get; set; }
