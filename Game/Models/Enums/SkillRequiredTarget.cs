@@ -1,6 +1,6 @@
 namespace Navislamia.Game.Models.Arcadia.Enums;
 
-public enum SkillNeedTarget
+public enum SkillRequiredTarget
 {
     Self,
     Target,

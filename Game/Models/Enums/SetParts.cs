@@ -3,7 +3,7 @@
 namespace Navislamia.Game.Models.Arcadia.Enums
 {
     [Flags]
-    public enum SetPartFlag : short
+    public enum SetParts : short
     {
         None = 0,
         Weapon = 1,

@@ -1,4 +1,4 @@
-using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Models.Enums;
 
 namespace Navislamia.Game.Models.Arcadia
 {

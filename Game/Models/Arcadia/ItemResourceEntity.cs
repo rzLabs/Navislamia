@@ -1,4 +1,5 @@
 using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Models.Enums;
 using ItemGroup = Navislamia.Game.Models.Arcadia.Enums.ItemGroup;
 using ItemType = Navislamia.Game.Models.Arcadia.Enums.ItemType;
 using ItemWearType = Navislamia.Game.Models.Arcadia.Enums.ItemWearType;
@@ -13,8 +14,8 @@ namespace Navislamia.Game.Models.Arcadia
         public ItemWearType WearType { get; set; } 
         public SetPartType SetPartFlag { get; set; } 
         public ItemStatus Status { get; set; }
-        public ItemClassRestriction ClassRestriction { get; set; }
-        public ItemRestriction Restriction { get; set; }
+        public ItemRaceRestriction RaceRestriction { get; set; }
+        public ItemJobRestriction JobRestriction { get; set; }
         public ItemUseFlag ItemUseFlag { get; set; }
         public ItemDecreaseTimeType DecreaseType { get; set; }
     
@@ -38,38 +39,39 @@ namespace Navislamia.Game.Models.Arcadia
         public int AvailablePeriod { get; set; }
         public decimal ThrowRange { get; set; }
     
-        public short[] BaseType { get; set; } = new short[2]; // Base item Type of type ItemEffectInstant or ItemEffectPassive
-        public decimal[,] BaseVar { get; set; } = new decimal[2, 4]; 
-        public short[] OptType { get; set; } = new short[2]; // Extends Base item type by ItemEffectInstant or ItemEffectPassive
-        public decimal[,] OptVar { get; set; } = new decimal[2,4];
+        public short[] BaseTypes { get; set; } // = new short[4]; // Base item Type of type ItemEffectInstant or ItemEffectPassive
+        public decimal[,] BaseValues { get; set; } // = new decimal[4, 2];
+        
+        public short[] OptTypes { get; set; } // = new short[4]; // Extends Base item type by ItemEffectInstant or ItemEffectPassive
+        public decimal[,] OptValues { get; set; } // = new decimal[4,2];
 
-        public int[] EnchanceId { get; set; } = new int[2];
-        public decimal[,] EnchanceVar { get; set; } = new decimal[2,4];
+        public long?[]? EnhanceIds { get; set; } // = new int[2];
+        public decimal[,] EnhanceValues { get; set; } // = new decimal[2,4];
 
         public int StateLevel { get; set; }
         public int StateTime { get; set; }
         public int CoolTime { get; set; }
-        public short CoolTimeGroup { get; set; } // could not find related enum
-        public string ScriptText { get; set; }
+        public short CoolTimeGroup { get; set; } // Groupid  of items sharing a cooldown timer could be refractored into an enum
+        public string? ScriptText { get; set; }
     
-        public int NameId { get; set; } 
+        public int? NameId { get; set; } 
     
-        public int TooltipId { get; set; }  
+        public int? TooltipId { get; set; }  
         // public virtual StringResourceEntity Tooltip { get; set; }
     
-        public int SetId { get; set; } 
+        public int? SetId { get; set; } 
         // public virtual SetItemEffectResourceEntity Set { get; set; }
     
-        public int SummonId { get; set; } 
+        public int? SummonId { get; set; } 
         // public virtual SummonResourceEntity Summon { get; set; }
     
-        public int EffectId { get; set; }
+        public int? EffectId { get; set; }
         // public virtual EffectResourceEntity Effect { get; set; }
     
-        public int SkillId { get; set; }  
+        public int? SkillId { get; set; }  
         // public virtual SkillResourceEntity Skill { get; set; }
     
-        public int StateId { get; set; }
+        public int? StateId { get; set; }
         // public virtual StateResourceEntity State { get; set; }
     
         // public virtual EnhanceResourceEntity[] Enchance { get; set; }

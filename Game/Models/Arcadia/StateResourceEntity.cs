@@ -1,4 +1,5 @@
 using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Models.Enums;
 
 namespace Navislamia.Game.Models.Arcadia
 {
@@ -10,9 +11,9 @@ namespace Navislamia.Game.Models.Arcadia
 		public StateTimeType StateTimeType { get; set; }
 		public StateGroup StateGroup { get; set; }
 		public int[] DuplicateGroup { get; set; } 
-		public string UfAvatar { get; set; }
-		public string UfSummon { get; set; }
-		public string UfMonster { get; set; }
+		public bool UseOnCharacter { get; set; }
+		public bool UseOnSummon { get; set; }
+		public bool UseOnMonster { get; set; }
 		public string ReiterationCount { get; set; }
 		public StateBaseEffect BaseEffect { get; set; }
 		public int FireInterval { get; set; }
@@ -22,7 +23,7 @@ namespace Navislamia.Game.Models.Arcadia
 		public int AddDamageBase { get; set; }
 		public int AddDamagePerSkl { get; set; }
 		public SkillEffectType EffectType { get; set; }
-		public int[] Value { get; set; } = new int[20];
+		public decimal[] Values { get; set; } = new decimal[20];
 		public int IconId { get; set; }
 		public string IconFileName { get; set; }
 		public int FxId { get; set; }

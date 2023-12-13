@@ -1,7 +1,7 @@
 ﻿namespace Navislamia.Game.Models.Arcadia.Enums
 {
     /// <summary>
-    /// Is the same as <see cref="SetPartFlag"/> but not flaggable
+    /// Is the same as <see cref="SetParts"/> but not flaggable
     /// ItemResource uses one type per Item and SetItemEffectResource uses multiple items (part flags) per set effect
     /// </summary>
 

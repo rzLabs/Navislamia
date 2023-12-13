@@ -1,9 +1,8 @@
-﻿namespace Navislamia.Game.Models.Arcadia.Enums
+﻿namespace Navislamia.Game.Models.Enums;
+
+public enum ItemDecreaseTimeType : byte
 {
-    public enum ItemDecreaseTimeType
-    {
-        Permanent = 0,
-        DecreaseInGame = 1,
-        DecreaseAlways = 2
-    }
+    Permanent = 0,
+    DecreaseInGame = 1,
+    DecreaseAlways = 2
 }

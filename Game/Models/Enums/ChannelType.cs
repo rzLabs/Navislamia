@@ -1,4 +1,4 @@
-namespace Navislamia.Game.Models.Arcadia.Enums
+namespace Navislamia.Game.Models.Enums
 {
     public enum ChannelType
     {
