@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
@@ -9,6 +11,7 @@ using Navislamia.Game.Repositories;
 using Navislamia.Notification;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
+using Navislamia.Game.Services;
 using Navislamia.Network;
 using Navislamia.Scripting;
 
@@ -24,16 +27,18 @@ namespace Navislamia.Game
         private readonly MapOptions _mapOptions;
 
         private readonly IWorldRepository _worldRepository;
+        private readonly ICharacterService _characterService;
         private readonly WorldEntity _worldEntity;
 
         public GameModule(INotificationModule notificationModule, INetworkModule networkModule,
-            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository)
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository, ICharacterService characterService)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _notificationModule = notificationModule;            
             _networkModule = networkModule;
             _worldRepository = worldRepository;
+            _characterService = characterService;
 
             _worldEntity = worldRepository.LoadWorldIntoMemory();
 
@@ -44,6 +49,12 @@ namespace Navislamia.Game
 
         public void Start(string ip, int port, int backlog)
         {
+            var charsWithItems = _characterService.GetCharacterListByAccountId(1, true);
+            var chars = _characterService.GetCharacterListByAccountId(1);
+
+            Console.WriteLine("Chars: " + chars.Count());
+            Console.WriteLine("Chars: " + charsWithItems.Count() + " Items: " + charsWithItems.Select(c => c.Items.Count));
+            
             if (!LoadScripts(_scriptOptions.SkipLoading))
                 return;
 

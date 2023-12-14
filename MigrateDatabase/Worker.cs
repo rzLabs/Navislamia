@@ -977,8 +977,13 @@ public class Worker : BackgroundService
             }
             Log.Information("Processing... {processed}/{amount}", processed, items.Count);
 
-            var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
+            if (item.fail_result != "1" || item.fail_result != "2" || item.fail_result != "3")
+            {
+                item.fail_result = "1";
+            }
             
+            var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
+
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.EnhanceResources.FirstOrDefault(i => i.Id == item.enhance_id && (int)i.LocalFlag == item.local_flag);
