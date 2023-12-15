@@ -6,6 +6,5 @@ namespace Navislamia.Game.Services;
 
 public interface ICharacterService
 {
-    IEnumerable<CharacterEntity> GetCharacterListByAccountId(long accountId, bool withItems = false);
-    IEnumerable<ItemEntity> GetCharactersItems(long accountId, long characterId);
+    IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false);
 }

@@ -6,6 +6,7 @@ using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Services;
 using Navislamia.Network.Enums;
 using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions;
@@ -36,7 +37,7 @@ namespace Navislamia.Game.Network
 
         public NetworkModule(IClientService<AuthClientEntity> authService, IClientService<UploadClientEntity> uploadService,
             IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, IOptions<LogOptions> logOptions,
-            IOptions<ServerOptions> serverOptions) 
+            IOptions<ServerOptions> serverOptions, ICharacterService characterService) 
         {
             _notificationSvc = notificationModule;
             _authService = authService;
@@ -47,7 +48,7 @@ namespace Navislamia.Game.Network
             _logOptions = logOptions;
 
             AuthActions = new AuthActions(notificationModule, this);
-            GameActions = new GameActions(notificationModule, this, _networkOptions);
+            GameActions = new GameActions(notificationModule, this, _networkOptions, characterService);
             UploadActions = new UploadActions(notificationModule);
         }
 
@@ -61,10 +62,10 @@ namespace Navislamia.Game.Network
 
         public void Initialize()
         {
-            // ConnectToAuth();
-            // ConnectToUpload();
-            // SendGsInfoToAuth();
-            // SendInfoToUpload();
+             ConnectToAuth();
+             ConnectToUpload();
+             SendGsInfoToAuth();
+             SendInfoToUpload();
         }
         public void Shutdown()
         {

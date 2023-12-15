@@ -7,6 +7,12 @@ using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Auth;
+using Navislamia.Game.Services;
+using System.Runtime.InteropServices;
+
+using static Navislamia.Network.Packets.PacketExtensions;
+using System.Linq;
+using Navislamia.Game.Models.Arcadia.Enums;
 
 namespace Navislamia.Network.Packets.Actions
 {
@@ -15,14 +21,16 @@ namespace Navislamia.Network.Packets.Actions
         private readonly NetworkOptions _networkOptions;
         INotificationModule _notificationModule;
         INetworkModule _networkModule;
+        ICharacterService _characterService;
 
         Dictionary<ushort, Func<ClientService<GameClientEntity>, IPacket, int>> actions = new();
 
-        public GameActions(INotificationModule notificationModule, INetworkModule networkModule, NetworkOptions networkOptions)
+        public GameActions(INotificationModule notificationModule, INetworkModule networkModule, NetworkOptions networkOptions, ICharacterService characterService)
         {
             _networkOptions = networkOptions;
             _notificationModule = notificationModule;
             _networkModule = networkModule;
+            _characterService = characterService;
 
             actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
             actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
@@ -52,9 +60,52 @@ namespace Navislamia.Network.Packets.Actions
             return 0;
         }
 
-        private int OnCharacterList(ClientService<GameClientEntity> arg1, IPacket arg2)
+        private int OnCharacterList(ClientService<GameClientEntity> client, IPacket msg)
         {
-            // TODO: implement me
+            var _msg = msg.GetDataStruct<TS_CS_CHARACTER_LIST>();
+
+            var _characters = _characterService.GetCharactersByAccountName(_msg.Account, true);
+
+            List<LobbyCharacterInfo> _lobbyCharacters = new List<LobbyCharacterInfo>();
+
+            foreach (var _character in _characters)
+            {
+                var _characterLobbyInfo = new LobbyCharacterInfo();
+
+                _characterLobbyInfo.Level = _character.Lv;
+                _characterLobbyInfo.Job = (int)_character.CurrentJob;
+                _characterLobbyInfo.JobLevel = _character.Jlv;
+                _characterLobbyInfo.ExpPercentage = 0; // TODO: needs to be done by getting values from LevelResourceRepository
+                _characterLobbyInfo.HP = _character.Hp;
+                _characterLobbyInfo.MP = _character.Mp;
+                _characterLobbyInfo.Permission = _character.Permission;
+                _characterLobbyInfo.IsBanned = 0;
+                _characterLobbyInfo.Name = _character.CharacterName;
+                _characterLobbyInfo.SkinColor = (uint)_character.SkinColor;
+                _characterLobbyInfo.CreateTime = _character.CreatedOn.ToString("yyyy/MM/dd");
+                _characterLobbyInfo.DeleteTime = _character.DeletedOn.ToString("yyyy/MM/dd");
+
+                foreach (var _item in  _character.Items.Where(i => i.WearInfo != ItemWearType.None))
+                {
+                    _characterLobbyInfo.WearInfo[(int)_item.WearInfo] = _item.ItemResourceId;
+                    _characterLobbyInfo.WearItemEnhanceInfo[(int)_item.WearInfo] = _item.Enhance;
+                    _characterLobbyInfo.WearItemLevelInfo[(int)_item.WearInfo] = _item.Level;
+                    _characterLobbyInfo.WearItemElementalType[(int)_item.WearInfo] = (char)_item.ElementalEffectType;
+                }
+
+                _characterLobbyInfo.Sex = _character.Sex;
+                _characterLobbyInfo.Race = _character.Race;
+
+                _characterLobbyInfo.ModelId = _character.Models;
+                _characterLobbyInfo.HairColorIndex = _character.HairColorIndex;
+                _characterLobbyInfo.HairColorRGB = (uint)_character.HairColorRgb;
+                _characterLobbyInfo.HideEquipFlag = (uint)_character.HideEquipFlag;
+                _characterLobbyInfo.TextureID = _character.TextureId;
+
+                _lobbyCharacters.Add(_characterLobbyInfo);
+            }
+
+            client.SendCharacterList(_lobbyCharacters);
 
             return 0;
         }

@@ -48,13 +48,7 @@ namespace Navislamia.Game
         }
 
         public void Start(string ip, int port, int backlog)
-        {
-            var charsWithItems = _characterService.GetCharacterListByAccountId(1, true);
-            var chars = _characterService.GetCharacterListByAccountId(1);
-
-            Console.WriteLine("Chars: " + chars.Count());
-            Console.WriteLine("Chars: " + charsWithItems.Count() + " Items: " + charsWithItems.Select(c => c.Items.Count));
-            
+        {   
             if (!LoadScripts(_scriptOptions.SkipLoading))
                 return;
 

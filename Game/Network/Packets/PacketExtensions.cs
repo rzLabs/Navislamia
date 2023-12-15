@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Navislamia.Network.Packets
 {
@@ -37,6 +39,20 @@ namespace Navislamia.Network.Packets
             header.Checksum += (byte)((header.Length >> 24) & 0xFF);
             header.Checksum += (byte)(header.ID & 0xFF);
             header.Checksum += (byte)((header.ID >> 8) & 0xFF);
+        }
+
+        public static byte[] StructToByte<T>(this T structure)
+        {
+            var length = Marshal.SizeOf(structure);
+            var ptr = Marshal.AllocHGlobal(length);
+
+            byte[] buffer = new byte[length];
+
+            Marshal.StructureToPtr(structure, ptr, true);
+            Marshal.Copy(ptr, buffer, 0, length);
+            Marshal.FreeHGlobal(ptr);
+
+            return buffer;
         }
     }
 }
