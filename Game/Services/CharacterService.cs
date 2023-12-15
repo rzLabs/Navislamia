@@ -14,13 +14,8 @@ public class CharacterService : ICharacterService
         _repository = repository;
     }
 
-    public IEnumerable<CharacterEntity> GetCharacterListByAccountId(long accountId, bool withItems = false)
+    public IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false)
     {
-        return _repository.GetCharacterListByAccountId(accountId, withItems);
-    }
-    
-    public IEnumerable<ItemEntity> GetCharactersItems(long accountId, long characterId)
-    {
-        return _repository.GetCharactersItems(accountId, characterId);
+        return _repository.GetCharactersByAccountName(accountName, withItems);
     }
 }

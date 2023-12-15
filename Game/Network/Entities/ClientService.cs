@@ -23,6 +23,7 @@ using Navislamia.Utilities;
 using Network.Security;
 using static Navislamia.Network.NetworkExtensions;
 using static Navislamia.Network.Packets.PacketExtensions;
+using System.Collections.Generic;
 
 namespace Navislamia.Game.Network.Entities
 {
@@ -74,7 +75,6 @@ namespace Navislamia.Game.Network.Entities
 
                     while (_sendCollection.TryTake(out queuedMsg))
                     {
-
                         var sendBuffer = queuedMsg.Data;
 
                         if (Entity.Type is ClientType.Game)
@@ -85,7 +85,8 @@ namespace Navislamia.Game.Network.Entities
                             var structDump = queuedMsg.DumpStructToString();
                             var dataDump = _notificationSvc.EscapeString(queuedMsg.DumpDataToHexString());
 
-                            _notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}\n{dataDump}");
+                            // TODO: Figure out a way to turn this back on. Had to disable because of TS_SC_CHARACTER_LIST
+                            //_notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}\n{dataDump}");
                         }
 
                         Send(sendBuffer);
@@ -213,27 +214,19 @@ namespace Navislamia.Game.Network.Entities
 
                 if (availableBytes > 0)
                 {
-                    Entity.PendingDataLength = availableBytes;
+                    entity.PendingDataLength = availableBytes;
 
                     // If we are receiving data from a Game Client we must decode it
                     if (Entity.Type is ClientType.Game)
-                        _recvCipher.Decode(Entity.MessageBuffer, Entity.MessageBuffer, Entity.PendingDataLength);
+                        _recvCipher.Decode(entity.MessageBuffer, entity.MessageBuffer, entity.PendingDataLength);
 
-                    while (Entity.PendingDataLength > Marshal.SizeOf<Header>())
+                    while (entity.PendingDataLength > Marshal.SizeOf<Header>())
                     {
                         Header _header = Entity.MessageBuffer.PeekHeader();
 
                         // If the packet length is more than the available packet this is obviously a bad read
                         if (_header.Length > Entity.PendingDataLength)
                             return;
-
-                        // Check for packets that haven't been defined yet (development)
-                        if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
-                            Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), _header.ID) ||
-                            Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), _header.ID))
-                        {
-                            _notificationSvc.WriteWarning($"Undefined packet {_header.ID} (Checksum: {_header.Checksum}, Length: {_header.Length}) received from {clientTag} @{Entity.IP}:{Entity.Port}");
-                        }
 
                         // Get the data from the front of the Entity.MessageBuffer
                         byte[] msgBuffer = new byte[_header.Length];
@@ -243,9 +236,21 @@ namespace Navislamia.Game.Network.Entities
                         Entity.PendingDataLength -= (int)_header.Length;
                         Buffer.BlockCopy(Entity.MessageBuffer, (int)_header.Length, Entity.MessageBuffer, 0, Entity.MessageBuffer.Length - (int)_header.Length);
 
+                        // Check for packets that haven't been defined yet (development)
+                        if (entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
+                            entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), _header.ID) ||
+                            entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), _header.ID))
+                        {
+                            _notificationSvc.WriteWarning($"Undefined packet {_header.ID} (Checksum: {_header.Checksum}, Length: {_header.Length}) received from {clientTag} @{Entity.IP}:{Entity.Port}");
+                            continue;
+                        }
+
                         // TM_NONE is a dummy packet sent by the client for...."reasons"
                         if (_header.ID == (ushort)GamePackets.TM_NONE)
+                        {
+                            _notificationSvc.WriteWarning($"Received TM_NONE from {clientTag} @P{entity.IP}:{entity.Port}");
                             continue;
+                        }
 
                         IPacket msg = _header.ID switch
                         {
@@ -294,14 +299,14 @@ namespace Navislamia.Game.Network.Entities
                         }
                     }
                 }
-
-                Listen();
             }
             catch (Exception ex)
             {
                 _notificationSvc.WriteError($"An error occured while attempting to read data from connection! {Entity.IP}:{Entity.Port}");
                 _notificationSvc.WriteException(ex);
             }
+
+            Listen();
         }
 
         public void SendMessage(IPacket msg)
@@ -315,6 +320,28 @@ namespace Navislamia.Game.Network.Entities
         public void SendResult(ushort id, ushort result, int value = 0)
         {
             SendMessage(new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new(id, result, value)));
+        }
+
+        public void SendCharacterList(List<LobbyCharacterInfo> characterList)
+        {
+            var _charCount = (ushort)characterList.Count;
+
+            var _packetStructLength = Marshal.SizeOf<TS_SC_CHARACTER_LIST>();
+            var _lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfo>();
+            var _lobbyCharacterBufferLength = _lobbyCharacterStructLength * characterList.Count;
+
+            var _packet = new Packet<TS_SC_CHARACTER_LIST>(2004, new(0, 0, _charCount), (_packetStructLength + _lobbyCharacterBufferLength));
+
+            int _charInfoOffset = Marshal.SizeOf<Header>() +_packetStructLength;
+
+            foreach (var _character in characterList)
+            {
+                Buffer.BlockCopy(_character.StructToByte(), 0, _packet.Data, _charInfoOffset, _lobbyCharacterStructLength);
+
+                _charInfoOffset += _lobbyCharacterStructLength;
+            }
+
+            SendMessage(_packet);
         }
 
         private string clientTag

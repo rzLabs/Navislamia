@@ -14,7 +14,7 @@ namespace Navislamia.Network.Packets
 
         public byte Checksum { get; }
 
-        public byte[] Data { get; }
+        public byte[] Data { get; set; }
 
         public S GetDataStruct<S>();
 
@@ -25,7 +25,7 @@ namespace Navislamia.Network.Packets
 
     public class Packet<T> : IPacket where T : new()
     {
-        public Packet(ushort id, T dataStruct)
+        public Packet(ushort id, T dataStruct, int length = 0)
         {
             HeaderStruct = new Header(id);
             DataStruct = dataStruct;
@@ -33,7 +33,7 @@ namespace Navislamia.Network.Packets
             _headerLen = 7;
             _dataLen = Marshal.SizeOf(DataStruct);
 
-            Data = new byte[_headerLen + _dataLen];
+            Data = new byte[_headerLen + ((length == 0) ?_dataLen : length)];
 
             serialize();
         }

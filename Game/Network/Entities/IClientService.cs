@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Navislamia.Network.Packets;
@@ -14,4 +15,6 @@ public interface IClientService<T>
     void Listen();
     void SendMessage(IPacket msg);
     void SendResult(ushort id, ushort result, int value = 0);
+
+    void SendCharacterList(List<LobbyCharacterInfo> characterList);
 }

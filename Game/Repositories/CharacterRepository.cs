@@ -16,9 +16,9 @@ public class CharacterRepository : ICharacterRepository
         _context = context;
     }
     
-    public IEnumerable<CharacterEntity> GetCharacterListByAccountId(long accountId, bool withItems = false)
+    public IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false)
     {
-        var query = _context.Characters.Where(c => c.AccountId == accountId);
+        var query = _context.Characters.Where(c => c.AccountName == accountName);
 
         if (withItems)
         {
@@ -26,11 +26,6 @@ public class CharacterRepository : ICharacterRepository
         }
         
         return query;
-    }
-
-    public IEnumerable<ItemEntity> GetCharactersItems(long accountId, long characterId)
-    {
-        return _context.Items.Where(c => c.AccountId == accountId && c.CharacterId == characterId);
     }
 
 
