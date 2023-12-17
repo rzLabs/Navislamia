@@ -6,6 +6,8 @@ using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Packets.Auth;
 
+using Navislamia.Game.Network.Enums;
+
 namespace Navislamia.Network.Packets.Actions
 {
     public class AuthActions
@@ -46,7 +48,7 @@ namespace Navislamia.Network.Packets.Actions
                 return 1;
             }
 
-            client.GetEntity().Ready = true;
+            _networkModule.SetReadiness(NetworkReadiness.AuthReady);
 
             _notificationModule.WriteSuccess("Successfully registered to the Auth Server!");
 

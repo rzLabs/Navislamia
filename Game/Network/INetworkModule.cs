@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Enums;
+using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions;
 
 namespace Navislamia.Game.Network
@@ -26,15 +28,19 @@ namespace Navislamia.Game.Network
 
         UploadActions UploadActions { get; }
 
-        bool IsReady();
+        void SetReadiness(NetworkReadiness readinessFlag);
+
+        bool IsReady { get; }
 
         int GetPlayerCount();
 
-        void Initialize();
+        bool Initialize();
 
-        int StartListener();
+        void StartListener();
 
         bool RegisterAccount(ClientService<GameClientEntity> client, string accountName);
+
+        void RemoveGameClient(ClientService<GameClientEntity> client);
 
     }
 }

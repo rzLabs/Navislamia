@@ -24,13 +24,15 @@ using Network.Security;
 using static Navislamia.Network.NetworkExtensions;
 using static Navislamia.Network.Packets.PacketExtensions;
 using System.Collections.Generic;
+using Navislamia.Game.Network.Packets.Auth;
+using Navislamia.Game.Models.Arcadia;
 
 namespace Navislamia.Game.Network.Entities
 {
     // TODO: Poll connections by configuration interval
     // TODO: Disconnect/Destroy
 
-    public class ClientService<T> : IClientService<T> where T : ClientEntity, new()
+    public class ClientService<T> : IDisposable, IClientService<T> where T : ClientEntity, new()
     {
         private readonly INotificationModule _notificationSvc;
         private INetworkModule _networkModule;
@@ -46,7 +48,7 @@ namespace Navislamia.Game.Network.Entities
 
         private readonly ConcurrentQueue<IPacket> _sendQueue = new();
         private BlockingCollection<IPacket> _sendCollection;
-        private readonly CancellationTokenSource _sendCancelSource = new();
+        private readonly CancellationTokenSource _updateCancelSource = new();
 
         public T Entity;
 
@@ -61,11 +63,22 @@ namespace Navislamia.Game.Network.Entities
             _sendCipher.SetKey(_networkOptions.CipherKey);
 
             _sendCollection = new BlockingCollection<IPacket>(_sendQueue);
-
-            ProcessSendQueue(_sendCancelSource.Token);
         }
 
-        private Task ProcessSendQueue(CancellationToken cancellationToken)
+        public void Dispose()
+        {
+            _updateCancelSource.Cancel();
+
+            _recvCipher.Clear();
+            _sendCipher.Clear();
+            _sendQueue.Clear();
+            _sendCollection = null;
+
+            Entity = null;
+        }
+        
+
+        private Task Update(CancellationToken cancellationToken)
         {
             Task.Run(() =>
             {
@@ -104,7 +117,7 @@ namespace Navislamia.Game.Network.Entities
             return Entity;
         }
 
-        public void Create(INetworkModule networkModule, Socket socket)
+        public void Initialize(INetworkModule networkModule, Socket socket)
         {
             _networkModule = networkModule;
 
@@ -126,6 +139,128 @@ namespace Navislamia.Game.Network.Entities
                 Type = type
             };
 
+            Update(_updateCancelSource.Token);
+
+            Task.Run(ListenLoop);
+        }
+
+        private void ListenLoop()
+        {
+            while (true)
+            {
+                try
+                {
+                    SocketError _socketError;
+
+                    Span<byte> _receiveBuffer = new Span<byte>(Entity.MessageBuffer);
+
+                    var availableBytes = Entity.Socket.Receive(_receiveBuffer, SocketFlags.None, out _socketError);
+
+                    if (!Entity.Socket.IsConnected())
+                    {
+                        // If we've reached this point the client is no longer connected
+                        if (Entity.Type is ClientType.Game)
+                            _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
+
+                        break;
+                    }
+
+                    if (availableBytes > 0)
+                    {
+                        Entity.PendingDataLength = availableBytes;
+
+                        // If we are receiving data from a Game Client we must decode it
+                        if (Entity.Type is ClientType.Game)
+                            _recvCipher.Decode(Entity.MessageBuffer, Entity.MessageBuffer, Entity.PendingDataLength);
+
+                        while (Entity.PendingDataLength > Marshal.SizeOf<Header>())
+                        {
+                            Header _header = Entity.MessageBuffer.PeekHeader();
+
+                            // If the packet length is more than the available packet this is obviously a bad read
+                            if (_header.Length > Entity.PendingDataLength)
+                                return;
+
+                            // Get the data from the front of the Entity.MessageBuffer
+                            byte[] msgBuffer = new byte[_header.Length];
+                            Buffer.BlockCopy(Entity.MessageBuffer, 0, msgBuffer, 0, (int)_header.Length);
+
+                            // Reduce the available data length and move the rest of the available data to the front of the buffer
+                            Entity.PendingDataLength -= (int)_header.Length;
+                            Buffer.BlockCopy(Entity.MessageBuffer, (int)_header.Length, Entity.MessageBuffer, 0, Entity.MessageBuffer.Length - (int)_header.Length);
+
+                            // Check for packets that haven't been defined yet (development)
+                            if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
+                                Entity.Type is ClientType.Upload && !Enum.IsDefined(typeof(UploadPackets), _header.ID) ||
+                                Entity.Type is ClientType.Game && !Enum.IsDefined(typeof(GamePackets), _header.ID))
+                            {
+                                _notificationSvc.WriteWarning($"Undefined packet {_header.ID} (Checksum: {_header.Checksum}, Length: {_header.Length}) received from {clientTag} @{Entity.IP}:{Entity.Port}");
+                                continue;
+                            }
+
+                            // TM_NONE is a dummy packet sent by the client for...."reasons"
+                            if (_header.ID == (ushort)GamePackets.TM_NONE)
+                            {
+                                _notificationSvc.WriteWarning($"Received TM_NONE from {clientTag} @P{Entity.IP}:{Entity.Port}");
+                                continue;
+                            }
+
+                            IPacket msg = _header.ID switch
+                            {
+                                // Auth
+                                (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
+                                (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
+
+                                // Game
+                                //(ushort)GamePackets.TM_NONE => null,
+                                (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
+                                (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
+                                (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
+                                (ushort)GamePackets.TS_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
+
+                                // Upload
+                                (ushort)UploadPackets.TS_US_LOGIN_RESULT => new Packet<TS_US_LOGIN_RESULT>(msgBuffer),
+
+                                _ => throw new Exception("Unknown Packet Type")
+                            };
+
+                            if (_logOptions.PacketDebug)
+                            {
+                                var structDump = msg.DumpStructToString();
+                                var dataDump = _notificationSvc.EscapeString(msg.DumpDataToHexString());
+
+                                _notificationSvc.WriteMarkup($"[bold orange3]Received ({msg.Length} bytes) from {clientTag} @{Entity.IP}:{Entity.Port}[/]\n\n{structDump}\n{dataDump}");
+                            }
+
+                            switch (Entity.Type)
+                            {
+                                case ClientType.Auth:
+                                    _networkModule.AuthActions.Execute(this as ClientService<AuthClientEntity>, msg);
+                                    break;
+                                case ClientType.Game:
+                                    _networkModule.GameActions.Execute(this as ClientService<GameClientEntity>, msg);
+                                    break;
+                                case ClientType.Upload:
+                                    _networkModule.UploadActions.Execute(this as ClientService<UploadClientEntity>, msg);
+                                    break;
+                                case ClientType.Unknown:
+
+                                default:
+                                    {
+                                        throw new ArgumentOutOfRangeException(nameof(ClientType), Entity.Type, $"Could not execute action for {clientTag}");
+                                    }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationSvc.WriteError($"An error occured while attempting to read listen for data from {clientTag} @{Entity.IP}:{Entity.Port} !!!");
+                    _notificationSvc.WriteException(ex);
+
+                    break;
+                }
+            }
         }
 
         public void Connect(IPEndPoint ep)
@@ -155,7 +290,7 @@ namespace Navislamia.Game.Network.Entities
 
             Entity.Socket.Dispose();
 
-            _sendCancelSource.Cancel();
+            _updateCancelSource.Cancel();
         }
 
         public void Send(byte[] data)
@@ -179,32 +314,21 @@ namespace Navislamia.Game.Network.Entities
                 throw new Exception("Lost entity on SendCallback");
             }
             entity.Socket.EndSend(ar);
-            Listen();
-        }
-
-        public void Listen()
-        {
-            if (!Entity.Socket.Connected)
-                return;
-
-            try
-            {
-                Entity.Socket.BeginReceive(Entity.MessageBuffer, 0, Entity.MessageBuffer.Length, SocketFlags.None, ListenCallback, Entity);
-            }
-            catch (Exception ex)
-            {
-                _notificationSvc.WriteError($"An error occured while attempting to read listen for data from connection! {Entity.IP}:{Entity.Port}");
-                _notificationSvc.WriteException(ex);
-            }
         }
 
         private void ListenCallback(IAsyncResult ar)
         {
             T entity = (T)ar.AsyncState;
 
-            if (entity == null || !entity.Socket.Connected)
+            if (entity == null || !entity.Socket.IsConnected())
             {
-                _notificationSvc.WriteError($"Read attempted for invalid or closed connection! {Entity.IP}:{Entity.Port}");
+                _notificationSvc.WriteError($"Client {clientTag} @{Entity.IP}:{Entity.Port} disconnected!!!");
+
+                if (Entity.Type is ClientType.Game)
+                {
+                    _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
+                }
+
                 return;
             }
 
@@ -306,7 +430,7 @@ namespace Navislamia.Game.Network.Entities
                 _notificationSvc.WriteException(ex);
             }
 
-            Listen();
+
         }
 
         public void SendMessage(IPacket msg)

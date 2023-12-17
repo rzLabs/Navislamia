@@ -4,18 +4,23 @@ using Navislamia.Notification;
 using System;
 using System.Collections.Generic;
 using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network;
+using Navislamia.Game.Network.Enums;
 
 namespace Navislamia.Network.Packets.Actions
 {
     public class UploadActions
     {
         INotificationModule notificationSVC;
+        INetworkModule _networkModule;
 
         Dictionary<ushort, Func<ClientService<UploadClientEntity>, IPacket, int>> actions = new();
 
-        public UploadActions(INotificationModule notificationModule)
+        public UploadActions(INotificationModule notificationModule, INetworkModule networkModule)
         {
             notificationSVC = notificationModule;
+            _networkModule = networkModule;
+
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 
@@ -38,7 +43,7 @@ namespace Navislamia.Network.Packets.Actions
                 return 1;
             }
 
-            client.GetEntity().Ready = true;
+            _networkModule.SetReadiness(NetworkReadiness.UploadReady);
 
             notificationSVC.WriteSuccess("Successfully registered to the Upload Server!");
 

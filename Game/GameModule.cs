@@ -14,6 +14,7 @@ using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Navislamia.Network;
 using Navislamia.Scripting;
+using System.Threading;
 
 namespace Navislamia.Game
 {
@@ -55,22 +56,8 @@ namespace Navislamia.Game
             if (!LoadMaps(_mapOptions.SkipLoading))
                 return; 
 
-            _networkModule.Initialize();
-            
-            while (!_networkModule.IsReady())
-            {
-                var maxTime = DateTime.UtcNow.AddSeconds(30);
-
-                if (DateTime.UtcNow < maxTime)
-                {
-                    continue;
-                }
-                
-                _notificationModule.WriteError("Network service timed out!");
-                return;
-            }
-            
-            _networkModule.StartListener();
+            if (_networkModule.Initialize())
+                _networkModule.StartListener();
         }
 
         private bool LoadMaps(bool skip)
