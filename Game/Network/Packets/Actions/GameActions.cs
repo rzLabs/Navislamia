@@ -8,9 +8,6 @@ using Navislamia.Game.Network.Entities;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Game.Services;
-using System.Runtime.InteropServices;
-
-using static Navislamia.Network.Packets.PacketExtensions;
 using System.Linq;
 using Navislamia.Game.Models.Arcadia.Enums;
 

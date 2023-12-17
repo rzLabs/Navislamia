@@ -17,7 +17,6 @@ using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
 using Navislamia.Notification;
-using Serilog.Core;
 
 namespace Navislamia.Game.Network
 {
@@ -35,8 +34,8 @@ namespace Navislamia.Game.Network
         private readonly IOptions<LogOptions> _logOptions;
 
         private readonly AutoResetEvent authReset = new AutoResetEvent(false);
-
-        private NetworkReadiness _readinessFlag { get; set; } = NetworkReadiness.NotReady;
+        
+        private volatile int _readinessFlag;
 
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
         public Dictionary<string, ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
@@ -65,35 +64,21 @@ namespace Navislamia.Game.Network
         public IClientService<AuthClientEntity> GetAuthClient() => _authService;
 
         public IClientService<UploadClientEntity> GetUploadClient() => _uploadService;
-
+      
         public void SetReadiness(NetworkReadiness readinessFlag)
         {
-            if (!_readinessFlag.HasFlag(readinessFlag))
-                _readinessFlag |= readinessFlag;
+            _readinessFlag |= (int)readinessFlag;
         }
-
-        public bool IsReady => _readinessFlag == NetworkReadiness.AuthServerReady;
-
+        
+        public bool IsReady => (_readinessFlag & (int)NetworkReadiness.AuthReady) != 0 &&
+                               (_readinessFlag & (int)NetworkReadiness.UploadReady) != 0;
+        
         public int GetPlayerCount() => AuthorizedGameClients.Count;
 
         public bool Initialize()
         {
             ConnectToAuth();
             ConnectToUpload();
-            SendGsInfoToAuth();
-            SendInfoToUpload();
-
-            while (_readinessFlag != NetworkReadiness.AuthServerReady)
-            {
-                var maxTime = DateTime.UtcNow.AddSeconds(30);
-
-                if (DateTime.UtcNow < maxTime)
-                    continue;
-
-                _notificationSvc.WriteError("Network service timed out!");
-
-                return false;
-            }
 
             return true;
         }
@@ -137,7 +122,8 @@ namespace Navislamia.Game.Network
         private void ConnectToAuth()
         {
             string addrStr = _networkOptions.Auth.Ip;
-            int port = _networkOptions.Auth.Port;            if (string.IsNullOrEmpty(addrStr) || port == 0)
+            int port = _networkOptions.Auth.Port;
+            if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 _notificationSvc.WriteError("Invalid network auth ip! Review your configuration!");
                 throw new Exception();
@@ -159,6 +145,27 @@ namespace Navislamia.Game.Network
             {
                 _authService.Initialize(this, authSock);
                 _authService.Connect(authEp);
+                
+                try
+                {
+                    var index = _serverOptions.Index;
+                    var name = _serverOptions.Name;
+                    var screenshotUrl = _serverOptions.ScreenshotUrl;
+                    var isAdultServer = _serverOptions.IsAdultServer;
+                    var ip = _networkOptions.Game.Ip;
+                    var gamePort = _networkOptions.Game.Port;
+
+                    var msg = new Packet<TS_GA_LOGIN>((ushort)AuthPackets.TS_GA_LOGIN, new(index, name, screenshotUrl, (byte)isAdultServer, ip, gamePort));
+
+                    _authService.SendMessage(msg);
+                }
+                catch (Exception ex)
+                {
+                    _notificationSvc.WriteError("Failed to send Game server info to the Auth Server!");
+                    _notificationSvc.WriteException(ex);
+
+                    throw new Exception("Failed sending message to Authservice");
+                };
             }
             catch (Exception ex)
             {
@@ -174,33 +181,15 @@ namespace Navislamia.Game.Network
 
         private void SendGsInfoToAuth()
         {
-            try
-            {
-                var index = _serverOptions.Index;
-                var name = _serverOptions.Name;
-                var screenshotUrl = _serverOptions.ScreenshotUrl;
-                var isAdultServer = _serverOptions.IsAdultServer;
-                var ip = _networkOptions.Game.Ip;
-                var port = _networkOptions.Game.Port;
-
-                var msg = new Packet<TS_GA_LOGIN>((ushort)AuthPackets.TS_GA_LOGIN, new(index, name, screenshotUrl, (byte)isAdultServer, ip, port));
-
-                _authService.SendMessage(msg);
-            }
-            catch (Exception ex)
-            {
-                _notificationSvc.WriteError("Failed to send Game server info to the Auth Server!");
-                _notificationSvc.WriteException(ex);
-
-                throw new Exception("Failed sending message to Authservice");
-            };
+            
         }
 
         private void ConnectToUpload()
         {
             string addrStr = _networkOptions.Upload.Ip;
             int port = _networkOptions.Upload.Port;
-            if (string.IsNullOrEmpty(addrStr) || port == 0)
+
+            if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
             }
@@ -220,6 +209,20 @@ namespace Navislamia.Game.Network
             {
                 _uploadService.Initialize(this, uploadSock);
                 _uploadService.Connect(uploadEp);
+                
+                try
+                {
+                    var serverName = _serverOptions.Name;
+
+                    var msg = new Packet<TS_SU_LOGIN>((ushort)UploadPackets.TS_SU_LOGIN, new(serverName));
+
+                    _uploadService.SendMessage(msg);
+                }
+                catch (Exception ex)
+                {
+                    _notificationSvc.WriteException(ex);
+                    throw new Exception();
+                }
             }
             catch (Exception ex)
             {
@@ -229,22 +232,11 @@ namespace Navislamia.Game.Network
             }
 
             _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }); ;
-        }
+        }
+
         private void SendInfoToUpload()
         {
-            try
-            {
-                var serverName = _serverOptions.Name;
-
-                var msg = new Packet<TS_SU_LOGIN>((ushort)UploadPackets.TS_SU_LOGIN, new(serverName));
-
-                _uploadService.SendMessage(msg);
-            }
-            catch (Exception ex)
-            {
-                _notificationSvc.WriteException(ex);
-                throw new Exception();
-            }
+           
         }
 
         public void StartListener()

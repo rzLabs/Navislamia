@@ -5,8 +5,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-using System.Net;
-using System.Net.Sockets;
 using Microsoft.Extensions.Options;
 
 using Configuration;
@@ -18,14 +16,11 @@ using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets.Upload;
-using Navislamia.Notification;
-using Navislamia.Utilities;
 using Network.Security;
 using static Navislamia.Network.NetworkExtensions;
-using static Navislamia.Network.Packets.PacketExtensions;
 using System.Collections.Generic;
 using Navislamia.Game.Network.Packets.Auth;
-using Navislamia.Game.Models.Arcadia;
+using Serilog;
 
 namespace Navislamia.Game.Network.Entities
 {
@@ -76,7 +71,6 @@ namespace Navislamia.Game.Network.Entities
 
             Entity = null;
         }
-        
 
         private Task Update(CancellationToken cancellationToken)
         {
@@ -204,12 +198,30 @@ namespace Navislamia.Game.Network.Entities
                                 _notificationSvc.WriteWarning($"Received TM_NONE from {clientTag} @P{Entity.IP}:{Entity.Port}");
                                 continue;
                             }
+                            
+                            if (_header.ID == (ushort)GamePackets.TM_NONE)
+                            {
+                                _notificationSvc.WriteWarning($"Received TM_NONE from {clientTag} @P{Entity.IP}:{Entity.Port}");
+                                continue;
+                            }
+                            
+                            if (_header.ID == (ushort)AuthPackets.TM_AG_KICK_CLIENT)
+                            {
+                                Log.Logger.Warning("Kicking Client {tag}", clientTag);
+                            }
+                            
+                            if (_header.ID == (ushort)AuthPackets.TM_GA_CLIENT_KICK_FAILED)
+                            {
+                                Log.Logger.Warning("Failed kicking Client {tag}", clientTag);
+                            }
 
                             IPacket msg = _header.ID switch
                             {
                                 // Auth
                                 (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
                                 (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
+                                (ushort)AuthPackets.TM_AG_KICK_CLIENT => new Packet<TS_AG_KICK_CLIENT>(msgBuffer),
+                                (ushort)AuthPackets.TM_GA_CLIENT_KICK_FAILED => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
 
                                 // Game
                                 //(ushort)GamePackets.TM_NONE => null,
