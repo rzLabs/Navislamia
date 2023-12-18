@@ -96,8 +96,11 @@ namespace Navislamia.Network.Packets.Actions
                 }
             }
 
-            gameClient?.SendResult((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, agClientLogin.Result);
-            
+            if (gameClient is not null)
+            {
+                gameClient.SendResult((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, agClientLogin.Result);              
+            }
+
             return 0;
         }
     }

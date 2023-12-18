@@ -26,6 +26,7 @@ using static Navislamia.Network.Packets.PacketExtensions;
 using System.Collections.Generic;
 using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Models.Arcadia;
+using Serilog;
 
 namespace Navislamia.Game.Network.Entities
 {
@@ -93,16 +94,25 @@ namespace Navislamia.Game.Network.Entities
                         if (Entity.Type is ClientType.Game)
                             _sendCipher.Encode(queuedMsg.Data, sendBuffer, sendBuffer.Length);
 
-                        if (_logOptions.PacketDebug)
+                        //if (_logOptions.PacketDebug)
+                        //{
+                        //    var structDump = queuedMsg.DumpStructToString();
+                        //    var dataDump = _notificationSvc.EscapeString(queuedMsg.DumpDataToHexString());
+
+                        //    // TODO: Figure out a way to turn this back on. Had to disable because of TS_SC_CHARACTER_LIST
+                        //    //_notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}\n{dataDump}");
+
+                        //    Console.WriteLine($"Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}\n\n{structDump}\n{dataDump}");
+                        //}
+
+                        try
                         {
-                            var structDump = queuedMsg.DumpStructToString();
-                            var dataDump = _notificationSvc.EscapeString(queuedMsg.DumpDataToHexString());
-
-                            // TODO: Figure out a way to turn this back on. Had to disable because of TS_SC_CHARACTER_LIST
-                            //_notificationSvc.WriteMarkup($"[bold orange3]Sending ({queuedMsg.Data.Length} bytes) to the {clientTag}[/]\n\n{structDump}\n{dataDump}");
+                            Send(sendBuffer);
                         }
+                        catch (Exception ex)
+                        {
 
-                        Send(sendBuffer);
+                        }
                     }
 
                     Thread.Sleep(50); // TODO: research required processing speed
@@ -141,34 +151,35 @@ namespace Navislamia.Game.Network.Entities
 
             Update(_updateCancelSource.Token);
 
-            Task.Run(ListenLoop);
+            Task.Run(Listen);
         }
 
-        private void ListenLoop()
+        private async void Listen()
         {
             while (true)
             {
-                try
+                if (!Entity.Socket.IsConnected())
                 {
-                    SocketError _socketError;
-
-                    Span<byte> _receiveBuffer = new Span<byte>(Entity.MessageBuffer);
-
-                    var availableBytes = Entity.Socket.Receive(_receiveBuffer, SocketFlags.None, out _socketError);
-
-                    if (!Entity.Socket.IsConnected())
+                    // If we've reached this point the client is no longer connected
+                    if (Entity.Type is ClientType.Game)
                     {
-                        // If we've reached this point the client is no longer connected
-                        if (Entity.Type is ClientType.Game)
-                            _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
-
-                        break;
+                        _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
                     }
 
-                    if (availableBytes > 0)
-                    {
-                        Entity.PendingDataLength = availableBytes;
+                    break;
+                }
 
+                try
+                {
+                    ArraySegment<byte> _receiveBuffer = new ArraySegment<byte>(Entity.MessageBuffer);
+
+                    if (Entity.Socket.Available == 0)
+                        continue;
+
+                    Entity.PendingDataLength = Entity.Socket.Receive(_receiveBuffer, SocketFlags.None);
+
+                    if (Entity.PendingDataLength > 0)
+                    {
                         // If we are receiving data from a Game Client we must decode it
                         if (Entity.Type is ClientType.Game)
                             _recvCipher.Decode(Entity.MessageBuffer, Entity.MessageBuffer, Entity.PendingDataLength);
@@ -178,16 +189,23 @@ namespace Navislamia.Game.Network.Entities
                             Header _header = Entity.MessageBuffer.PeekHeader();
 
                             // If the packet length is more than the available packet this is obviously a bad read
-                            if (_header.Length > Entity.PendingDataLength)
-                                return;
+                            if (_header.Length > Entity.PendingDataLength && _header.ID == (ushort)GamePackets.TM_NONE)
+                            {
+                                _notificationSvc.WriteDebug("Header length above received length!");
+
+                                _header.Length = (uint)Entity.PendingDataLength;
+
+                                // Lets slow down execution to avoid reading garbage
+                                Thread.Sleep(250);
+                            }
 
                             // Get the data from the front of the Entity.MessageBuffer
                             byte[] msgBuffer = new byte[_header.Length];
                             Buffer.BlockCopy(Entity.MessageBuffer, 0, msgBuffer, 0, (int)_header.Length);
 
                             // Reduce the available data length and move the rest of the available data to the front of the buffer
-                            Entity.PendingDataLength -= (int)_header.Length;
-                            Buffer.BlockCopy(Entity.MessageBuffer, (int)_header.Length, Entity.MessageBuffer, 0, Entity.MessageBuffer.Length - (int)_header.Length);
+                            Entity.PendingDataLength -= msgBuffer.Length;
+                            Buffer.BlockCopy(Entity.MessageBuffer, msgBuffer.Length, Entity.MessageBuffer, 0, Entity.PendingDataLength);
 
                             // Check for packets that haven't been defined yet (development)
                             if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
@@ -224,13 +242,13 @@ namespace Navislamia.Game.Network.Entities
                                 _ => throw new Exception("Unknown Packet Type")
                             };
 
-                            if (_logOptions.PacketDebug)
-                            {
-                                var structDump = msg.DumpStructToString();
-                                var dataDump = _notificationSvc.EscapeString(msg.DumpDataToHexString());
+                            //if (_logOptions.PacketDebug)
+                            //{
+                            //    var structDump = msg.DumpStructToString();
+                            //    var dataDump = _notificationSvc.EscapeString(msg.DumpDataToHexString());
 
-                                _notificationSvc.WriteMarkup($"[bold orange3]Received ({msg.Length} bytes) from {clientTag} @{Entity.IP}:{Entity.Port}[/]\n\n{structDump}\n{dataDump}");
-                            }
+                            //    _notificationSvc.WriteMarkup($"[bold orange3]Received ({msg.Length} bytes) from {clientTag} @{Entity.IP}:{Entity.Port}[/]\n\n{structDump}\n{dataDump}");
+                            //}
 
                             switch (Entity.Type)
                             {

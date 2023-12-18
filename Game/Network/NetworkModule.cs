@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Network.Entities;
@@ -36,7 +37,9 @@ namespace Navislamia.Game.Network
 
         private readonly AutoResetEvent authReset = new AutoResetEvent(false);
 
-        private NetworkReadiness _readinessFlag { get; set; } = NetworkReadiness.NotReady;
+        private volatile int _readyFlag;
+
+        private ILogger _logger;
 
         public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
         public Dictionary<string, ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
@@ -68,11 +71,21 @@ namespace Navislamia.Game.Network
 
         public void SetReadiness(NetworkReadiness readinessFlag)
         {
-            if (!_readinessFlag.HasFlag(readinessFlag))
-                _readinessFlag |= readinessFlag;
+            _readyFlag |= (int)readinessFlag;
         }
 
-        public bool IsReady => _readinessFlag == NetworkReadiness.AuthServerReady;
+        public bool IsReady
+        {
+            get
+            {
+                if ((_readyFlag & (int)NetworkReadiness.AuthReady) != 0 && (_readyFlag & (int)NetworkReadiness.UploadReady) != 0)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
 
         public int GetPlayerCount() => AuthorizedGameClients.Count;
 
@@ -83,7 +96,7 @@ namespace Navislamia.Game.Network
             SendGsInfoToAuth();
             SendInfoToUpload();
 
-            while (_readinessFlag != NetworkReadiness.AuthServerReady)
+            while ((_readyFlag & (int)NetworkReadiness.AuthServerReady) == 0)
             {
                 var maxTime = DateTime.UtcNow.AddSeconds(30);
 
@@ -157,8 +170,8 @@ namespace Navislamia.Game.Network
 
             try
             {
+                authSock.Connect(authEp);
                 _authService.Initialize(this, authSock);
-                _authService.Connect(authEp);
             }
             catch (Exception ex)
             {
@@ -218,8 +231,8 @@ namespace Navislamia.Game.Network
 
             try
             {
+                uploadSock.Connect(uploadEp);
                 _uploadService.Initialize(this, uploadSock);
-                _uploadService.Connect(uploadEp);
             }
             catch (Exception ex)
             {
