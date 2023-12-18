@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
@@ -12,9 +10,6 @@ using Navislamia.Notification;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
-using Navislamia.Network;
-using Navislamia.Scripting;
-using System.Threading;
 
 namespace Navislamia.Game
 {
@@ -54,10 +49,17 @@ namespace Navislamia.Game
                 return;
 
             if (!LoadMaps(_mapOptions.SkipLoading))
-                return; 
+                return;
 
-            if (_networkModule.Initialize())
-                _networkModule.StartListener();
+            _networkModule.Initialize();
+            var maxTime = DateTime.UtcNow.AddSeconds(30);
+            
+            while (!_networkModule.IsReady)
+            {
+                // Do nothing
+            }
+                
+            _networkModule.StartListener();
         }
 
         private bool LoadMaps(bool skip)
