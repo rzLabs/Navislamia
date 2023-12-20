@@ -150,7 +150,9 @@ namespace Navislamia.Game.Network
         private void ConnectToAuth()
         {
             string addrStr = _networkOptions.Auth.Ip;
-            int port = _networkOptions.Auth.Port;            if (string.IsNullOrEmpty(addrStr) || port == 0)
+            int port = _networkOptions.Auth.Port;
+
+            if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 _notificationSvc.WriteError("Invalid network auth ip! Review your configuration!");
                 throw new Exception();
@@ -170,8 +172,10 @@ namespace Navislamia.Game.Network
 
             try
             {
-                authSock.Connect(authEp);
-                _authService.Initialize(this, authSock);
+                var _authConnection = new Connection(authSock);
+                _authConnection.Connect(addrStr, port);
+
+                _authService.Initialize(this, _authConnection);
             }
             catch (Exception ex)
             {
@@ -213,7 +217,8 @@ namespace Navislamia.Game.Network
         {
             string addrStr = _networkOptions.Upload.Ip;
             int port = _networkOptions.Upload.Port;
-            if (string.IsNullOrEmpty(addrStr) || port == 0)
+
+            if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
                 _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
             }
@@ -231,8 +236,10 @@ namespace Navislamia.Game.Network
 
             try
             {
-                uploadSock.Connect(uploadEp);
-                _uploadService.Initialize(this, uploadSock);
+                var _uploadConnection = new Connection(uploadSock);
+                _uploadConnection.Connect(addrStr, port);
+
+                _uploadService.Initialize(this, _uploadConnection);
             }
             catch (Exception ex)
             {
@@ -242,7 +249,8 @@ namespace Navislamia.Game.Network
             }
 
             _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }); ;
-        }
+        }
+
         private void SendInfoToUpload()
         {
             try
@@ -289,11 +297,12 @@ namespace Navislamia.Game.Network
             while (true)
             {
                 var _clientSocket = await _clientListener.AcceptAsync();
+                _clientSocket.NoDelay = true;
 
                 ClientService<GameClientEntity> client = new(_logOptions, _notificationSvc, _networkIOptions);
-                client.Initialize(this, _clientSocket);
+                client.Initialize(this, new CipherConnection(_clientSocket, _networkOptions.CipherKey));
 
-                _notificationSvc.WriteDebug($"Game client connected from: {client.Entity.IP}");
+                _notificationSvc.WriteDebug($"Game client connected from: {client.Entity.Connection.RemoteIp}");
             }
         }
 
@@ -317,7 +326,7 @@ namespace Navislamia.Game.Network
 
             AuthorizedGameClients.Remove(_clientInfo.AccountName);
 
-            _notificationSvc.WriteWarning($"Game Client @{client.Entity.IP}:{client.Entity.Port} disconnected!");
+            _notificationSvc.WriteDebug($"Game Client @{client.Entity.Connection.RemoteIp}:{client.Entity.Connection.RemotePort} disconnected!");
 
             client.Dispose();
             client = null;

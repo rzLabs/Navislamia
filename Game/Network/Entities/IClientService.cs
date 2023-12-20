@@ -8,10 +8,8 @@ namespace Navislamia.Game.Network.Entities;
 public interface IClientService<T>
 {
     T GetEntity();
-    void Initialize(INetworkModule networkModule, Socket socket);
-    void Connect(IPEndPoint ep);
+    void Initialize(INetworkModule networkModule, IConnection connection);
     void Disconnect();
-    void Send(byte[] data);
     void SendMessage(IPacket msg);
     void SendResult(ushort id, ushort result, int value = 0);
 

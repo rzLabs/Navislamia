@@ -131,7 +131,7 @@ namespace Navislamia.Network.Packets.Actions
                 _networkModule.UnauthorizedGameClients.Add(_msg.Account, client);
             }
 
-            if (_networkModule.GetAuthClient().GetEntity().Connected)
+            if (_networkModule.GetAuthClient().GetEntity().Connection.Connected)
                 _networkModule.GetAuthClient().SendMessage(_loginInfo);
 
             return 0;
