@@ -20,7 +20,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{DE85A5AB-D5A8-4BBD-9C8C-CBFDEA914C0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrateDatabase", "MigrateDatabase\MigrateDatabase.csproj", "{066BFC54-4FB8-42D9-9CC4-1286F646118B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MigrateDatabase", "MigrateDatabase\MigrateDatabase.csproj", "{066BFC54-4FB8-42D9-9CC4-1286F646118B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -106,10 +106,10 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {1E97CD14-AEC2-4B45-83C5-05A415B6FC51}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{066BFC54-4FB8-42D9-9CC4-1286F646118B} = {DE85A5AB-D5A8-4BBD-9C8C-CBFDEA914C0F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1E97CD14-AEC2-4B45-83C5-05A415B6FC51}
 	EndGlobalSection
 EndGlobal

@@ -2,5 +2,5 @@ namespace Navislamia.Game.Network.Entities;
 
 public class GameClientEntity : ClientEntity
 {
-    public Tag Info { get; set; } = new Tag();
+    public ConnectionInfo Info { get; set; } = new ConnectionInfo();
 }

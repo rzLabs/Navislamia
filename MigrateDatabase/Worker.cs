@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MigrateDatabase.MigrationContexts;
@@ -32,10 +33,116 @@ public class Worker : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken token)
     {
-        Log.Logger.Warning("Starting transfer from MSSQL to PSQL");
+        Log.Logger.Information("Welcome! What do you want to do?");
+        Log.Logger.Information("1 = Transfer Arcadia, 2 = Seed Testdata");
+
+        var options = Console.ReadKey();
+        Console.Clear();
         
-        await TransferArcadia(token);
-        await SeedTelecaster(token);
+        switch (options.Key)
+        {
+            case ConsoleKey.D1: case ConsoleKey.NumPad1:
+                Log.Logger.Information("Transfer Arcadia");
+                Log.Logger.Information("What do you wish to transfer?");
+                Log.Logger.Information("1 = Everything, 2 = Choose tables");
+                
+                var transferOptions = Console.ReadKey();
+                Console.Clear();
+
+                switch (transferOptions.Key)
+                {
+                    case ConsoleKey.D1:
+                    case ConsoleKey.NumPad1:
+                        await TransferArcadia(token, TransferTables.All);
+                        break;
+                    case ConsoleKey.D2:
+                    case ConsoleKey.NumPad2:
+                        var selecting = true;
+                        var selection = TransferTables.Unset;
+                        Log.Logger.Information("Choose your tables");
+                        while (selecting)
+                        {
+                            Console.Clear();
+                            Log.Logger.Information("1: {type}" + (selection.HasFlag(TransferTables.ItemResource) ? " • " : ""), "ItemResource");
+                            Log.Logger.Information("2: {type}", "LevelResource");
+                            Log.Logger.Information("3: {type}", "StringResource");
+                            Log.Logger.Information("4: {type}", "StatResource");
+                            Log.Logger.Information("5: {type}", "ChannelResource");
+                            Log.Logger.Information("6: {type}", "GlobalVariables");
+                            Log.Logger.Information("7: {type}", "EffectResource");
+                            Log.Logger.Information("8: {type}", "ItemEffectResource");
+                            Log.Logger.Information("9: {type}", "SummonResource");
+                            Log.Logger.Information("10: {type}", "SetItemEffectResource");
+                            Log.Logger.Information("11: {type}", "EnhanceResource");
+                            Log.Logger.Information("12: {type}", "SkillResource");
+                            Log.Logger.Information("13: {type}", "StateResource");
+                            Console.WriteLine();
+                            Log.Logger.Warning("Selected: {selection}", selection);
+                            Log.Logger.Information("go: {type}", "Start transferring");
+                            Log.Logger.Information("stop: {type}", "Abort");
+
+                            var selected = Console.ReadLine();
+                            switch (selected)
+                            {
+                                case "1":
+                                    selection |= TransferTables.ItemResource;
+                                    break;
+                                case "2":
+                                    selection |= TransferTables.LevelResource;                       
+                                    break;
+                                case "3":
+                                    selection |= TransferTables.StringResource;
+                                    break;
+                                case "4":
+                                    selection |= TransferTables.StatResource;
+                                    break;
+                                case "5":
+                                    selection |= TransferTables.ChannelResource;
+                                    break;
+                                case "6":
+                                    selection |= TransferTables.GlobaleVariables;
+                                    break;
+                                case "7":
+                                    selection |= TransferTables.EffectResource;
+                                    break;
+                                case "8":
+                                    selection |= TransferTables.ItemEffectResource;
+                                    break;
+                                case "9":
+                                    selection |= TransferTables.SummonResource;
+                                    break;
+                                case "10":
+                                    selection |= TransferTables.SetItemEffectResource;
+                                    break;
+                                case "11":
+                                    selection |= TransferTables.EnhanceResource;
+                                    break;
+                                case "12":
+                                    selection |= TransferTables.SkillResource;
+                                    break;
+                                case "13":
+                                    selection |= TransferTables.StateResource;
+                                    break;
+                            }
+                            
+                            if (selected == "stop")
+                            {
+                                return;
+                            }
+
+                            selecting = selected != "go";
+                        }
+
+                        await TransferArcadia(token, selection);
+
+                        break;
+                }
+                break;
+            case ConsoleKey.D2: case ConsoleKey.NumPad2:
+                await SeedTelecaster(token);
+                break;
+        }
+        
         
         Log.Logger.Warning("Done. You can now close this window.");
 
@@ -424,20 +531,17 @@ public class Worker : BackgroundService
         _finishedSeeds.Add(nameof(ItemEntity));
     }
     
-    
-    
-    
-    private async Task TransferArcadia(CancellationToken token)
+    private async Task TransferArcadia(CancellationToken token, TransferTables tableChoice)
     {
-        // await TransferChannelResource(token);
-        // await TransferLevelResource(token);
-        // await TransferStringResource(token);
-        // await TransferEffectResource(token);
-        // await TransferStatResource(token);
-        // await TransferStateResource(token);
-        // await TransferSummonResource(token, false);
-        // await TransferSkillResource(token);
-        // await TransferSetItemEffectResource(token);
+        await TransferChannelResource(token);
+        await TransferLevelResource(token);
+        await TransferStringResource(token);
+        await TransferEffectResource(token);
+        await TransferStatResource(token);
+        await TransferStateResource(token);
+        await TransferSummonResource(token, false);
+        await TransferSkillResource(token);
+        await TransferSetItemEffectResource(token);
         await TransferItemResource(token, false);
         await TransferSummonResource(token, true);
         await TransferItemResource(token, true);
@@ -1013,8 +1117,13 @@ public class Worker : BackgroundService
             }
             Log.Information("Processing... {processed}/{amount}", processed, items.Count);
 
-            var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
+            if (item.fail_result != "1" || item.fail_result != "2" || item.fail_result != "3")
+            {
+                item.fail_result = "1";
+            }
             
+            var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
+
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var requiredItemExists = psqlContext.ItemResources.Any(i => i.Id == mappedItem.RequiredItemId);

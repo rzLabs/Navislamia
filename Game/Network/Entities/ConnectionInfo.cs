@@ -2,7 +2,7 @@
 
 namespace Navislamia.Game.Network.Entities
 {
-    public class Tag
+    public class ConnectionInfo
     {
         public string AccountName { get; set; }
 
@@ -31,8 +31,6 @@ namespace Navislamia.Game.Network.Entities
         public float ContinuousLogoutTime { get; set; }
 
         public float LastContinuousPlayTimeProcTime;
-
-        public int ConnectionID { get; set; }
 
         public string NameToDelete { get; set; }
 

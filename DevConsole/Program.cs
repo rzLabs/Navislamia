@@ -13,6 +13,7 @@ using Navislamia.Game.Contexts;
 using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Repositories;
+using Navislamia.Game.Services;
 using Navislamia.Notification;
 using Serilog;
 
@@ -87,6 +88,8 @@ public class Program
         services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
         services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
         services.AddSingleton<IWorldRepository, WorldRepository>();
+        services.AddSingleton<ICharacterService, CharacterService>();
+        services.AddSingleton<ICharacterRepository, CharacterRepository>();
     }
     
     private static void ConfigureDataAccess(IServiceCollection services)
