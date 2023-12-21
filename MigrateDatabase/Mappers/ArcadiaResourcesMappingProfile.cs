@@ -12,6 +12,7 @@ public class ArcadiaResourcesMappingProfile : Profile
 	public ArcadiaResourcesMappingProfile()
 	{
 		CreateMap<MSSQLItemResource, ItemResourceEntity>()
+			.ForMember(src => src.Id, ex => ex.MapFrom(dst => dst.id))
 			.ForMember(src => src.JobDepth, ex => ex.MapFrom(dst => dst.job_depth))
 			.ForMember(src => src.UseMinLevel, ex => ex.MapFrom(dst => dst.use_min_level))
 			.ForMember(src => src.UseMaxLevel, ex => ex.MapFrom(dst => dst.use_max_level))
@@ -34,16 +35,17 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.CoolTimeGroup, ex => ex.MapFrom(dst => dst.cool_time_group))
 			.ForMember(src => src.ScriptText,
 				ex => ex.MapFrom(dst => string.IsNullOrWhiteSpace(dst.script_text) ? null : dst.script_text))
-			.ForMember(src => src.Id, ex => ex.MapFrom(dst => dst.id))
 			.ForMember(src => src.ItemBaseType, ex => ex.MapFrom(dst => dst.type))
 			.ForMember(src => src.Group, ex => ex.MapFrom(dst => dst.group))
 			.ForMember(src => src.ItemType, ex => ex.MapFrom(dst => dst.Class))
 			.ForMember(src => src.WearType, ex => ex.MapFrom(dst => dst.wear_type))
-			.ForMember(src => src.SetPartFlag, ex => ex.MapFrom(dst => dst.set_part_flag))
+			.ForMember(src => src.SetPart, ex => ex.MapFrom(dst => (SetParts)dst.set_part_flag))
 			.ForMember(src => src.Grade, ex => ex.MapFrom(dst => dst.grade))
 			.ForMember(src => src.Rank, ex => ex.MapFrom(dst => dst.rank))
 			.ForMember(src => src.Level, ex => ex.MapFrom(dst => dst.level))
 			.ForMember(src => src.Enhance, ex => ex.MapFrom(dst => dst.enhance))
+			.ForMember(src => src.BaseTypes, ex => ex.MapFrom(dst =>  new[] { dst.base_type_0, dst.base_type_1, dst.base_type_2, dst.base_type_3 }))
+			.ForMember(src => src.OptTypes, ex => ex.MapFrom(dst => new[] { dst.opt_type_0, dst.opt_type_1, dst.opt_type_2, dst.opt_type_3 }))
 			.ForMember(src => src.SocketCount, ex => ex.MapFrom(dst => dst.socket))
 			.ForMember(src => src.Status, ex => ex.MapFrom(dst => dst.status_flag))
 			.ForMember(src => src.EnhanceIds, ex => ex.MapFrom(dst => new[] { dst.enhance_0_id, dst.enhance_1_id }))
@@ -55,10 +57,10 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.EnhanceIds,
 				ex => ex.MapFrom(dst => new[]
 				{
-					dst.enhance_0_id != 0 ? dst.effect_id : null, dst.enhance_1_id != 0 ? dst.effect_id : (int?)null
+					dst.enhance_0_id != 0 ? dst.enhance_0_id : null, dst.enhance_1_id != 0 ? dst.enhance_1_id : (int?)null
 				}))
-			.ForMember(src => src.SkillId, ex => ex.MapFrom(dst => dst.skill_id != 0 ? dst.effect_id : (int?)null))
-			.ForMember(src => src.StateId, ex => ex.MapFrom(dst => dst.state_id != 0 ? dst.effect_id : (int?)null))
+			.ForMember(src => src.SkillId, ex => ex.MapFrom(dst => dst.skill_id != 0 ? dst.skill_id : (int?)null))
+			.ForMember(src => src.StateId, ex => ex.MapFrom(dst => dst.state_id != 0 ? dst.state_id : (int?)null))
 			.ReverseMap();
 
 		CreateMap<MSSQLLevelResource, LevelResourceEntity>()
@@ -108,7 +110,7 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.Id, ex => ex.MapFrom(dst => dst.id))
 			.ForMember(src => src.OrdinalId, ex => ex.MapFrom(dst => dst.ordinal_id))
 			.ForMember(src => src.TooltipId, ex => ex.MapFrom(dst => dst.tooltip_id))
-			.ForMember(src => src.EffectId, ex => ex.MapFrom(dst => dst.effect_id))
+			.ForMember(src => src.EffectTrigger, ex => ex.MapFrom(dst => (EffectTrigger)dst.effect_id))
 			.ForMember(src => src.EffectType, ex => ex.MapFrom(dst => (EffectType)dst.effect_type))
 			.ForMember(src => src.EffectLevel, ex => ex.MapFrom(dst => dst.effect_level))
 			.ForMember(src => src.Values, ex => ex.MapFrom(dst => new decimal[]
@@ -127,7 +129,6 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.Size, ex => ex.MapFrom(dst => dst.size))
 			.ForMember(src => src.Scale, ex => ex.MapFrom(dst => dst.scale))
 			.ForMember(src => src.TargetFxSize, ex => ex.MapFrom(dst => dst.target_fx_size))
-			.ForMember(src => src.ModelId, ex => ex.MapFrom(dst => dst.model_id))
 			.ForMember(src => src.StandardWalkSpeed, ex => ex.MapFrom(dst => dst.standard_walk_speed))
 			.ForMember(src => src.StandardRunSpeed, ex => ex.MapFrom(dst => dst.standard_run_speed))
 			.ForMember(src => src.IsRidingOnly, ex => ex.MapFrom(dst => dst.is_riding_only))
@@ -140,32 +141,35 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.Material, ex => ex.MapFrom(dst => dst.material))
 			.ForMember(src => src.WeaponType, ex => ex.MapFrom(dst => dst.weapon_type))
 			.ForMember(src => src.AttackMotionSpeed, ex => ex.MapFrom(dst => dst.attack_motion_speed))
-			.ForMember(src => src.EvolveIntoSummonId, ex => ex.MapFrom(dst => dst.evolve_target))
+			.ForMember(src => src.EvolveTargetId, ex => ex.MapFrom(dst => dst.evolve_target))
 			.ForMember(src => src.CameraPosition,
 				ex => ex.MapFrom(dst => new[] { dst.camera_x, dst.camera_y, dst.camera_z }))
 			.ForMember(src => src.TargetPosition,
 				ex => ex.MapFrom(dst => new[] { dst.target_x, dst.target_y, dst.target_z }))
-			.ForMember(src => src.Model, ex => ex.MapFrom(dst => dst.model))
+			.ForMember(src => src.ModelId, ex => ex.MapFrom(dst => dst.model_id))
+			.ForMember(src => src.ModelName, ex => ex.MapFrom(dst => dst.model))
 			.ForMember(src => src.MotionFileId, ex => ex.MapFrom(dst => dst.motion_file_id))
 			.ForMember(src => src.FaceId, ex => ex.MapFrom(dst => dst.face_id))
 			.ForMember(src => src.FaceFileName, ex => ex.MapFrom(dst => dst.face_file_name))
 			.ForMember(src => src.CardId, ex => ex.MapFrom(dst => dst.card_id))
-			.ForMember(src => src.ScriptText, ex => ex.MapFrom(dst => dst.script_text))
 			.ForMember(src => src.IllustFileName, ex => ex.MapFrom(dst => dst.illust_file_name))
 			.ForMember(src => src.TextFeatureId, ex => ex.MapFrom(dst => dst.text_feature_id))
 			.ForMember(src => src.SkillIds,
 				ex => ex.MapFrom(dst => new[] { dst.skill1_id, dst.skill2_id, dst.skill3_id, dst.skill4_id }))
-			.ForMember(src => src.SkillTextIds,
-				ex => ex.MapFrom(dst => new[]
-					{ dst.skill1_text_id, dst.skill2_text_id, dst.skill3_text_id, dst.skill4_text_id }))
+			// .ForMember(src => src.SkillTextIds,
+			// 	ex => ex.MapFrom(dst => new[]
+			// 		{ dst.skill1_text_id, dst.skill2_text_id, dst.skill3_text_id, dst.skill4_text_id }))
 			.ForMember(src => src.StatId, ex => ex.MapFrom(dst => dst.stat_id))
 			.ForMember(src => src.NameId, ex => ex.MapFrom(dst => dst.name_id))
 			.ForMember(src => src.TextureGroup, ex => ex.MapFrom(dst => dst.texture_group))
+			.ForMember(src => src.Model, ex => ex.Ignore())
+			.ForMember(src => src.EvolveTarget, ex => ex.Ignore())
+			.ForMember(src => src.EvolveSource, ex => ex.Ignore())
 			.ReverseMap();
 
 		CreateMap<MSSQLSetItemEffectResource, SetItemEffectResourceEntity>()
-			.ForMember(src => src.SetId, ex => ex.MapFrom(dst => dst.set_id))
-			.ForMember(src => src.SetParts, ex => ex.MapFrom(dst => (SetParts)dst.set_part_id))
+			.ForMember(src => src.Id, ex => ex.MapFrom(dst => dst.set_id))
+			.ForMember(src => src.Parts, ex => ex.MapFrom(dst => (SetParts)dst.set_part_id))
 			.ForMember(src => src.TextId, ex => ex.MapFrom(dst => dst.text_id))
 			.ForMember(src => src.TooltipId, ex => ex.MapFrom(dst => dst.tooltip_id))
 			.ForMember(src => src.EffectId, ex => ex.MapFrom(dst => dst.effect_id))
@@ -227,7 +231,7 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.CostItem, ex => ex.MapFrom(dst => dst.cost_item))
 			.ForMember(src => src.CostItemCount, ex => ex.MapFrom(dst => dst.cost_item_count))
 			.ForMember(src => src.CostItemCountPerSkl, ex => ex.MapFrom(dst => dst.cost_item_count_per_skl))
-			.ForMember(src => src.RequriedLevel, ex => ex.MapFrom(dst => dst.need_level))
+			.ForMember(src => src.RequiredLevel, ex => ex.MapFrom(dst => dst.need_level))
 			.ForMember(src => src.RequiredHp, ex => ex.MapFrom(dst => dst.need_hp))
 			.ForMember(src => src.RequiredMp, ex => ex.MapFrom(dst => dst.need_mp))
 			.ForMember(src => src.RequiredHavoc, ex => ex.MapFrom(dst => dst.need_havoc))
@@ -272,7 +276,7 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.SkillLvupLimit, ex => ex.MapFrom(dst => dst.skill_lvup_limit))
 			.ForMember(src => src.Target, ex => ex.MapFrom(dst => (SkillTarget)dst.target))
 			.ForMember(src => src.EffectType, ex => ex.MapFrom(dst => (EffectType)dst.effect_type))
-			.ForMember(src => src.SkillEnchantLinkId, ex => ex.MapFrom(dst => dst.skill_enchant_link_id))
+			.ForMember(src => src.UpgradeIntoSkillId, ex => ex.MapFrom(dst => dst.skill_enchant_link_id))
 			.ForMember(src => src.StateId, ex => ex.MapFrom(dst => dst.state_id))
 			.ForMember(src => src.StateLevelBase, ex => ex.MapFrom(dst => dst.state_level_base))
 			.ForMember(src => src.StateLevelPerSkill, ex => ex.MapFrom(dst => dst.state_level_per_skl))
@@ -332,16 +336,9 @@ public class ArcadiaResourcesMappingProfile : Profile
 			.ForMember(src => src.IconFileName, ex => ex.MapFrom(dst => dst.icon_file_name))
 			.ForMember(src => src.FxId, ex => ex.MapFrom(dst => dst.fx_id))
 			.ForMember(src => src.PosId, ex => ex.MapFrom(dst => dst.pos_id))
-			.ForMember(src => src.CastSkillId, ex => ex.MapFrom(dst => dst.cast_skill_id))
-			.ForMember(src => src.CastFxId, ex => ex.MapFrom(dst => dst.cast_fx_id))
-			.ForMember(src => src.CastFxPosId, ex => ex.MapFrom(dst => dst.cast_fx_pos_id))
-			.ForMember(src => src.HitFxId, ex => ex.MapFrom(dst => dst.hit_fx_id))
-			.ForMember(src => src.HitFxPosId, ex => ex.MapFrom(dst => dst.hit_fx_pos_id))
 			.ForMember(src => src.SpecialOutputTimingId, ex => ex.MapFrom(dst => dst.special_output_timing_id))
 			.ForMember(src => src.SpecialOutputFxId, ex => ex.MapFrom(dst => dst.special_output_fx_id))
 			.ForMember(src => src.SpecialOutputFxPosId, ex => ex.MapFrom(dst => dst.special_output_fx_pos_id))
-			.ForMember(src => src.StateFxId, ex => ex.MapFrom(dst => dst.state_fx_id))
-			.ForMember(src => src.StateFxPosId, ex => ex.MapFrom(dst => dst.state_fx_pos_id))
 			.ForMember(src => src.Values,
 				ex => ex.MapFrom(dst => new decimal[]
 				{

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Navislamia.Game.Contexts;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Navislamia.Game.Migrations.Arcadia
 {
     [DbContext(typeof(ArcadiaContext))]
-    partial class ArcadiaContextModelSnapshot : ModelSnapshot
+    [Migration("20231219220028_Version0002_AddSoftDeletableContext")]
+    partial class Version0002_AddSoftDeletableContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,31 +79,10 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<string>("FileName")
                         .HasColumnType("text");
 
-                    b.Property<long?>("ItemEffectId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("ItemEffectOrdinalId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("ModelEffectResourceEntityId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("SetId")
-                        .HasColumnType("bigint");
-
-                    b.Property<short?>("SetParts")
-                        .HasColumnType("smallint");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ModelEffectResourceEntityId");
-
-                    b.HasIndex("ItemEffectId", "ItemEffectOrdinalId");
-
-                    b.HasIndex("SetId", "SetParts");
 
                     b.ToTable("EffectResources");
                 });
@@ -135,20 +117,16 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal[]>("Percentage")
+                        .HasMaxLength(20)
                         .HasPrecision(10, 3)
                         .HasColumnType("numeric[]");
 
-                    b.Property<long?>("RequiredItemId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("RequiredItemId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id", "LocalFlag");
 
-                    b.HasIndex("RequiredItemId");
-
-                    b.ToTable("EnhanceResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_EnhanceResourceEntity_Percentage_MaxSize20", "cardinality(\"Percentage\") <= 20");
-                        });
+                    b.ToTable("EnhanceResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemEffectResourceEntity", b =>
@@ -159,26 +137,26 @@ namespace Navislamia.Game.Migrations.Arcadia
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<long>("OrdinalId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long>("EffectId")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("EffectLevel")
                         .HasColumnType("boolean");
-
-                    b.Property<int>("EffectTrigger")
-                        .HasColumnType("integer");
 
                     b.Property<int>("EffectType")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("OrdinalId")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("TooltipId")
                         .HasColumnType("bigint");
@@ -187,9 +165,7 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
-                    b.HasKey("Id", "OrdinalId");
-
-                    b.HasIndex("TooltipId");
+                    b.HasKey("Id");
 
                     b.ToTable("ItemEffectResources", t =>
                         {
@@ -209,9 +185,11 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasColumnType("integer");
 
                     b.Property<short[]>("BaseTypes")
+                        .HasMaxLength(4)
                         .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("BaseValues")
+                        .HasMaxLength(8)
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
@@ -230,8 +208,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("EffectId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("EffectId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Endurance")
                         .HasColumnType("integer");
@@ -239,10 +217,12 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("Enhance")
                         .HasColumnType("integer");
 
-                    b.Property<long[]>("EnhanceIds")
+                    b.Property<long?[]>("EnhanceIds")
+                        .HasMaxLength(2)
                         .HasColumnType("bigint[]");
 
                     b.Property<decimal[,]>("EnhanceValues")
+                        .HasMaxLength(8)
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric[]");
 
@@ -282,13 +262,15 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("NameId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("NameId")
+                        .HasColumnType("integer");
 
                     b.Property<short[]>("OptTypes")
+                        .HasMaxLength(4)
                         .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("OptValues")
+                        .HasMaxLength(8)
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
@@ -308,20 +290,20 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<string>("ScriptText")
                         .HasColumnType("text");
 
-                    b.Property<long?>("SetId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("SetId")
+                        .HasColumnType("integer");
 
-                    b.Property<short>("SetPart")
-                        .HasColumnType("smallint");
+                    b.Property<int>("SetPartFlag")
+                        .HasColumnType("integer");
 
-                    b.Property<long?>("SkillId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("SkillId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("SocketCount")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("StateId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("StateId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("StateLevel")
                         .HasColumnType("integer");
@@ -332,8 +314,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("SummonId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("SummonId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("TargetMaxLevel")
                         .HasColumnType("integer");
@@ -345,8 +327,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
-                    b.Property<long?>("TooltipId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("TooltipId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UseMaxLevel")
                         .HasColumnType("integer");
@@ -363,33 +345,7 @@ namespace Navislamia.Game.Migrations.Arcadia
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EffectId")
-                        .IsUnique();
-
-                    b.HasIndex("NameId");
-
-                    b.HasIndex("SkillId");
-
-                    b.HasIndex("StateId");
-
-                    b.HasIndex("SummonId");
-
-                    b.HasIndex("TooltipId");
-
-                    b.ToTable("ItemResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_ItemResourceEntity_BaseTypes_MaxSize4", "cardinality(\"BaseTypes\") <= 4");
-
-                            t.HasCheckConstraint("CK_ItemResourceEntity_BaseValues_MaxSize8", "cardinality(\"BaseValues\") <= 8");
-
-                            t.HasCheckConstraint("CK_ItemResourceEntity_EnhanceIds_MaxSize2", "cardinality(\"EnhanceIds\") <= 2");
-
-                            t.HasCheckConstraint("CK_ItemResourceEntity_EnhanceValues_MaxSize8", "cardinality(\"EnhanceValues\") <= 8");
-
-                            t.HasCheckConstraint("CK_ItemResourceEntity_OptTypes_MaxSize4", "cardinality(\"OptTypes\") <= 4");
-
-                            t.HasCheckConstraint("CK_ItemResourceEntity_OptValues_MaxSize8", "cardinality(\"OptValues\") <= 8");
-                        });
+                    b.ToTable("ItemResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.LevelResourceEntity", b =>
@@ -408,111 +364,47 @@ namespace Navislamia.Game.Migrations.Arcadia
 
                     b.HasKey("Level");
 
-                    b.ToTable("LevelResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_LevelResourceEntity_JLvs_MaxSize4", "cardinality(\"JLvs\") <= 4");
-                        });
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<long?[]>("BoneEffectIds")
-                        .HasColumnType("bigint[]");
-
-                    b.Property<string[]>("BoneNames")
-                        .HasColumnType("text[]");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("EffectFileId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("EffectPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("LoopEffect")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EffectFileId")
-                        .IsUnique();
-
-                    b.ToTable("ModelEffectResources");
+                    b.ToTable("LevelResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SetItemEffectResourceEntity", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                    b.Property<int>("SetId")
+                        .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<short>("Parts")
+                    b.Property<short>("SetParts")
                         .HasColumnType("smallint");
 
                     b.Property<short[]>("BaseTypes")
+                        .HasMaxLength(2)
                         .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("BaseValues")
+                        .HasMaxLength(8)
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long?>("EffectId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("EffectId")
+                        .HasColumnType("integer");
 
                     b.Property<short[]>("OptTypes")
+                        .HasMaxLength(2)
                         .HasColumnType("smallint[]");
 
                     b.Property<decimal[,]>("OptValues")
+                        .HasMaxLength(8)
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric[]");
 
-                    b.Property<long?>("TextId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TextId")
+                        .HasColumnType("integer");
 
-                    b.Property<long?>("TooltipId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TooltipId")
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id", "Parts");
+                    b.HasKey("SetId", "SetParts");
 
-                    b.HasIndex("TextId");
-
-                    b.HasIndex("TooltipId");
-
-                    b.ToTable("SetItemEffectResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_SetItemEffectResourceEntity_BaseTypes_MaxSize4", "cardinality(\"BaseTypes\") <= 4");
-
-                            t.HasCheckConstraint("CK_SetItemEffectResourceEntity_BaseValues_MaxSize8", "cardinality(\"BaseValues\") <= 8");
-
-                            t.HasCheckConstraint("CK_SetItemEffectResourceEntity_OptTypes_MaxSize4", "cardinality(\"OptTypes\") <= 4");
-
-                            t.HasCheckConstraint("CK_SetItemEffectResourceEntity_OptValues_MaxSize8", "cardinality(\"OptValues\") <= 8");
-                        });
+                    b.ToTable("SetItemEffectResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SkillResourceEntity", b =>
@@ -641,8 +533,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("DescriptionId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("DescriptionId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("EffectType")
                         .HasColumnType("integer");
@@ -674,8 +566,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<string>("IconFileName")
                         .HasColumnType("text");
 
-                    b.Property<long?>("IconId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("IconId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsCorpse")
                         .HasColumnType("boolean");
@@ -727,23 +619,26 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("RequiredHp")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RequiredLevel")
-                        .HasColumnType("integer");
-
                     b.Property<int>("RequiredMp")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("RequiredStateId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("RequiredStateId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RequiredTarget")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RequriedLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkillEnchantLinkId")
                         .HasColumnType("integer");
 
                     b.Property<string>("SkillLvupLimit")
                         .HasColumnType("text");
 
-                    b.Property<long?>("StateId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("StateId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("StateLevelBase")
                         .HasColumnType("integer");
@@ -768,23 +663,17 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
-                    b.Property<long?>("SummonId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("Target")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("TextId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TextId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ToggleGroup")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("TooltipId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("UpgradeIntoSkillId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TooltipId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("UseOnCharacter")
                         .HasColumnType("boolean");
@@ -871,30 +760,13 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasColumnType("integer");
 
                     b.Property<decimal[]>("Values")
+                        .HasMaxLength(19)
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric[]");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DescriptionId");
-
-                    b.HasIndex("RequiredStateId");
-
-                    b.HasIndex("StateId");
-
-                    b.HasIndex("SummonId");
-
-                    b.HasIndex("TextId");
-
-                    b.HasIndex("TooltipId");
-
-                    b.HasIndex("UpgradeIntoSkillId")
-                        .IsUnique();
-
-                    b.ToTable("SkillResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_SkillResourceEntity_Values_MaxSize20", "cardinality(\"Values\") <= 20");
-                        });
+                    b.ToTable("SkillResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StatResourceEntity", b =>
@@ -965,6 +837,15 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("BaseEffect")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CastFxId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CastFxPosId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CastSkillId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -984,14 +865,20 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("FireInterval")
                         .HasColumnType("integer");
 
-                    b.Property<long>("FxId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("FxId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HitFxId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HitFxPosId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("IconFileName")
                         .HasColumnType("text");
 
-                    b.Property<long>("IconId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("IconId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsHarmful")
                         .HasColumnType("boolean");
@@ -999,11 +886,14 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PosId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("PosId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ReiterationCount")
                         .HasColumnType("text");
+
+                    b.Property<int>("SpecialOutputFxDelay")
+                        .HasColumnType("integer");
 
                     b.Property<int>("SpecialOutputFxId")
                         .HasColumnType("integer");
@@ -1014,17 +904,23 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("SpecialOutputTimingId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("StateFxId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StateFxPosId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("StateGroup")
                         .HasColumnType("integer");
 
                     b.Property<short>("StateTimeType")
                         .HasColumnType("smallint");
 
-                    b.Property<long?>("TextId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TextId")
+                        .HasColumnType("integer");
 
-                    b.Property<long?>("TooltipId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TooltipId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("UseOnCharacter")
                         .HasColumnType("boolean");
@@ -1036,19 +932,13 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasColumnType("boolean");
 
                     b.Property<decimal[]>("Values")
+                        .HasMaxLength(20)
                         .HasPrecision(13, 3)
                         .HasColumnType("numeric[]");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TextId");
-
-                    b.HasIndex("TooltipId");
-
-                    b.ToTable("StateResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_StateResourceEntity_Values_MaxSize20", "cardinality(\"Values\") <= 20");
-                        });
+                    b.ToTable("StateResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StringResourceEntity", b =>
@@ -1097,8 +987,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int[]>("CameraPosition")
                         .HasColumnType("integer[]");
 
-                    b.Property<long?>("CardId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("CardId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
@@ -1106,8 +996,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("EvolveTargetId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("EvolveIntoSummonId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("EvolveType")
                         .HasColumnType("integer");
@@ -1115,8 +1005,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<string>("FaceFileName")
                         .HasColumnType("text");
 
-                    b.Property<long>("FaceId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("FaceId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("IllustFileName")
                         .HasColumnType("text");
@@ -1130,20 +1020,20 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("Material")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("ModelId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ModelName")
+                    b.Property<string>("Model")
                         .HasColumnType("text");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("MotionFileId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("MotionFileId")
+                        .HasColumnType("integer");
 
-                    b.Property<long?>("NameId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("NameId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RidingMotionType")
                         .HasColumnType("integer");
@@ -1158,12 +1048,18 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<string>("ScriptText")
+                        .HasColumnType("text");
+
                     b.Property<decimal>("Size")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
-                    b.Property<long?[]>("SkillIds")
-                        .HasColumnType("bigint[]");
+                    b.Property<int[]>("SkillIds")
+                        .HasColumnType("integer[]");
+
+                    b.Property<int[]>("SkillTextIds")
+                        .HasColumnType("integer[]");
 
                     b.Property<int>("SlantType")
                         .HasColumnType("integer");
@@ -1174,11 +1070,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<int>("StandardWalkSpeed")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("StatId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("StringResourceEntityId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("StatId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TargetFxSize")
                         .HasPrecision(10, 2)
@@ -1188,8 +1081,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric[]");
 
-                    b.Property<long>("TextFeatureId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("TextFeatureId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("TextureGroup")
                         .HasColumnType("integer");
@@ -1205,23 +1098,7 @@ namespace Navislamia.Game.Migrations.Arcadia
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CardId");
-
-                    b.HasIndex("EvolveTargetId")
-                        .IsUnique();
-
-                    b.HasIndex("ModelId");
-
-                    b.HasIndex("NameId");
-
-                    b.HasIndex("StatId");
-
-                    b.HasIndex("StringResourceEntityId");
-
-                    b.ToTable("SummonResources", t =>
-                        {
-                            t.HasCheckConstraint("CK_SummonResourceEntity_CameraPosition_MaxSize3", "cardinality(\"CameraPosition\") <= 3");
-                        });
+                    b.ToTable("SummonResources");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.GlobalVariableEntity", b =>
@@ -1250,283 +1127,6 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.HasKey("Id");
 
                     b.ToTable("GlobalVariables");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EffectResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", null)
-                        .WithMany("BoneEffects")
-                        .HasForeignKey("ModelEffectResourceEntityId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.ItemEffectResourceEntity", "ItemEffect")
-                        .WithMany()
-                        .HasForeignKey("ItemEffectId", "ItemEffectOrdinalId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SetItemEffectResourceEntity", "Set")
-                        .WithMany()
-                        .HasForeignKey("SetId", "SetParts");
-
-                    b.Navigation("ItemEffect");
-
-                    b.Navigation("Set");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EnhanceResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.ItemResourceEntity", "RequiredItem")
-                        .WithMany("RequiredByEnhanceResources")
-                        .HasForeignKey("RequiredItemId");
-
-                    b.Navigation("RequiredItem");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemEffectResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Tooltip")
-                        .WithMany("ItemEffectToolTips")
-                        .HasForeignKey("TooltipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tooltip");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.EffectResourceEntity", "Effect")
-                        .WithOne("Item")
-                        .HasForeignKey("Navislamia.Game.Models.Arcadia.ItemResourceEntity", "EffectId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Name")
-                        .WithMany("ItemResourceNames")
-                        .HasForeignKey("NameId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SkillResourceEntity", "Skill")
-                        .WithMany("Items")
-                        .HasForeignKey("SkillId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StateResourceEntity", "State")
-                        .WithMany("Items")
-                        .HasForeignKey("StateId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SummonResourceEntity", "Summon")
-                        .WithMany("Items")
-                        .HasForeignKey("SummonId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Tooltip")
-                        .WithMany("ItemResourceTooltips")
-                        .HasForeignKey("TooltipId");
-
-                    b.Navigation("Effect");
-
-                    b.Navigation("Name");
-
-                    b.Navigation("Skill");
-
-                    b.Navigation("State");
-
-                    b.Navigation("Summon");
-
-                    b.Navigation("Tooltip");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.EffectResourceEntity", "EffectFile")
-                        .WithOne("Model")
-                        .HasForeignKey("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", "EffectFileId");
-
-                    b.Navigation("EffectFile");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SetItemEffectResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Text")
-                        .WithMany("SetTexts")
-                        .HasForeignKey("TextId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Tooltip")
-                        .WithMany("SetTooltips")
-                        .HasForeignKey("TooltipId");
-
-                    b.Navigation("Text");
-
-                    b.Navigation("Tooltip");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SkillResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Description")
-                        .WithMany("SkillDescriptions")
-                        .HasForeignKey("DescriptionId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StateResourceEntity", "RequiredState")
-                        .WithMany("RequiredBySkills")
-                        .HasForeignKey("RequiredStateId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StateResourceEntity", "State")
-                        .WithMany("Skills")
-                        .HasForeignKey("StateId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SummonResourceEntity", "Summon")
-                        .WithMany("Skills")
-                        .HasForeignKey("SummonId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Text")
-                        .WithMany("SkillTexts")
-                        .HasForeignKey("TextId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Tooltip")
-                        .WithMany("SkillTooltips")
-                        .HasForeignKey("TooltipId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SkillResourceEntity", "SkillUpgrade")
-                        .WithOne("Skill")
-                        .HasForeignKey("Navislamia.Game.Models.Arcadia.SkillResourceEntity", "UpgradeIntoSkillId");
-
-                    b.Navigation("Description");
-
-                    b.Navigation("RequiredState");
-
-                    b.Navigation("SkillUpgrade");
-
-                    b.Navigation("State");
-
-                    b.Navigation("Summon");
-
-                    b.Navigation("Text");
-
-                    b.Navigation("Tooltip");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StateResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Text")
-                        .WithMany("StateTexts")
-                        .HasForeignKey("TextId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Tooltip")
-                        .WithMany("StateTooltips")
-                        .HasForeignKey("TooltipId");
-
-                    b.Navigation("Text");
-
-                    b.Navigation("Tooltip");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SummonResourceEntity", b =>
-                {
-                    b.HasOne("Navislamia.Game.Models.Arcadia.ItemResourceEntity", "Card")
-                        .WithMany("Cards")
-                        .HasForeignKey("CardId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.SummonResourceEntity", "EvolveTarget")
-                        .WithOne("EvolveSource")
-                        .HasForeignKey("Navislamia.Game.Models.Arcadia.SummonResourceEntity", "EvolveTargetId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", "Model")
-                        .WithMany("SummonModels")
-                        .HasForeignKey("ModelId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", "Name")
-                        .WithMany("SummonNames")
-                        .HasForeignKey("NameId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StatResourceEntity", "Stat")
-                        .WithMany("Summons")
-                        .HasForeignKey("StatId");
-
-                    b.HasOne("Navislamia.Game.Models.Arcadia.StringResourceEntity", null)
-                        .WithMany("SummonSkillTexts")
-                        .HasForeignKey("StringResourceEntityId");
-
-                    b.Navigation("Card");
-
-                    b.Navigation("EvolveTarget");
-
-                    b.Navigation("Model");
-
-                    b.Navigation("Name");
-
-                    b.Navigation("Stat");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EffectResourceEntity", b =>
-                {
-                    b.Navigation("Item");
-
-                    b.Navigation("Model");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemResourceEntity", b =>
-                {
-                    b.Navigation("Cards");
-
-                    b.Navigation("RequiredByEnhanceResources");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ModelEffectResourceEntity", b =>
-                {
-                    b.Navigation("BoneEffects");
-
-                    b.Navigation("SummonModels");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SkillResourceEntity", b =>
-                {
-                    b.Navigation("Items");
-
-                    b.Navigation("Skill");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StatResourceEntity", b =>
-                {
-                    b.Navigation("Summons");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StateResourceEntity", b =>
-                {
-                    b.Navigation("Items");
-
-                    b.Navigation("RequiredBySkills");
-
-                    b.Navigation("Skills");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.StringResourceEntity", b =>
-                {
-                    b.Navigation("ItemEffectToolTips");
-
-                    b.Navigation("ItemResourceNames");
-
-                    b.Navigation("ItemResourceTooltips");
-
-                    b.Navigation("SetTexts");
-
-                    b.Navigation("SetTooltips");
-
-                    b.Navigation("SkillDescriptions");
-
-                    b.Navigation("SkillTexts");
-
-                    b.Navigation("SkillTooltips");
-
-                    b.Navigation("StateTexts");
-
-                    b.Navigation("StateTooltips");
-
-                    b.Navigation("SummonNames");
-
-                    b.Navigation("SummonSkillTexts");
-                });
-
-            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.SummonResourceEntity", b =>
-                {
-                    b.Navigation("EvolveSource");
-
-                    b.Navigation("Items");
-
-                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }

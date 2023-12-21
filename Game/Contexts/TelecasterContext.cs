@@ -3,7 +3,7 @@ using Navislamia.Game.Models.Telecaster;
 
 namespace Navislamia.Game.Contexts;
 
-public class TelecasterContext : DbContext
+public class TelecasterContext : SoftDeletionContext
 {
     public TelecasterContext(DbContextOptions<TelecasterContext> options) : base(options) { }
     
