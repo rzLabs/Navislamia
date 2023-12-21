@@ -115,8 +115,8 @@ namespace Navislamia.Game.Network
         {
             _notificationSvc.WriteString("NetworkModule is shutting down...\n");
 
-            _authService.Disconnect();
-            _uploadService.Disconnect();
+            _authService.GetEntity().Connection.Disconnect();
+            _uploadService.GetEntity().Connection.Disconnect();
 
             using (var clientEnumerator = UnauthorizedGameClients.GetEnumerator())
             {
@@ -125,7 +125,7 @@ namespace Navislamia.Game.Network
                     IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
-                    client.Disconnect();
+                    client.GetEntity().Connection.Disconnect();
                 }
 
                 UnauthorizedGameClients.Clear();
@@ -138,7 +138,7 @@ namespace Navislamia.Game.Network
                     IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
-                    client.Disconnect();
+                    client.GetEntity().Connection.Disconnect();
                 }
 
                 AuthorizedGameClients.Clear();
@@ -302,7 +302,7 @@ namespace Navislamia.Game.Network
                 ClientService<GameClientEntity> client = new(_logOptions, _notificationSvc, _networkIOptions);
                 client.Initialize(this, new CipherConnection(_clientSocket, _networkOptions.CipherKey));
 
-                _notificationSvc.WriteDebug($"Game client connected from: {client.Entity.Connection.RemoteIp}");
+                _notificationSvc.WriteDebug($"Game client connected @{client.Entity.Connection.RemoteIp}:{client.Entity.Connection.RemotePort}");
             }
         }
 

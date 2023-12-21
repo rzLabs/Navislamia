@@ -44,7 +44,6 @@ namespace Navislamia.Game.Network.Entities
             Entity = null;
         }
         
-
         public T GetEntity()
         {
             return Entity;
@@ -80,34 +79,42 @@ namespace Navislamia.Game.Network.Entities
 
         private void onDisconnected()
         {
-            _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
+            if (Entity.Type is ClientType.Game)
+            {
+                _notificationSvc.WriteSuccess($"{clientTag} @{Entity.Connection.RemoteIp}:{Entity.Connection.RemotePort} has been disconnected!");
+
+                _networkModule.RemoveGameClient(this as ClientService<GameClientEntity>);
+            }
         }
 
-        private void onDataReceived(byte[] data)
+        private void onDataReceived(int receivedLength)
         {
-            var offset = 0;
-            var remainingData = data.Length;
+            var remainingData = receivedLength;
 
             while (remainingData > Marshal.SizeOf<Header>())
             {
-                Header _header = data.PeekHeader();
+                var _header = new Header(Entity.Connection.Peek(Marshal.SizeOf<Header>()));
+                var _isValidMsg = _header.Checksum == Header.CalculateChecksum(_header);
 
                 if (_header.Length > remainingData)
                 {
-                    _notificationSvc.WriteWarning($"Invalid Header Length!!! Length: {_header.Length} Available Data: {remainingData}");
+                    _notificationSvc.WriteWarning($"Partial packet received from {clientTag} @{Entity.Connection.RemoteIp}:{Entity.Connection.RemotePort} !!! ID: {_header.ID} Length: {_header.Length} Available Data: {remainingData}");
 
                     return;
                 }
 
-                byte[] msgBuffer = new byte[_header.Length];
-                Buffer.BlockCopy(data, offset, msgBuffer, 0, (int)_header.Length);
+                if (!_isValidMsg)
+                {
+                    _notificationSvc.WriteError($"Invalid Message received from {clientTag} @{Entity.Connection.RemoteIp}:{Entity.Connection.RemotePort}");
+
+                    Entity.Connection.Disconnect();
+
+                    return;
+                }
+
+                var msgBuffer = Entity.Connection.Read((int)_header.Length);
 
                 remainingData -= msgBuffer.Length;
-
-                if (remainingData > 0)
-                {
-                    Buffer.BlockCopy(data, msgBuffer.Length, data, 0, remainingData);
-                }
 
                 // Check for packets that haven't been defined yet (development)
                 if (Entity.Type is ClientType.Auth && !Enum.IsDefined(typeof(AuthPackets), _header.ID) ||
@@ -121,6 +128,8 @@ namespace Navislamia.Game.Network.Entities
                 // TM_NONE is a dummy packet sent by the client for...."reasons"
                 if (_header.ID == (ushort)GamePackets.TM_NONE)
                 {
+                    _notificationSvc.WriteDebug($"TM_NONE received from {clientTag} @{Entity.Connection.RemoteIp}:{Entity.Connection.RemotePort} Length: {_header.Length}");
+
                     continue;
                 }
 
@@ -142,6 +151,8 @@ namespace Navislamia.Game.Network.Entities
 
                     _ => throw new Exception("Unknown Packet Type")
                 };
+
+                _notificationSvc.WriteDebug($"Packet Received from {clientTag} ID: {_header.ID} Length: {_header.Length} !!!");
 
                 //if (_logOptions.PacketDebug)
                 //{
@@ -177,22 +188,10 @@ namespace Navislamia.Game.Network.Entities
             
         }
 
-        public void Disconnect()
-        {
-            if (Entity is null)
-                return;
-
-            if (Entity.Connection is null)
-                return;
-
-            Entity.Connection.Disconnect();
-
-            _notificationSvc.WriteSuccess($"{clientTag} @{Entity.Connection.RemoteIp}:{Entity.Connection.RemotePort} has been disconnected!");
-
-        }
-
         public void SendMessage(IPacket msg)
         {
+            _notificationSvc.WriteDebug($"Sending packet to {clientTag} ID: {msg.ID} Length: {msg.Length}");
+
             Entity.Connection.Send(msg.Data);
         }
 

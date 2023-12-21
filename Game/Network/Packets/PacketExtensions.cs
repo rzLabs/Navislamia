@@ -31,14 +31,18 @@ namespace Navislamia.Network.Packets
         /// </summary>
         /// <seealso cref="https://github.com/glandu2/rzu_packet_dotnet/blob/4e179816ae03de067d299342a90250e284c15ac3/lib/Packet/CliSerializer.h#L21"/>
         /// <returns></returns>
-        public static void CalculateChecksum(this ref Header header)
+        public static byte CalculateChecksum(this ref Header header)
         {
-            header.Checksum += (byte)(header.Length & 0xFF);
-            header.Checksum += (byte)((header.Length >> 8) & 0xFF);
-            header.Checksum += (byte)((header.Length >> 16) & 0xFF);
-            header.Checksum += (byte)((header.Length >> 24) & 0xFF);
-            header.Checksum += (byte)(header.ID & 0xFF);
-            header.Checksum += (byte)((header.ID >> 8) & 0xFF);
+            byte _checksum = 0;
+
+            _checksum += (byte)(header.Length & 0xFF);
+            _checksum += (byte)((header.Length >> 8) & 0xFF);
+            _checksum += (byte)((header.Length >> 16) & 0xFF);
+            _checksum += (byte)((header.Length >> 24) & 0xFF);
+            _checksum += (byte)(header.ID & 0xFF);
+            _checksum += (byte)((header.ID >> 8) & 0xFF);
+
+            return _checksum;
         }
 
         public static byte[] StructToByte<T>(this T structure)

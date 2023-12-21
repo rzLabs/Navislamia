@@ -11,9 +11,13 @@ using Network.Security;
 using System.Collections.Concurrent;
 using System.Threading;
 using static Navislamia.Game.Network.Entities.Connection;
+using Navislamia.Network.Packets;
 
 namespace Navislamia.Game.Network.Entities
 {
+    /// <summary>
+    /// Socket wrapper for handling Auth/Upload/Game connections
+    /// </summary>
     public class Connection : IConnection
     {
         internal Socket Socket;
@@ -23,6 +27,7 @@ namespace Navislamia.Game.Network.Entities
         internal volatile int BytesSent;
         internal volatile int BytesReceived;
 
+        private int _dataLength = 0;
         internal byte[] ReceiveBuffer = new byte[32768];
 
         internal ConcurrentQueue<byte[]> SendQueue = new ConcurrentQueue<byte[]>();
@@ -30,15 +35,40 @@ namespace Navislamia.Game.Network.Entities
         internal CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         internal CancellationToken cancellationToken;
 
+        /// <summary>
+        /// Event triggered when data has been sent to the remote connection. (includes count of bytes sent)
+        /// </summary>
         public Action<int> OnDataSent { get; set; }   
-        public Action<byte[]> OnDataReceived { get; set; }
+
+        /// <summary>
+        /// Event triggered when data has been received from the remote connection (includes count of bytes received)
+        /// </summary>
+        public Action<int> OnDataReceived { get; set; }
+
+        /// <summary>
+        /// Event triggered when the remote connection has disconnected
+        /// </summary>
         public Action OnDisconnected { get; set; }
 
+        /// <summary>
+        /// Event triggered when an exception occurs during any operation
+        /// </summary>
+        public Action<Exception> OnException { get; set; }
+
+        /// <summary>
+        /// Creates a new instance of the connection wrapper
+        /// </summary>
+        /// <param name="socket">Socket being wrapped</param>
         public Connection(Socket socket)
         {
             Socket = socket;
         }
 
+        /// <summary>
+        /// Connects to the remote host at provided ip and port
+        /// </summary>
+        /// <param name="ip">Remote host ip address</param>
+        /// <param name="port">Remote host port</param>
         public void Connect(string ip, int port)
         {
             try
@@ -52,6 +82,9 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Gracefully disconnects the connection
+        /// </summary>
         public void Disconnect()
         {
             if (!Connected)
@@ -60,6 +93,9 @@ namespace Navislamia.Game.Network.Entities
             Socket.Disconnect(false);
         }
 
+        /// <summary>
+        /// Local IP Address of the wrapped socket
+        /// </summary>
         public string LocalIp
         {
             get
@@ -73,6 +109,9 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Local port of the wrapped socket
+        /// </summary>
         public int LocalPort
         {
             get
@@ -86,6 +125,9 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Remote IP Address of the wrapped socket
+        /// </summary>
         public string RemoteIp
         {
             get
@@ -99,6 +141,9 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Remote port of the wrapped socket
+        /// </summary>
         public int RemotePort
         {
             get
@@ -112,17 +157,15 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Checks if the wrapped socket is connected via polling
+        /// </summary>
         public bool Connected
         {
             get
             {
-                if (Socket.Poll(1000, SelectMode.SelectRead) && Socket.Available == 0)
+                if (!Socket.Connected || Socket.Poll(1000, SelectMode.SelectRead) && Socket.Available == 0 || _disconnectSignaled)
                 {
-                    if (!_disconnectSignaled)
-                    {
-                        onDisconnect();
-                    }
-
                     return false;
                 }
 
@@ -130,14 +173,66 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Starts internal processes like checking for disconnect, sending messages and begins listening
+        /// </summary>
         public virtual void Start()
         {
             cancellationToken = cancellationTokenSource.Token;
 
-            Task.Run(SendLoop);
-            Task.Run(ListenLoop);
+            Task.Run(checkForDisconnect, cancellationToken);
+            Task.Run(SendLoop, cancellationToken);
+
+            Listen();
         }
 
+        /// <summary>
+        /// Peeks the receive buffer for data.
+        /// </summary>
+        /// <param name="length">Amount of data to be peeked from the receive buffer</param>
+        /// <returns>ReadOnlySpan pointing to the data inside the receive buffer</returns>
+        public virtual ReadOnlySpan<byte> Peek(int length)
+        {
+            return new ReadOnlySpan<byte>(ReceiveBuffer, 0, length);
+        }
+
+        /// <summary>
+        /// Reads data from the receive buffer and moves remaining data to the front of the receive buffer
+        /// </summary>
+        /// <param name="length">Amount of data to be read</param>
+        /// <returns>Byte array containing read data</returns>
+        public virtual byte[] Read(int length)
+        {
+            try
+            {
+                // Set the read length to be the smaller of available data in the buffer or the length provided
+                var _length = Math.Min(_dataLength, length);
+
+                var readBuffer = new byte[_length];
+
+                // copy the data from the ReceiveBuffer into a message buffer
+                Buffer.BlockCopy(ReceiveBuffer, 0, readBuffer, 0, _length);
+
+                // reduce the available data length
+                _dataLength -= length;
+
+                // move the remaining data into the front of the buffer
+                Buffer.BlockCopy(ReceiveBuffer, length, ReceiveBuffer, 0, _dataLength);
+
+                return readBuffer;
+            }
+            catch (Exception ex)
+            {
+                OnException(ex);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Adds a message to the send queue 
+        /// </summary>
+        /// <param name="buffer">Message data to be sent</param>
         public virtual void Send(byte[] buffer)
         {
             try
@@ -150,15 +245,19 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
+        /// <summary>
+        /// Loop through the send queue and send any available data as long as the connection hasn't been disconnected
+        /// </summary>
+        /// <returns>Nothing</returns>
         public virtual async Task SendLoop()
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
                 while (!SendQueue.IsEmpty)
                 {
                     try
                     {
-                        if (Connected)
+                        if (!_disconnectSignaled)
                         {
                             byte[] sendBuffer;
 
@@ -181,72 +280,155 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
-        public virtual async Task ListenLoop()
+        /// <summary>
+        /// Listen for new data sent by the remote connection as long as the connection hasn't been disconnected
+        /// </summary>
+        public virtual void Listen()
         {
-            while (!cancellationToken.IsCancellationRequested)
+            if (!_disconnectSignaled)
             {
-                if (Connected)
+                try
                 {
-                    var receiveBytes = await Socket.ReceiveAsync(ReceiveBuffer, SocketFlags.None);
+                    // receive the data into the receive buffer @ the current data length (to preserve any partial packets that may remain in the buffer)
+                    Socket.BeginReceive(ReceiveBuffer, _dataLength, ReceiveBuffer.Length - _dataLength, SocketFlags.None, onReceive, Socket);
+                }
+                catch (Exception ex)
+                {
+                    OnException(ex);
+                }              
+            }
+        }
+
+        /// <summary>
+        /// Receives data from the remote connection and add trigger hooked actions for the data to be processed, then trigger listen again
+        /// </summary>
+        /// <param name="ar"></param>
+        private void onReceive(IAsyncResult ar)
+        {
+            try
+            {
+                if (!_disconnectSignaled)
+                {
+                    var receiveBytes = Socket.EndReceive(ar);
 
                     if (receiveBytes > 0)
                     {
-                        var receiveBuffer = new byte[receiveBytes];
+                        BytesReceived += receiveBytes;
 
-                        Buffer.BlockCopy(ReceiveBuffer, 0, receiveBuffer, 0, receiveBytes);
+                        // set the available data tracker
+                        _dataLength += receiveBytes;
 
-                        OnDataReceived(receiveBuffer);
+                        OnDataReceived(_dataLength);
+
+                        Listen();
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Check if the remote connection has disconnected and trigger disconnect events accordingly
+        /// </summary>
+        /// <returns>Nothing</returns>
+        private async Task checkForDisconnect()
+        {
+            while (true) 
+            {
+                if (!Connected)
+                {
+                    onDisconnect();
                 }
 
                 await Task.Delay(100);
             }
         }
 
-        internal void OnException(Exception ex)
-        {
-            Log.Logger.Error(ex.Message);
-        }
-
+        /// <summary>
+        /// Perform actions related to a connection disconnecting
+        /// </summary>
         private void onDisconnect()
         {
-            _disconnectSignaled = true;
 
             cancellationTokenSource.Cancel();
 
-            OnDisconnected();
-        }
+            if (!_disconnectSignaled)
+            {
+                OnDisconnected();
+            }
 
-        [Flags]
-        public enum ConnectionStateFlag
-        {
-            Connected = 0,
-            Writable = 1,
-            Readable = 2,
-            Send = 4,
-            Receive = 8,
-            Error = 16,
-            Ready = Connected | Writable | Readable
+            _disconnectSignaled = true;
         }
     }
 
+    /// <summary>
+    /// Abstraction of the Connection class that provides encode/decode capabilities for Game Client connections
+    /// </summary>
     public class CipherConnection : Connection, IConnection
     {
         XRC4Cipher _sendCipher = new XRC4Cipher();
         XRC4Cipher _receiveCipher = new XRC4Cipher();
 
+        /// <summary>
+        /// Creates a new instance of the cipher connection wrapper abstraction
+        /// </summary>
+        /// <param name="socket">Socket being wrapped</param>
+        /// <param name="cipherKey">Key to be used in cipher operations</param>
         public CipherConnection(Socket socket, string cipherKey) : base(socket)
         {
             _sendCipher.SetKey(cipherKey);
             _receiveCipher.SetKey(cipherKey);
         }
 
-        public override void Start()
+        /// <summary>
+        /// Peeks encoded data in the receive buffer for data.
+        /// </summary>
+        /// <param name="length">Amount of data to be peeked from the receive buffer</param>
+        /// <returns>ReadOnlySpan pointing to the data inside the receive buffer</returns>
+        public override ReadOnlySpan<byte> Peek(int length)
         {
-            Task.Run(SendLoop);
-            Task.Run(ListenLoop);
+            var _peekBuffer = new byte[length];
+
+            Buffer.BlockCopy(ReceiveBuffer, 0, _peekBuffer, 0, length);
+
+            _receiveCipher.Decode(_peekBuffer, _peekBuffer, length, true);
+
+            return new ReadOnlySpan<byte>(_peekBuffer, 0, length);
         }
 
+        /// <summary>
+        /// Reads encoded data from the receive buffer and moves remaining data to the front of the receive buffer
+        /// </summary>
+        /// <param name="length">Amount of data to be read</param>
+        /// <returns>Byte array containing read data</returns>
+        public override byte[] Read(int length)
+        {
+            try
+            {
+                var _readBuffer = base.Read(length);
+
+                if (_readBuffer is not null)
+                {
+                    _receiveCipher.Decode(_readBuffer, _readBuffer, length);
+
+                    return _readBuffer;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnException(ex);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Adds an encoded message to the send queue 
+        /// </summary>
+        /// <param name="buffer">Message data to be sent</param>
         public override void Send(byte[] buffer)
         {
             try
@@ -258,37 +440,6 @@ namespace Navislamia.Game.Network.Entities
             catch (Exception ex)
             {
                 OnException(ex);
-            }
-        }
-
-        public override async Task ListenLoop()
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (Connected)
-                {
-                    try
-                    {
-                        var receiveBytes = Socket.Receive(ReceiveBuffer, SocketFlags.None);
-
-                        if (receiveBytes > 0)
-                        {
-                            var receiveBuffer = new byte[receiveBytes];
-
-                            Buffer.BlockCopy(ReceiveBuffer, 0, receiveBuffer, 0, receiveBytes);
-
-                            _receiveCipher.Decode(receiveBuffer, receiveBuffer, receiveBytes);
-
-                            OnDataReceived(receiveBuffer);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-
-                    }
-                }
-
-                await Task.Delay(100);
             }
         }
     }
@@ -307,12 +458,18 @@ namespace Navislamia.Game.Network.Entities
 
         void Disconnect();
 
+        ReadOnlySpan<byte> Peek(int length);
+
+        byte[] Read(int length);
+
         void Send(byte[] buffer);
 
-        Action<byte[]> OnDataReceived { get; set; }
+        Action<int> OnDataReceived { get; set; }
 
         Action<int> OnDataSent { get; set; }
 
         Action OnDisconnected { get; set; }
+
+        Action<Exception> OnException { get; set; }
     }
 }

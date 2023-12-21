@@ -9,7 +9,6 @@ public interface IClientService<T>
 {
     T GetEntity();
     void Initialize(INetworkModule networkModule, IConnection connection);
-    void Disconnect();
     void SendMessage(IPacket msg);
     void SendResult(ushort id, ushort result, int value = 0);
 
