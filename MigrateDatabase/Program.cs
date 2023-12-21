@@ -51,7 +51,6 @@ var builder = Host.CreateDefaultBuilder(args)
         {
             var config = serviceProvider.GetService<IConfiguration>();
             var dbOptions = config.GetSection("MigrationTool").Get<MigrationToolOptions>();
-            dbOptions.DbName = "Arcadia";
             var connstring = new SqlConnectionStringBuilder
             {
                 DataSource = dbOptions.Ip,

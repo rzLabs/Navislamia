@@ -9,8 +9,7 @@ using Navislamia.Game.Repositories;
 using Navislamia.Notification;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
-using Navislamia.Network;
-using Navislamia.Scripting;
+using Navislamia.Game.Services;
 
 namespace Navislamia.Game
 {
@@ -24,16 +23,18 @@ namespace Navislamia.Game
         private readonly MapOptions _mapOptions;
 
         private readonly IWorldRepository _worldRepository;
+        private readonly ICharacterService _characterService;
         private readonly WorldEntity _worldEntity;
 
         public GameModule(INotificationModule notificationModule, INetworkModule networkModule,
-            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository)
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository, ICharacterService characterService)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _notificationModule = notificationModule;            
             _networkModule = networkModule;
             _worldRepository = worldRepository;
+            _characterService = characterService;
 
             _worldEntity = worldRepository.LoadWorldIntoMemory();
 
@@ -43,28 +44,21 @@ namespace Navislamia.Game
         }
 
         public void Start(string ip, int port, int backlog)
-        {
+        {   
             if (!LoadScripts(_scriptOptions.SkipLoading))
                 return;
 
             if (!LoadMaps(_mapOptions.SkipLoading))
-                return; 
+                return;
 
             _networkModule.Initialize();
+            var maxTime = DateTime.UtcNow.AddSeconds(30);
             
-            while (!_networkModule.IsReady())
+            while (!_networkModule.IsReady)
             {
-                var maxTime = DateTime.UtcNow.AddSeconds(30);
-
-                if (DateTime.UtcNow < maxTime)
-                {
-                    continue;
-                }
-                
-                _notificationModule.WriteError("Network service timed out!");
-                return;
+                // Do nothing
             }
-            
+                
             _networkModule.StartListener();
         }
 

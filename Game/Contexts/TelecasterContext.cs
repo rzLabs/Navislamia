@@ -6,7 +6,7 @@ namespace Navislamia.Game.Contexts;
 public class TelecasterContext : DbContext
 {
     public TelecasterContext(DbContextOptions<TelecasterContext> options) : base(options) { }
-    
+
     public DbSet<AllianceEntity> Alliances { get; set; }
     public DbSet<AuctionEntity> Auctions { get; set; }
     public DbSet<CharacterEntity> Characters { get; set; }
