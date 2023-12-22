@@ -3,31 +3,31 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using MoonSharp.Interpreter;
-using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
 
 namespace Navislamia.Game.Scripting
 {
-    public class ScriptContent
+    public class ScriptService : IScriptService
     {
         public string ScriptsDirectory;
         public int ScriptCount { get; set; }
 
         Script luaVM = new();
-        private readonly INotificationModule _notificationModule;
+        private readonly ILogger _logger;
 
-        public static ScriptContent Instance { get; private set; }
+        public static ScriptService Instance { get; private set; }
 
-        public ScriptContent(INotificationModule notificationModule)
+        public ScriptService(ILogger<GameModule> logger)
         {
-            _notificationModule = notificationModule;
+            _logger = logger;
 
             Instance = this;
         }
 
-        public bool Init(string directory = null)
+        public bool Start()
         {
             try
             {
@@ -35,7 +35,7 @@ namespace Navislamia.Game.Scripting
                 if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
                 {
                     Directory.CreateDirectory(scriptDir);
-                    _notificationModule.WriteWarning("Missing directory: .\\Scripts has been created!");
+                    _logger.LogWarning("Missing directory: .\\Scripts has been created!");
                 }
 
                 ScriptsDirectory = scriptDir;
@@ -44,13 +44,12 @@ namespace Navislamia.Game.Scripting
 
                 loadScripts();
 
-                _notificationModule.WriteSuccess(new[] { "Scripts loaded successfully!", $"[green]{ScriptCount}[/] scripts loaded!" }, true);
+                _logger.LogDebug("{scriptCount} loaded successfully!", ScriptCount);
 
             }
             catch (Exception e)
             {
-                _notificationModule.WriteError($"Failed loads scripts!");
-                _notificationModule.WriteException(e);
+                _logger.LogError($"An exception occured while trying to load scripts!\n\nMessage:\n\t- {e.Message}\n\n Stack-Trace:\n\t- {e.StackTrace}");
                 return false;
             }
 
@@ -91,8 +90,6 @@ namespace Navislamia.Game.Scripting
             return 1;
         }
 
-
-        // TODO: Sandro, this is where you register your lua functions
         void registerFunctions()
         {
             RegisterFunction("call_lc_In", MiscFunc.SetCurrentLocationID);
@@ -107,7 +104,7 @@ namespace Navislamia.Game.Scripting
 
             if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
             {
-                _notificationModule.WriteError("ScriptModule failed to load because the scripts directory is null or does not exist!");
+                _logger.LogError("ScriptModule failed to load because the scripts directory is null or does not exist!");
                 return;
             }
 
@@ -134,7 +131,7 @@ namespace Navislamia.Game.Scripting
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 
-                        _notificationModule.WriteMarkup($"[bold red]{exMsg}[/]");
+                        _logger.LogError(exMsg);
                     }
                 }));
 
@@ -152,7 +149,7 @@ namespace Navislamia.Game.Scripting
 
             foreach (var task in scriptTasks)
                 if (task.IsFaulted)
-                    _notificationModule.WriteException(task.Exception);
+                    _logger.LogError(task.Exception.Message);
         }
     }
 }

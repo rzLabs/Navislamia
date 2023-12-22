@@ -1,17 +1,11 @@
-﻿using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 using Network.Security;
 using System.Collections.Concurrent;
 using System.Threading;
-using static Navislamia.Game.Network.Entities.Connection;
-using Navislamia.Network.Packets;
 
 namespace Navislamia.Game.Network.Entities
 {
@@ -50,10 +44,6 @@ namespace Navislamia.Game.Network.Entities
         /// </summary>
         public Action OnDisconnected { get; set; }
 
-        /// <summary>
-        /// Event triggered when an exception occurs during any operation
-        /// </summary>
-        public Action<Exception> OnException { get; set; }
 
         /// <summary>
         /// Creates a new instance of the connection wrapper
@@ -71,15 +61,7 @@ namespace Navislamia.Game.Network.Entities
         /// <param name="port">Remote host port</param>
         public void Connect(string ip, int port)
         {
-            try
-            {
-                Socket.Connect(ip, port);
-
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
-            }
+            Socket.Connect(ip, port);
         }
 
         /// <summary>
@@ -203,30 +185,21 @@ namespace Navislamia.Game.Network.Entities
         /// <returns>Byte array containing read data</returns>
         public virtual byte[] Read(int length)
         {
-            try
-            {
-                // Set the read length to be the smaller of available data in the buffer or the length provided
-                var _length = Math.Min(_dataLength, length);
+            // Set the read length to be the smaller of available data in the buffer or the length provided
+            var _length = Math.Min(_dataLength, length);
 
-                var readBuffer = new byte[_length];
+            var readBuffer = new byte[_length];
 
-                // copy the data from the ReceiveBuffer into a message buffer
-                Buffer.BlockCopy(ReceiveBuffer, 0, readBuffer, 0, _length);
+            // copy the data from the ReceiveBuffer into a message buffer
+            Buffer.BlockCopy(ReceiveBuffer, 0, readBuffer, 0, _length);
 
-                // reduce the available data length
-                _dataLength -= length;
+            // reduce the available data length
+            _dataLength -= length;
 
-                // move the remaining data into the front of the buffer
-                Buffer.BlockCopy(ReceiveBuffer, length, ReceiveBuffer, 0, _dataLength);
+            // move the remaining data into the front of the buffer
+            Buffer.BlockCopy(ReceiveBuffer, length, ReceiveBuffer, 0, _dataLength);
 
-                return readBuffer;
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
-            }
-
-            return null;
+            return readBuffer;
         }
 
         /// <summary>
@@ -235,14 +208,8 @@ namespace Navislamia.Game.Network.Entities
         /// <param name="buffer">Message data to be sent</param>
         public virtual void Send(byte[] buffer)
         {
-            try
-            {
-                SendQueue.Enqueue(buffer);
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
-            }
+
+            SendQueue.Enqueue(buffer);
         }
 
         /// <summary>
@@ -255,24 +222,17 @@ namespace Navislamia.Game.Network.Entities
             {
                 while (!SendQueue.IsEmpty)
                 {
-                    try
+                    if (!_disconnectSignaled)
                     {
-                        if (!_disconnectSignaled)
+                        byte[] sendBuffer;
+
+                        if (SendQueue.TryDequeue(out sendBuffer))
                         {
-                            byte[] sendBuffer;
+                            var sentBytes = await Socket.SendAsync(sendBuffer, SocketFlags.None);
 
-                            if (SendQueue.TryDequeue(out sendBuffer))
-                            {
-                                var sentBytes = await Socket.SendAsync(sendBuffer, SocketFlags.None);
-
-                                if (sentBytes > 0)
-                                    OnDataSent(sentBytes);
-                            }
+                            if (sentBytes > 0)
+                                OnDataSent(sentBytes);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        OnException(ex);
                     }
                 }
 
@@ -287,15 +247,8 @@ namespace Navislamia.Game.Network.Entities
         {
             if (!_disconnectSignaled)
             {
-                try
-                {
-                    // receive the data into the receive buffer @ the current data length (to preserve any partial packets that may remain in the buffer)
-                    Socket.BeginReceive(ReceiveBuffer, _dataLength, ReceiveBuffer.Length - _dataLength, SocketFlags.None, onReceive, Socket);
-                }
-                catch (Exception ex)
-                {
-                    OnException(ex);
-                }              
+                // receive the data into the receive buffer @ the current data length (to preserve any partial packets that may remain in the buffer)
+                Socket.BeginReceive(ReceiveBuffer, _dataLength, ReceiveBuffer.Length - _dataLength, SocketFlags.None, onReceive, Socket);
             }
         }
 
@@ -305,28 +258,21 @@ namespace Navislamia.Game.Network.Entities
         /// <param name="ar"></param>
         private void onReceive(IAsyncResult ar)
         {
-            try
+            if (!_disconnectSignaled)
             {
-                if (!_disconnectSignaled)
+                var receiveBytes = Socket.EndReceive(ar);
+
+                if (receiveBytes > 0)
                 {
-                    var receiveBytes = Socket.EndReceive(ar);
+                    BytesReceived += receiveBytes;
 
-                    if (receiveBytes > 0)
-                    {
-                        BytesReceived += receiveBytes;
+                    // set the available data tracker
+                    _dataLength += receiveBytes;
 
-                        // set the available data tracker
-                        _dataLength += receiveBytes;
+                    OnDataReceived(_dataLength);
 
-                        OnDataReceived(_dataLength);
-
-                        Listen();
-                    }
+                    Listen();
                 }
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
             }
         }
 
@@ -406,23 +352,11 @@ namespace Navislamia.Game.Network.Entities
         /// <returns>Byte array containing read data</returns>
         public override byte[] Read(int length)
         {
-            try
-            {
-                var _readBuffer = base.Read(length);
+            var _readBuffer = base.Read(length);
 
-                if (_readBuffer is not null)
-                {
-                    _receiveCipher.Decode(_readBuffer, _readBuffer, length);
+            _receiveCipher.Decode(_readBuffer, _readBuffer, length);
 
-                    return _readBuffer;
-                }
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
-            }
-
-            return null;
+            return _readBuffer;
         }
 
         /// <summary>
@@ -431,16 +365,9 @@ namespace Navislamia.Game.Network.Entities
         /// <param name="buffer">Message data to be sent</param>
         public override void Send(byte[] buffer)
         {
-            try
-            {
-                _sendCipher.Encode(buffer, buffer, buffer.Length);
+            _sendCipher.Encode(buffer, buffer, buffer.Length);
 
-                SendQueue.Enqueue(buffer);
-            }
-            catch (Exception ex)
-            {
-                OnException(ex);
-            }
+            SendQueue.Enqueue(buffer);
         }
     }
 
@@ -469,7 +396,5 @@ namespace Navislamia.Game.Network.Entities
         Action<int> OnDataSent { get; set; }
 
         Action OnDisconnected { get; set; }
-
-        Action<Exception> OnException { get; set; }
     }
 }

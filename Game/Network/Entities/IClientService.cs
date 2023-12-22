@@ -2,15 +2,35 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Navislamia.Network.Packets;
+using Navislamia.Network.Packets.Actions;
 
 namespace Navislamia.Game.Network.Entities;
 
-public interface IClientService<T>
+public interface IClientService
 {
-    T GetEntity();
-    void Initialize(INetworkModule networkModule, IConnection connection);
-    void SendMessage(IPacket msg);
-    void SendResult(ushort id, ushort result, int value = 0);
+    int ClientCount { get; }
 
-    void SendCharacterList(List<LobbyCharacterInfo> characterList);
+    AuthClientService AuthClient { get; }
+
+    UploadClientService UploadClient { get; }
+
+    bool AuthReady { get; set; }
+
+    bool UploadReady { get; set; }
+
+    bool IsReady { get; }
+
+    Dictionary<string, GameClientService> UnauthorizedGameClients { get; set; }
+
+    Dictionary<string, GameClientService> AuthorizedGameClients { get; set; }
+
+    AuthClientService CreateAuthClient(IPEndPoint authEndPoint);
+
+    UploadClientService CreateUploadClient(IPEndPoint authEndPoint);
+
+    GameClientService CreateGameClient(Socket scoket);
+
+    bool RegisterGameClient(string account,  GameClientService client);
+
+    void RemoveGameClient(string account, GameClientService client);
 }

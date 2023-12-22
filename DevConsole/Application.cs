@@ -1,41 +1,33 @@
 using System;
 using System.Threading;
 using Navislamia.Game;
-using Navislamia.Notification;
 using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Exceptions;
-using DevConsole.Properties;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Navislamia.Command;
+using Microsoft.Extensions.Logging;
 
 namespace DevConsole
 {
     public class Application : IHostedService
     {
-        private readonly IHostEnvironment _environment;
         private readonly IGameModule _gameModule;
         private readonly NetworkOptions _networkOptions;
-        private readonly INotificationModule _notificationModule;
-        private readonly ICommandModule _commandModule;
 
-        public Application(IHostEnvironment environment, IGameModule gameModule,
-            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, ICommandModule commandModule)
+        private readonly ILogger<Application> _logger;
+
+        public Application(IGameModule gameModule,
+            IOptions<NetworkOptions> networkOptions, ILogger<Application> logger)
         {
-            _environment = environment;
             _gameModule = gameModule;
-            _notificationModule = notificationModule;
             _networkOptions = networkOptions.Value;
-            _commandModule = commandModule;
+
+            _logger = logger;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _notificationModule.WriteString($"\n{Resources.arcadia}");
-            _notificationModule.WriteString("Navislamia starting...\n");
-            _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
-
             var ip = _networkOptions.Game.Ip;
             var port = _networkOptions.Game.Port;
             var backlog = _networkOptions.Backlog;
@@ -48,23 +40,15 @@ namespace DevConsole
             try
             {
                 _gameModule.Start(ip, port, backlog);
-
-               
             }
             catch (Exception e)
             {
-                _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
+                // TODO: write the message and stack trace
+                _logger.LogError($"Failed to start the game service!");
                 StopAsync(cancellationToken);
             }
 
-            _commandModule.Init();
-
-            while (true)
-                if (_commandModule.Wait() == 0)
-                    break;
-
-            //Console.ReadLine();
-            return null;
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

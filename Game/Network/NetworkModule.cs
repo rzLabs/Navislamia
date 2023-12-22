@@ -17,8 +17,7 @@ using Navislamia.Network.Packets;
 using Navislamia.Network.Packets.Actions;
 using Navislamia.Network.Packets.Auth;
 using Navislamia.Network.Packets.Upload;
-using Navislamia.Notification;
-using Serilog.Core;
+using Serilog;
 
 namespace Navislamia.Game.Network
 {
@@ -26,135 +25,95 @@ namespace Navislamia.Game.Network
     {
         private Socket _clientListener;
 
-        private readonly IClientService<AuthClientEntity> _authService;
-        private readonly IClientService<UploadClientEntity> _uploadService;
-
-        private readonly INotificationModule _notificationSvc;
         private readonly IOptions<NetworkOptions> _networkIOptions;
         private readonly NetworkOptions _networkOptions;
         private readonly ServerOptions _serverOptions;
         private readonly IOptions<LogOptions> _logOptions;
 
-        private readonly AutoResetEvent authReset = new AutoResetEvent(false);
+        private readonly IClientService _clientService;
 
-        private volatile int _readyFlag;
+        private ILogger<NetworkModule> _logger;
 
-        private ILogger _logger;
-
-        public Dictionary<string, ClientService<GameClientEntity>> UnauthorizedGameClients { get; set; } = new();
-        public Dictionary<string, ClientService<GameClientEntity>> AuthorizedGameClients { get; set; } = new();
-
-        public AuthActions AuthActions { get; }
-        public GameActions GameActions { get; }
-        public UploadActions UploadActions { get; }
-
-        public NetworkModule(IClientService<AuthClientEntity> authService, IClientService<UploadClientEntity> uploadService,
-            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, IOptions<LogOptions> logOptions,
-            IOptions<ServerOptions> serverOptions, ICharacterService characterService)
+        public NetworkModule(IClientService clientService, IOptions<NetworkOptions> networkOptions, ILogger<NetworkModule> logger, IOptions<LogOptions> logOptions, IOptions<ServerOptions> serverOptions, ICharacterService characterService)
         {
-            _notificationSvc = notificationModule;
-            _authService = authService;
-            _uploadService = uploadService;
+            _clientService = clientService;
+
             _networkIOptions = networkOptions;
             _networkOptions = networkOptions.Value;
             _serverOptions = serverOptions.Value;
             _logOptions = logOptions;
 
-            AuthActions = new AuthActions(notificationModule, this);
-            GameActions = new GameActions(notificationModule, this, _networkOptions, characterService);
-            UploadActions = new UploadActions(notificationModule, this);
+            _logger = logger;
         }
 
-        public IClientService<AuthClientEntity> GetAuthClient() => _authService;
-
-        public IClientService<UploadClientEntity> GetUploadClient() => _uploadService;
-
-        public void SetReadiness(NetworkReadiness readinessFlag)
-        {
-            _readyFlag |= (int)readinessFlag;
-        }
-
-        public bool IsReady
-        {
-            get
-            {
-                if ((_readyFlag & (int)NetworkReadiness.AuthReady) != 0 && (_readyFlag & (int)NetworkReadiness.UploadReady) != 0)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
-        public int GetPlayerCount() => AuthorizedGameClients.Count;
-
-        public bool Initialize()
+        public bool Start()
         {
             ConnectToAuth();
             ConnectToUpload();
             SendGsInfoToAuth();
             SendInfoToUpload();
 
-            while ((_readyFlag & (int)NetworkReadiness.AuthServerReady) == 0)
-            {
-                var maxTime = DateTime.UtcNow.AddSeconds(30);
+            var maxTime = DateTime.UtcNow.AddSeconds(30);
 
+            while (!_clientService.IsReady)
+            {
                 if (DateTime.UtcNow < maxTime)
                     continue;
 
-                _notificationSvc.WriteError("Network service timed out!");
+                _logger.LogError("Network service timed out!");
 
                 return false;
             }
+
+            ListenForClients();
 
             return true;
         }
 
         public void Shutdown()
         {
-            _notificationSvc.WriteString("NetworkModule is shutting down...\n");
+            _logger.LogInformation("NetworkModule is shutting down...\n");
 
-            _authService.GetEntity().Connection.Disconnect();
-            _uploadService.GetEntity().Connection.Disconnect();
+            _clientService.AuthClient.Connection.Disconnect();
+            _clientService.UploadClient.Connection.Disconnect();
 
-            using (var clientEnumerator = UnauthorizedGameClients.GetEnumerator())
+            using (var clientEnumerator = _clientService.UnauthorizedGameClients.GetEnumerator())
             {
                 while (clientEnumerator.MoveNext())
                 {
-                    IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
+                    GameClientService client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
-                    client.GetEntity().Connection.Disconnect();
+                    client.Connection.Disconnect();
                 }
 
-                UnauthorizedGameClients.Clear();
+                _clientService.UnauthorizedGameClients.Clear();
             }
 
-            using (var clientEnumerator = AuthorizedGameClients.GetEnumerator())
+            using (var clientEnumerator = _clientService.AuthorizedGameClients.GetEnumerator())
             {
                 while (clientEnumerator.MoveNext())
                 {
-                    IClientService<GameClientEntity> client = clientEnumerator.Current.Value;
+                    GameClientService client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
-                    client.GetEntity().Connection.Disconnect();
+                    client.Connection.Disconnect();
                 }
 
-                AuthorizedGameClients.Clear();
+                _clientService.AuthorizedGameClients.Clear();
             }
 
-            _notificationSvc.WriteSuccess("NetworkModule has successfully shutdown!");
+            _logger.LogInformation("NetworkModule has successfully shutdown!");
         }
 
-        private void ConnectToAuth()
+        private void ConnectToAuth() // TODO: exceptions need to write the ex message and stack trace
         {
             string addrStr = _networkOptions.Auth.Ip;
             int port = _networkOptions.Auth.Port;
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network auth ip! Review your configuration!");
+                _logger.LogError("Invalid network auth ip! Review your configuration!");
                 throw new Exception();
             }
 
@@ -162,30 +121,25 @@ namespace Navislamia.Game.Network
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                _notificationSvc.WriteError($"Failed to parse auth ip: {addrStr}");
+                _logger.LogError($"Failed to parse auth ip: {addrStr}");
                 throw new Exception();
 
             }
 
             IPEndPoint authEp = new IPEndPoint(addr, port);
-            var authSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                var _authConnection = new Connection(authSock);
-                _authConnection.Connect(addrStr, port);
-
-                _authService.Initialize(this, _authConnection);
+                _clientService.CreateAuthClient(authEp);
             }
             catch (Exception ex)
             {
-                _notificationSvc.WriteException(ex);
-                _notificationSvc.WriteError("Failed to connect to the auth server!");
+                _logger.LogError("Failed to connect to the auth server!");
                 throw new Exception();
 
             }
 
-            _notificationSvc.WriteDebug(new[] { "Connected to Auth server successfully!" }, true);
+            _logger.LogDebug( "Connected to Auth server successfully!");
             
         }
 
@@ -202,12 +156,11 @@ namespace Navislamia.Game.Network
 
                 var msg = new Packet<TS_GA_LOGIN>((ushort)AuthPackets.TS_GA_LOGIN, new(index, name, screenshotUrl, (byte)isAdultServer, ip, port));
 
-                _authService.SendMessage(msg);
+                _clientService.AuthClient.SendMessage(msg);
             }
             catch (Exception ex)
             {
-                _notificationSvc.WriteError("Failed to send Game server info to the Auth Server!");
-                _notificationSvc.WriteException(ex);
+                _logger.LogError("Failed to send Game server info to the Auth Server!");
 
                 throw new Exception("Failed sending message to Authservice");
             };
@@ -220,35 +173,30 @@ namespace Navislamia.Game.Network
 
             if (string.IsNullOrEmpty(addrStr) || port == 0)
             {
-                _notificationSvc.WriteError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
+                _logger.LogError("Invalid network io.upload.ip configuration! Review your Configuration.json!");
             }
 
             IPAddress addr;
 
             if (!IPAddress.TryParse(addrStr, out addr))
             {
-                _notificationSvc.WriteError($"Failed to parse io.upload.ip: {addrStr}");
+                _logger.LogError($"Failed to parse io.upload.ip: {addrStr}");
                 throw new Exception("Could not read upload ip");
             }
 
             IPEndPoint uploadEp = new IPEndPoint(addr, port);
-            var uploadSock = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                var _uploadConnection = new Connection(uploadSock);
-                _uploadConnection.Connect(addrStr, port);
-
-                _uploadService.Initialize(this, _uploadConnection);
+                _clientService.CreateUploadClient(uploadEp);
             }
             catch (Exception ex)
             {
-                _notificationSvc.WriteException(ex);
-                _notificationSvc.WriteError("Failed to connect to the upload server!");
+                _logger.LogError("Failed to connect to the upload server!");
                 throw new Exception();
             }
 
-            _notificationSvc.WriteDebug(new[] { "Connected to Upload server successfully!" }); ;
+            _logger.LogDebug("Connected to Upload server successfully!"); ;
         }
 
         private void SendInfoToUpload()
@@ -259,16 +207,17 @@ namespace Navislamia.Game.Network
 
                 var msg = new Packet<TS_SU_LOGIN>((ushort)UploadPackets.TS_SU_LOGIN, new(serverName));
 
-                _uploadService.SendMessage(msg);
+                _clientService.UploadClient.SendMessage(msg);
             }
             catch (Exception ex)
             {
-                _notificationSvc.WriteException(ex);
+                // TODO: fix me!
+                //_notificationSvc.WriteException(ex);
                 throw new Exception();
             }
         }
 
-        public void StartListener()
+        private void ListenForClients()
         {
             string _address = _networkOptions.Game.Ip;
             ushort _port = _networkOptions.Game.Port;
@@ -278,7 +227,7 @@ namespace Navislamia.Game.Network
 
             if (!IPAddress.TryParse(_address, out addr))
             {
-                _notificationSvc.WriteError($"Failed to parse io.ip: {_address}");
+                _logger.LogError("Failed to parse io.ip: {address}", _address);
                 return;
             }
 
@@ -288,6 +237,8 @@ namespace Navislamia.Game.Network
 
             _clientListener.Bind(_clientListenerEndPoint);
             _clientListener.Listen(_backlog);
+
+            _logger.LogInformation("Listening for clients on {address}:{port}", _address, _port);
 
             Task.Run(acceptClients);
         }
@@ -299,37 +250,10 @@ namespace Navislamia.Game.Network
                 var _clientSocket = await _clientListener.AcceptAsync();
                 _clientSocket.NoDelay = true;
 
-                ClientService<GameClientEntity> client = new(_logOptions, _notificationSvc, _networkIOptions);
-                client.Initialize(this, new CipherConnection(_clientSocket, _networkOptions.CipherKey));
+                var _gameClient = _clientService.CreateGameClient(_clientSocket);
 
-                _notificationSvc.WriteDebug($"Game client connected @{client.Entity.Connection.RemoteIp}:{client.Entity.Connection.RemotePort}");
+                _logger.LogDebug($"Game client connected {_gameClient.ClientTag}");
             }
-        }
-
-        public bool RegisterAccount(ClientService<GameClientEntity> client, string accountName)
-        {
-            if (AuthorizedGameClients.ContainsKey(accountName))
-                return false;
-
-            AuthorizedGameClients[accountName] = client;
-
-            return true;
-        }
-
-        public void RemoveGameClient(ClientService<GameClientEntity> client)
-        {
-            var _clientEntity = client.GetEntity();
-            var _clientInfo = _clientEntity.Info;
-            var _msg = new Packet<TS_GA_CLIENT_LOGOUT>((ushort)AuthPackets.TS_GA_CLIENT_LOGOUT, new(_clientInfo.AccountName, (uint)_clientInfo.ContinuousPlayTime));
-
-            _authService.SendMessage(_msg);
-
-            AuthorizedGameClients.Remove(_clientInfo.AccountName);
-
-            _notificationSvc.WriteDebug($"Game Client @{client.Entity.Connection.RemoteIp}:{client.Entity.Connection.RemotePort} disconnected!");
-
-            client.Dispose();
-            client = null;
         }
 
     }
