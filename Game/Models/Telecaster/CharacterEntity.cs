@@ -75,20 +75,18 @@ public class CharacterEntity : Entity
 	public long? PetId { get; set; } 
 	public virtual PetEntity Pet { get; set; }
 	
-	public DateTime CreatedOn { get; set; } // TODO introduce CreatedOn into DbContext as part of softdeletion @Nexitis
-	public DateTime DeletedOn { get; set; } // TODO introduce DeletedOn into DbContext as part of softdeletion @Nexitis
-	public DateTime LoginTime { get; set; }
+	public DateTime? LoginTime { get; set; }
 	public int LoginCount { get; set; }
-	public DateTime LogoutTime { get; set; }
+	public DateTime? LogoutTime { get; set; }
 	public int PlayTime { get; set; } // probably unused -> leave for new feature e.g. show account playtime in char info?
 	public int ChatBlockTime { get; set; } // refactor to DateTime -> BlockedUntil <timestamp>
 	public int AdvChatCount { get; set; }
 	public bool WasNameChanged { get; set; }
 	public bool AutoUsed { get; set; }
-	public DateTime GuildBlockTime { get; set; }
+	public DateTime? GuildBlockTime { get; set; }
 	public bool PkMode { get; set; }
 	public int OtpValue { get; set; } // otp = one time password
-	public DateTime OtpVerifiedAt { get; set; }
+	public DateTime? OtpVerifiedAt { get; set; }
 	public string[] FlagList { get; set; } // Lua stuff e.g.ry:49481...
 	public string[] ClientInfo { get; set; } // Client stuff e.g. KGM=02,1,3|AKA=2,513,3...
 	

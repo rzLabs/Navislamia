@@ -16,6 +16,7 @@ using Navislamia.Game.Repositories;
 using Navislamia.Game.Services;
 using Navislamia.Notification;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace DevConsole;
 
@@ -23,6 +24,13 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        Log.Logger = new LoggerConfiguration()
+                            //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
+                            .MinimumLevel.Verbose()
+                            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                            .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
+                            .CreateLogger();
+
         var host = CreateHostBuilder(args).Build();
         var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
         using (var scope = scopeFactory.CreateScope())
@@ -37,6 +45,7 @@ public class Program
         }
 
         await host.RunAsync();
+        await Log.CloseAndFlushAsync();
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
@@ -51,18 +60,14 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
+                services.AddLogging(logging => logging.ClearProviders().AddSerilog());
                 services.AddHostedService<Application>();
 
                 ConfigureOptions(services, context);
                 ConfigureServices(services);
                 ConfigureDataAccess(services);
             })
-            .ConfigureLogging((context, logging) => {
-                Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
-                    .WriteTo.Console().CreateLogger();
-                logging.AddConfiguration(context.Configuration.GetSection("Logging"));
-                logging.AddConsole();
-            })
+            .UseSerilog()
             .UseConsoleLifetime();
     }
 

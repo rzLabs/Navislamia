@@ -1,10 +1,8 @@
-using Navislamia.Game.Models.Arcadia;
 
-namespace Navislamia.Game.Models
+namespace Navislamia.Game.Models;
+
+public class GlobalVariableEntity : Entity
 {
-    public class GlobalVariableEntity : Entity
-    {
-        public string Name { get; set; }
-        public string Value { get; set; }
-    }
+    public string Name { get; set; }
+    public string Value { get; set; }
 }

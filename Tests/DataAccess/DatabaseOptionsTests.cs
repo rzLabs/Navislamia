@@ -24,6 +24,7 @@ public class DatabaseOptionsTests
             User = "postgres",
             Password = "t0p$eCr3t!",
             InitialCatalog = "myDatabase",
+            IncludeErrorDetail = true
         };
 
         var connectionStringBuilder = new NpgsqlConnectionStringBuilder
@@ -35,7 +36,8 @@ public class DatabaseOptionsTests
             Password = databaseOptions.Password,
             SslMode = SslMode.Prefer,
             MaxPoolSize = 5,
-            CommandTimeout = 30
+            CommandTimeout = 30,
+            IncludeErrorDetail = databaseOptions.IncludeErrorDetail
         };
 
         var expected = connectionStringBuilder.ConnectionString;

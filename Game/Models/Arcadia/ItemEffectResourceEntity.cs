@@ -11,14 +11,13 @@ public class ItemEffectResourceEntity : Entity
     // Effects with multiple ordinal_ids could be linked to the item via EffectId[]
     // e.g. ItemId 10 -> EffectIds [301003, 301004] where 301003 would represent ordinalId 1 and 301004 ordinalId 2 etc.
     public long OrdinalId { get; set; }
-
+    
     public long TooltipId { get; set; }
-    public long EffectId { get; set; }
+    public virtual StringResourceEntity Tooltip { get; set; }
+    
+    public EffectTrigger EffectTrigger { get; set; } //previously effect_id but its an enum, not an entity
+    
     public EffectType EffectType { get; set; }
     public bool EffectLevel { get; set; }
-
     public decimal[] Values { get; set; } // 20
-
-    // public virtual StringResourceEntity Tooltip { get; set; }
-    // public virtual EffectResourceEntity EffectResource { get; set; }
 }

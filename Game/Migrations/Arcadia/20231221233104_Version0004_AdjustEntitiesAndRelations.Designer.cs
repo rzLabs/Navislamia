@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Navislamia.Game.Contexts;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Navislamia.Game.Migrations.Arcadia
 {
     [DbContext(typeof(ArcadiaContext))]
-    partial class ArcadiaContextModelSnapshot : ModelSnapshot
+    [Migration("20231221233104_Version0004_AdjustEntitiesAndRelations")]
+    partial class Version0004_AdjustEntitiesAndRelations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -242,6 +245,12 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Property<long[]>("EnhanceIds")
                         .HasColumnType("bigint[]");
 
+                    b.Property<long?>("EnhanceResourceEntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("EnhanceResourceEntityLocalFlag")
+                        .HasColumnType("integer");
+
                     b.Property<decimal[,]>("EnhanceValues")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric[]");
@@ -375,6 +384,8 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.HasIndex("SummonId");
 
                     b.HasIndex("TooltipId");
+
+                    b.HasIndex("EnhanceResourceEntityId", "EnhanceResourceEntityLocalFlag");
 
                     b.ToTable("ItemResources", t =>
                         {
@@ -1317,6 +1328,10 @@ namespace Navislamia.Game.Migrations.Arcadia
                         .WithMany("ItemResourceTooltips")
                         .HasForeignKey("TooltipId");
 
+                    b.HasOne("Navislamia.Game.Models.Arcadia.EnhanceResourceEntity", null)
+                        .WithMany("Items")
+                        .HasForeignKey("EnhanceResourceEntityId", "EnhanceResourceEntityLocalFlag");
+
                     b.Navigation("Effect");
 
                     b.Navigation("Name");
@@ -1456,6 +1471,11 @@ namespace Navislamia.Game.Migrations.Arcadia
                     b.Navigation("Item");
 
                     b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("Navislamia.Game.Models.Arcadia.EnhanceResourceEntity", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Navislamia.Game.Models.Arcadia.ItemResourceEntity", b =>

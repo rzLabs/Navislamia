@@ -33,116 +33,118 @@ public class Worker : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken token)
     {
-        Log.Logger.Information("Welcome! What do you want to do?");
-        Log.Logger.Information("1 = Transfer Arcadia, 2 = Seed Testdata");
+        // Log.Logger.Information("Welcome! What do you want to do?");
+        // Log.Logger.Information("1 = Transfer Arcadia, 2 = Seed Testdata");
 
-        var options = Console.ReadKey();
-        Console.Clear();
-        
-        switch (options.Key)
-        {
-            case ConsoleKey.D1: case ConsoleKey.NumPad1:
-                Log.Logger.Information("Transfer Arcadia");
-                Log.Logger.Information("What do you wish to transfer?");
-                Log.Logger.Information("1 = Everything, 2 = Choose tables");
-                
-                var transferOptions = Console.ReadKey();
-                Console.Clear();
+        // var options = Console.ReadKey();
+        // Console.Clear();
+        //
+        // switch (options.Key)
+        // {
+        //     case ConsoleKey.D1: case ConsoleKey.NumPad1:
+        //         Log.Logger.Information("Transfer Arcadia");
+        //         Log.Logger.Information("What do you wish to transfer?");
+        //         Log.Logger.Information("1 = Everything, 2 = Choose tables");
+        //         
+        //         var transferOptions = Console.ReadKey();
+        //         Console.Clear();
+        //
+        //         switch (transferOptions.Key)
+        //         {
+        //             case ConsoleKey.D1:
+        //             case ConsoleKey.NumPad1:
+        //                 await TransferArcadia(token, TransferTables.All);
+        //                 break;
+        //             case ConsoleKey.D2:
+        //             case ConsoleKey.NumPad2:
+        //                 var selecting = true;
+        //                 var selection = TransferTables.Unset;
+        //                 Log.Logger.Information("Choose your tables");
+        //                 while (selecting)
+        //                 {
+        //                     Console.Clear();
+        //                     Log.Logger.Information("1: {type}" + (selection.HasFlag(TransferTables.ItemResource) ? " • " : ""), "ItemResource");
+        //                     Log.Logger.Information("2: {type}", "LevelResource");
+        //                     Log.Logger.Information("3: {type}", "StringResource");
+        //                     Log.Logger.Information("4: {type}", "StatResource");
+        //                     Log.Logger.Information("5: {type}", "ChannelResource");
+        //                     Log.Logger.Information("6: {type}", "GlobalVariables");
+        //                     Log.Logger.Information("7: {type}", "EffectResource");
+        //                     Log.Logger.Information("8: {type}", "ItemEffectResource");
+        //                     Log.Logger.Information("9: {type}", "SummonResource");
+        //                     Log.Logger.Information("10: {type}", "SetItemEffectResource");
+        //                     Log.Logger.Information("11: {type}", "EnhanceResource");
+        //                     Log.Logger.Information("12: {type}", "SkillResource");
+        //                     Log.Logger.Information("13: {type}", "StateResource");
+        //                     Console.WriteLine();
+        //                     Log.Logger.Warning("Selected: {selection}", selection);
+        //                     Log.Logger.Information("go: {type}", "Start transferring");
+        //                     Log.Logger.Information("stop: {type}", "Abort");
+        //
+        //                     var selected = Console.ReadLine();
+        //                     switch (selected)
+        //                     {
+        //                         case "1":
+        //                             selection |= TransferTables.ItemResource;
+        //                             break;
+        //                         case "2":
+        //                             selection |= TransferTables.LevelResource;                       
+        //                             break;
+        //                         case "3":
+        //                             selection |= TransferTables.StringResource;
+        //                             break;
+        //                         case "4":
+        //                             selection |= TransferTables.StatResource;
+        //                             break;
+        //                         case "5":
+        //                             selection |= TransferTables.ChannelResource;
+        //                             break;
+        //                         case "6":
+        //                             selection |= TransferTables.GlobaleVariables;
+        //                             break;
+        //                         case "7":
+        //                             selection |= TransferTables.EffectResource;
+        //                             break;
+        //                         case "8":
+        //                             selection |= TransferTables.ItemEffectResource;
+        //                             break;
+        //                         case "9":
+        //                             selection |= TransferTables.SummonResource;
+        //                             break;
+        //                         case "10":
+        //                             selection |= TransferTables.SetItemEffectResource;
+        //                             break;
+        //                         case "11":
+        //                             selection |= TransferTables.EnhanceResource;
+        //                             break;
+        //                         case "12":
+        //                             selection |= TransferTables.SkillResource;
+        //                             break;
+        //                         case "13":
+        //                             selection |= TransferTables.StateResource;
+        //                             break;
+        //                     }
+        //                     
+        //                     if (selected == "stop")
+        //                     {
+        //                         return;
+        //                     }
+        //
+        //                     selecting = selected != "go";
+        //                 }
+        //
+        //                 await TransferArcadia(token, selection);
+        //
+        //                 break;
+        //         }
+        //         break;
+        //     case ConsoleKey.D2: case ConsoleKey.NumPad2:
+        //         await SeedTelecaster(token);
+        //         break;
+        // }
 
-                switch (transferOptions.Key)
-                {
-                    case ConsoleKey.D1:
-                    case ConsoleKey.NumPad1:
-                        await TransferArcadia(token, TransferTables.All);
-                        break;
-                    case ConsoleKey.D2:
-                    case ConsoleKey.NumPad2:
-                        var selecting = true;
-                        var selection = TransferTables.Unset;
-                        Log.Logger.Information("Choose your tables");
-                        while (selecting)
-                        {
-                            Console.Clear();
-                            Log.Logger.Information("1: {type}" + (selection.HasFlag(TransferTables.ItemResource) ? " • " : ""), "ItemResource");
-                            Log.Logger.Information("2: {type}", "LevelResource");
-                            Log.Logger.Information("3: {type}", "StringResource");
-                            Log.Logger.Information("4: {type}", "StatResource");
-                            Log.Logger.Information("5: {type}", "ChannelResource");
-                            Log.Logger.Information("6: {type}", "GlobalVariables");
-                            Log.Logger.Information("7: {type}", "EffectResource");
-                            Log.Logger.Information("8: {type}", "ItemEffectResource");
-                            Log.Logger.Information("9: {type}", "SummonResource");
-                            Log.Logger.Information("10: {type}", "SetItemEffectResource");
-                            Log.Logger.Information("11: {type}", "EnhanceResource");
-                            Log.Logger.Information("12: {type}", "SkillResource");
-                            Log.Logger.Information("13: {type}", "StateResource");
-                            Console.WriteLine();
-                            Log.Logger.Warning("Selected: {selection}", selection);
-                            Log.Logger.Information("go: {type}", "Start transferring");
-                            Log.Logger.Information("stop: {type}", "Abort");
-
-                            var selected = Console.ReadLine();
-                            switch (selected)
-                            {
-                                case "1":
-                                    selection |= TransferTables.ItemResource;
-                                    break;
-                                case "2":
-                                    selection |= TransferTables.LevelResource;                       
-                                    break;
-                                case "3":
-                                    selection |= TransferTables.StringResource;
-                                    break;
-                                case "4":
-                                    selection |= TransferTables.StatResource;
-                                    break;
-                                case "5":
-                                    selection |= TransferTables.ChannelResource;
-                                    break;
-                                case "6":
-                                    selection |= TransferTables.GlobaleVariables;
-                                    break;
-                                case "7":
-                                    selection |= TransferTables.EffectResource;
-                                    break;
-                                case "8":
-                                    selection |= TransferTables.ItemEffectResource;
-                                    break;
-                                case "9":
-                                    selection |= TransferTables.SummonResource;
-                                    break;
-                                case "10":
-                                    selection |= TransferTables.SetItemEffectResource;
-                                    break;
-                                case "11":
-                                    selection |= TransferTables.EnhanceResource;
-                                    break;
-                                case "12":
-                                    selection |= TransferTables.SkillResource;
-                                    break;
-                                case "13":
-                                    selection |= TransferTables.StateResource;
-                                    break;
-                            }
-                            
-                            if (selected == "stop")
-                            {
-                                return;
-                            }
-
-                            selecting = selected != "go";
-                        }
-
-                        await TransferArcadia(token, selection);
-
-                        break;
-                }
-                break;
-            case ConsoleKey.D2: case ConsoleKey.NumPad2:
-                await SeedTelecaster(token);
-                break;
-        }
-        
+        await TransferArcadia(token, null);
+        await SeedTelecaster(token);
         
         Log.Logger.Warning("Done. You can now close this window.");
 
@@ -237,7 +239,6 @@ public class Worker : BackgroundService
                 Models = new[] { 104, 210, 301, 401, 501 },
                 HairColorIndex = 2,
                 TextureId = 10,
-                CreatedOn = DateTime.UtcNow,
                 FlagList = new[] { "rx:168339", "ry:55413", "wbx:168356", "lvup_armor:1", "wby:55399", "lvup_weapon:1" },
                 ClientInfo = new[]
                 {
@@ -297,7 +298,6 @@ public class Worker : BackgroundService
                 Models = new[] { 102, 209, 301, 401, 501 },
                 HairColorIndex = 2,
                 TextureId = 20,
-                CreatedOn = DateTime.UtcNow,
                 FlagList =
                     new[] { "rx:164325", "ry:49528", "wbx:164335", "lvup_armor:1", "wby:49510", "lvup_weapon:1" },
                 ClientInfo = new[]
@@ -358,7 +358,6 @@ public class Worker : BackgroundService
                 Models = new[] { 101, 210, 301, 401, 501 },
                 HairColorIndex = 2,
                 TextureId = 2,
-                CreatedOn = DateTime.UtcNow,
                 FlagList = new[] { "rx:164482", "ry:52951", "wbx:164464", "lvup_armor:1", "wby:52942", "lvup_weapon:1" },
                 ClientInfo = new[]
                 {
@@ -498,7 +497,6 @@ public class Worker : BackgroundService
                 SocketItemIds = new [] { sockets[i] },
                 RemainingTime = remainTime[i],
                 ElementalEffectExpireTime = DateTime.UtcNow.AddYears(-5),
-                CreatedOn = DateTime.UtcNow
             });
         }
         
@@ -535,105 +533,36 @@ public class Worker : BackgroundService
         _finishedSeeds.Add(nameof(ItemEntity));
     }
     
-    private async Task TransferArcadia(CancellationToken token, TransferTables tableChoice)
+    private async Task TransferArcadia(CancellationToken token, TransferTables? tableChoice)
     {
-        Console.Clear();
-        Log.Logger.Warning("Starting transfer from MSSQL to PSQL");
-        if (tableChoice.HasFlag(TransferTables.None))
-        {
-            return;
-        }
-
-        if (tableChoice.HasFlag(TransferTables.All))
-        { 
-            await TransferItemResource(token);
-            await TransferLevelResource(token);
-            await TransferStringResource(token);
-            await TransferStatResource(token);
-            await TransferChannelResource(token);
-            await TransferGlobalVariables(token);
-            await TransferEffectResource(token);
-            await TransferItemEffectResource(token);
-            await TransferSummonResource(token);
-            await TransferSetItemEffectResource(token);
-            await TransferEnhanceResource(token);
-            await TransferSkillResource(token);
-            await TransferStateResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.ItemResource))
-        {
-            await TransferItemResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.LevelResource))
-        {
-            await TransferLevelResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.StringResource))
-        {
-            await TransferStringResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.StatResource))
-        {
-            await TransferStatResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.ChannelResource))
-        {
-            await TransferChannelResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.GlobaleVariables))
-        {
-            await TransferGlobalVariables(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.EffectResource))
-        {
-            await TransferEffectResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.ItemEffectResource))
-        {
-            await TransferItemEffectResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.SummonResource))
-        {
-            await TransferSummonResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.SetItemEffectResource))
-        {
-            await TransferSetItemEffectResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.EnhanceResource))
-        {
-            await TransferEnhanceResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.SkillResource))
-        {
-            await TransferSkillResource(token);
-        }
-
-        if (tableChoice.HasFlag(TransferTables.StateResource))
-        {
-            await TransferStateResource(token);
-        }
+        await TransferChannelResource(token);
+        await TransferLevelResource(token);
+        await TransferStringResource(token);
+        await TransferEffectResource(token);
+        await TransferStatResource(token);
+        await TransferStateResource(token);
+        await TransferSummonResource(token, false);
+        await TransferSkillResource(token);
+        await TransferSetItemEffectResource(token);
+        await TransferItemResource(token, false);
+        await TransferSummonResource(token, true);
+        await TransferItemResource(token, true);
+        await TransferItemEffectResource(token);
+        await TransferEnhanceResource(token);
     }
-    
-    private async Task TransferItemResource(CancellationToken token)
+
+    private async Task TransferItemResource(CancellationToken token, bool updateRelations)
     {
         await using var context = new MssqlArcadiaContext(_mssqlOptions);
         var items = context.ItemResource.ToList();
         var processed = 1;
         
         Log.Logger.Information("Transferring {type}: {amount}",nameof(MSSQLItemResource), items.Count);
+
+        if (updateRelations)
+        {
+            Log.Logger.Information("Reapplying relations for ItemResource");
+        }
         
         foreach (var item in items)
         {
@@ -642,7 +571,6 @@ public class Worker : BackgroundService
                 Log.Logger.Warning("Stopping...");
                 return;
             }
-            
             Log.Information("Processing... {processed}/{amount}", processed, items.Count);
     
             var mappedItem = _mapper.Map<ItemResourceEntity>(item);
@@ -661,13 +589,8 @@ public class Worker : BackgroundService
                 { item.opt_var1_0, item.opt_var2_0 }, { item.opt_var1_1, item.opt_var2_1 },
                 { item.opt_var1_2, item.opt_var2_2 }, { item.opt_var1_3, item.opt_var2_3 }
             };
-    
-            var enhanceIds = new List<long?>();
-            if (item.enhance_0_id != 0 || item.enhance_1_id != 0)
-            {
-                enhanceIds.Add(item.enhance_0_id != 0 ? item.enhance_0_id : null);
-                enhanceIds.Add(item.enhance_1_id != 0 ? item.enhance_1_id : null);
-            }
+
+            var enhanceIds = new long [] { item.enhance_0_id, item.enhance_1_id };
             var enhanceValues = new[,]
             {
                 { item.enhance_0_01, item.enhance_0_02, item.enhance_0_03, item.enhance_0_04 },
@@ -718,10 +641,28 @@ public class Worker : BackgroundService
             mappedItem.RaceRestriction = itemRaceRestriction;
             mappedItem.JobRestriction = itemJobRestriction;
             mappedItem.EnhanceValues = enhanceValues;
-            mappedItem.EnhanceIds = enhanceIds.ToArray().Length != 0 ? enhanceIds.ToArray() : null;
+            mappedItem.EnhanceIds = enhanceIds.Length != 0 ? enhanceIds : null;
     
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
+                var summonExists = psqlContext.SummonResources.Any(s => s.Id == item.summon_id);
+                if (!summonExists)
+                {
+                    mappedItem.SummonId = null;
+                }
+                
+                var effectExists = psqlContext.EffectResources.Any(s => s.Id == item.effect_id);
+                if (!effectExists)
+                {
+                    mappedItem.EffectId = null;
+                }
+                
+                var skillExists = psqlContext.SkillResources.Any(s => s.Id == item.skill_id);
+                if (!skillExists)
+                {
+                    mappedItem.SkillId = null;
+                }
+                
                 var existingEntity = psqlContext.ItemResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
                 {
@@ -793,37 +734,54 @@ public class Worker : BackgroundService
         var processed = 1;
         
         Log.Logger.Information("Transferring {type}: {amount}",nameof(MSSQLStringResource), items.Count);
-        
-        foreach (var item in items)
+        var batches = new List<List<StringResourceEntity>>();
+        while(items.Count != 0)
         {
-            Log.Information("Processing... {processed}/{amount}", processed, items.Count);
-            if (token.IsCancellationRequested)
-            {
-                Log.Logger.Warning("Stopping...");
-                return;
-            }
-    
-            var mappedItem = _mapper.Map<StringResourceEntity>(item);
-    
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
-            {
-                var existingEntity = psqlContext.StringResources.FirstOrDefault(i => i.Id == item.code);
-                if (existingEntity != null)
-                {
-                    psqlContext.StringResources.Update(mappedItem);
-                }
-                else
-                {
-                    psqlContext.StringResources.Add(mappedItem);
-                }
-                await psqlContext.SaveChangesAsync(token);
-            }
-            processed++;
-            ClearCurrentConsoleLine();
+            var it = items.Take(1000);
+            var mappedList = _mapper.Map<List<StringResourceEntity>>(it);
+
+            batches.Add(mappedList);
+            items.RemoveRange(0, items.Count < 1000 ? items.Count : 1000);
         }
+
+        var runner = 1;
+        var tasks = new List<Task>();
+        foreach (var batch in batches)
+        {
+            tasks.Add(Task.Run(() => TransferEntities(batch, runner += 1), token));
+        }
+
+        tasks.Add(Task.Run(() =>
+        {
+            Log.Logger.Information("Waiting for runners to finish");
+        }, token));
+        await Task.WhenAll(tasks.AsParallel());
         
         _finishedTransfers.Add(nameof(MSSQLStringResource));
         UpdateConsole();
+    }
+
+    private async Task TransferEntities<T>(List<T> entities, int? runner = null) where T: class, IEntity
+    {
+        if (runner != null)
+        {
+            Log.Logger.Information("Runner: {num}", runner);
+        }
+        foreach (var entity in entities)
+        {
+            await using var psqlContext = new ArcadiaContext(_psqlArcadiaContext);
+            
+            var existingEntity = await psqlContext.Set<T>().FindAsync(entity.Id);
+            if (existingEntity != null)
+            {
+                psqlContext.Set<T>().Update(entity);
+            }
+            else
+            {
+                psqlContext.Set<T>().Add(entity);
+            }
+            await psqlContext.SaveChangesAsync();
+        }
     }
     
     private async Task TransferStatResource(CancellationToken token)
@@ -888,7 +846,7 @@ public class Worker : BackgroundService
     
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
-                var existingEntity = psqlContext.StatResources.FirstOrDefault(i => i.Id == item.id);
+                var existingEntity = psqlContext.ChannelResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
                 {
                     psqlContext.ChannelResources.Update(mappedItem);
@@ -904,47 +862,6 @@ public class Worker : BackgroundService
         }
         
         _finishedTransfers.Add(nameof(MSSQLChannelResource));
-        UpdateConsole();
-    }
-    
-    private async Task TransferGlobalVariables(CancellationToken token)
-    {
-        await using var mssqlContext = new MssqlArcadiaContext(_mssqlOptions);
-
-        var items = mssqlContext.GlobalVariable.ToList();
-        var processed = 1;
-        
-        Log.Logger.Information("Transferring {type}: {amount}",nameof(MSSQLGlobalVariable), items.Count);
-        
-        foreach (var item in items)
-        {
-            Log.Information("Processing... {processed}/{amount}", processed, items.Count);
-            if (token.IsCancellationRequested)
-            {
-                Log.Logger.Warning("Stopping...");
-                return;
-            }
-    
-            var mappedItem = _mapper.Map<GlobalVariableEntity>(item);
-    
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
-            {
-                var existingEntity = psqlContext.GlobalVariables.FirstOrDefault(i => i.Id == item.sid);
-                if (existingEntity != null)
-                {
-                    psqlContext.GlobalVariables.Update(mappedItem);
-                }
-                else
-                {
-                    psqlContext.GlobalVariables.Add(mappedItem);
-                }
-                await psqlContext.SaveChangesAsync(token);
-            }
-            processed++;
-            ClearCurrentConsoleLine();
-        }
-        
-        _finishedTransfers.Add(nameof(MSSQLGlobalVariable));
         UpdateConsole();
     }
     
@@ -1009,11 +926,10 @@ public class Worker : BackgroundService
             }
 
             var mappedItem = _mapper.Map<ItemEffectResourceEntity>(item);
-
+            
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
-                // DO NOT USE context.AddRange(entities) too many entities will crash the worker
-                var existingEntity = psqlContext.ItemEffectResources.FirstOrDefault(i => i.Id == item.id);
+                var existingEntity = psqlContext.ItemEffectResources.FirstOrDefault(i => i.Id == item.id && i.OrdinalId == item.ordinal_id);
                 if (existingEntity != null)
                 {
                     psqlContext.ItemEffectResources.Update(mappedItem);
@@ -1032,7 +948,7 @@ public class Worker : BackgroundService
         UpdateConsole();
     }
     
-    private async Task TransferSummonResource(CancellationToken token)
+    private async Task TransferSummonResource(CancellationToken token, bool updateRelations)
     {
         await using var mssqlContext = new MssqlArcadiaContext(_mssqlOptions);
 
@@ -1040,35 +956,75 @@ public class Worker : BackgroundService
         var processed = 1;
         
         Log.Logger.Information("Transferring {type}: {amount} entities",nameof(MSSQLSummonResource), items.Count);
-        
-        foreach (var item in items)
+
+        var loops = 2;
+        if (updateRelations)
         {
-            Log.Information("Processing... {processed}/{amount}", processed, items.Count);
-            if (token.IsCancellationRequested)
-            {
-                Log.Logger.Warning("Stopping...");
-                return;
-            }
-
-            var mappedItem = _mapper.Map<SummonResourceEntity>(item);
-
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
-            {
-                var existingEntity = psqlContext.SummonResources.FirstOrDefault(i => i.Id == item.id);
-                if (existingEntity != null)
-                {
-                    psqlContext.SummonResources.Update(mappedItem);
-                }
-                else
-                {
-                    psqlContext.SummonResources.Add(mappedItem);
-                }
-                await psqlContext.SaveChangesAsync(token);
-            }
-            processed++;
-            ClearCurrentConsoleLine();
+            loops = 1;
+            Log.Logger.Information("Reapplying relations for summons");
         }
-        
+        while (loops != 0)
+        {
+            foreach (var item in items)
+            {
+                Log.Information("Processing... {processed}/{amount}", processed, items.Count);
+                if (token.IsCancellationRequested)
+                {
+                    Log.Logger.Warning("Stopping...");
+                    return;
+                }
+
+                var mappedItem = _mapper.Map<SummonResourceEntity>(item);
+
+                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
+                {
+                    // ModelResource doesnt exist yet so id will be null 
+                    var existingModel = psqlContext.ModelEffectResources.Any(m => m.Id == mappedItem.ModelId);
+                    if (!existingModel)
+                    {
+                        mappedItem.ModelId = null;
+                    }
+                
+                    var existingStat = psqlContext.StatResources.Any(m => m.Id == mappedItem.StatId);
+                    if (!existingStat)
+                    {
+                        mappedItem.StatId = null;
+                    }
+                
+                    var existingCard = psqlContext.ItemResources.Any(m => m.Id == mappedItem.CardId);
+                    if (!existingCard)
+                    {
+                        mappedItem.CardId = null;
+                    }
+                
+                    var existingSummonTarget = psqlContext.SummonResources.Any(m => m.Id == mappedItem.EvolveTargetId);
+                    if (!existingSummonTarget)
+                    {
+                        mappedItem.EvolveTargetId = null;
+                    }
+                    
+                    var existingEntity = psqlContext.SummonResources.FirstOrDefault(i => i.Id == item.id);
+                    if (existingEntity != null)
+                    {
+                        psqlContext.SummonResources.Update(mappedItem);
+                    }
+                    else
+                    {
+                        psqlContext.SummonResources.Add(mappedItem);
+                    }
+                    await psqlContext.SaveChangesAsync(token);
+                }
+                processed++;
+                ClearCurrentConsoleLine();
+
+            }
+            
+            Log.Logger.Information("Repeating transfer to adjust relations: #{loop}", loops);
+            --loops;
+            processed = 1;
+        }
+        ClearCurrentConsoleLine();
+
         _finishedTransfers.Add(nameof(MSSQLSummonResource));
         UpdateConsole();
     }
@@ -1117,9 +1073,16 @@ public class Worker : BackgroundService
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
-                var existingEntity = psqlContext.SetItemEffectResources.FirstOrDefault(i => i.SetId == item.set_id && (int)i.SetParts == item.set_part_id);
+                var existingEffect = psqlContext.EffectResources.Any(e => e.Id == mappedItem.EffectId);
+                if (!existingEffect)
+                {
+                    mappedItem.EffectId = null;
+                }
+                
+                var existingEntity = psqlContext.SetItemEffectResources.FirstOrDefault(i => i.Id == item.set_id && (int)i.Parts == item.set_part_id);
                 if (existingEntity != null)
                 {
+                    mappedItem.Id = existingEntity.Id;
                     psqlContext.SetItemEffectResources.Update(mappedItem);
                 }
                 else
@@ -1165,6 +1128,12 @@ public class Worker : BackgroundService
 
             await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
+                var requiredItemExists = psqlContext.ItemResources.Any(i => i.Id == mappedItem.RequiredItemId);
+                if (!requiredItemExists)
+                {
+                    mappedItem.RequiredItemId = null;
+                }
+
                 var existingEntity = psqlContext.EnhanceResources.FirstOrDefault(i => i.Id == item.enhance_id && (int)i.LocalFlag == item.local_flag);
                 if (existingEntity != null)
                 {
@@ -1193,37 +1162,81 @@ public class Worker : BackgroundService
         var processed = 1;
         
         Log.Logger.Information("Transferring {type}: {amount} entities", nameof(MSSQLSkillResource), items.Count);
-        
-        foreach (var item in items)
+
+        var loops = 2;
+        while (loops != 0)
         {
-            if (token.IsCancellationRequested)
+            foreach (var item in items)
             {
-                Log.Logger.Warning("Stopping...");
-                return;
-            }
-            Log.Information("Processing... {processed}/{amount}", processed, items.Count);
+                if (token.IsCancellationRequested)
+                {
+                    Log.Logger.Warning("Stopping...");
+                    return;
+                }
+                Log.Information("Processing... {processed}/{amount}", processed, items.Count);
 
-            var mappedItem = _mapper.Map<SkillResourceEntity>(item);
+                var mappedItem = _mapper.Map<SkillResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
-            {
-                var existingEntity = psqlContext.SkillResources.FirstOrDefault(i => i.Id == item.id);
-                if (existingEntity != null)
+                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
                 {
-                    psqlContext.SkillResources.Update(mappedItem);
-                }
-                else
-                {
-                    psqlContext.SkillResources.Add(mappedItem);
-                }
+                    var existingSkillResource = psqlContext.SkillResources.Any(s => s.UpgradeIntoSkillId == mappedItem.Id);
+                    if (!existingSkillResource)
+                    {
+                        mappedItem.UpgradeIntoSkillId = null;
+                    }
+                    
+                    var existingStateResource = psqlContext.StateResources.Any(s => s.Id == mappedItem.StateId);
+                    if (!existingStateResource)
+                    {
+                        mappedItem.StateId = null;
+                    }
+                    
+                    var existingRequiredStateResource = psqlContext.StateResources.Any(s => s.Id == mappedItem.RequiredStateId);
+                    if (!existingRequiredStateResource)
+                    {
+                        mappedItem.RequiredStateId = null;
+                    }
+                    
+                    var existingDescription = psqlContext.StringResources.Any(s => s.Id == mappedItem.DescriptionId);
+                    if (!existingDescription)
+                    {
+                        mappedItem.DescriptionId = null;
+                    }
+                    
+                    var existingText = psqlContext.StringResources.Any(s => s.Id == mappedItem.TextId);
+                    if (!existingText)
+                    {
+                        mappedItem.TextId = null;
+                    }
+                    
+                    var existingTooltip = psqlContext.StringResources.Any(s => s.Id == mappedItem.TooltipId);
+                    if (!existingTooltip)
+                    {
+                        mappedItem.TooltipId = null;
+                    }
+                    
+                    var existingEntity = psqlContext.SkillResources.FirstOrDefault(i => i.Id == item.id);
+                    if (existingEntity != null)
+                    {
+                        psqlContext.SkillResources.Update(mappedItem);
+                    }
+                    else
+                    {
+                        psqlContext.SkillResources.Add(mappedItem);
+                    }
                 
-                await psqlContext.SaveChangesAsync(token);
-            }
+                    await psqlContext.SaveChangesAsync(token);
+                }
 
-            processed++;
-            ClearCurrentConsoleLine();
+                processed++;
+                ClearCurrentConsoleLine();
+            }
+            Log.Logger.Information("Repeating transfer to adjust relations: #{loop}", loops);
+            --loops;
+            processed = 1;
         }
-        
+        ClearCurrentConsoleLine();
+
         _finishedTransfers.Add(nameof(MSSQLSkillResource));
         UpdateConsole();
     }
@@ -1271,12 +1284,14 @@ public class Worker : BackgroundService
         _finishedTransfers.Add(nameof(MSSQLStateResource));
         UpdateConsole();
     }
+    
+    // TODO transfer ModelEffectResource
 
     private void UpdateConsole()
     {
         Console.Clear();
         _finishedTransfers.ForEach(l => Log.Logger.Information("Finished transferring {name}", l));
-        _finishedTransfers.ForEach(l => Log.Logger.Information("Finished seeding {name}", l));
+        _finishedSeeds.ForEach(l => Log.Logger.Information("Finished seeding {name}", l));
     }
 
     private static void ClearCurrentConsoleLine()

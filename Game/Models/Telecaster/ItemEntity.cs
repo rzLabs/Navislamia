@@ -40,8 +40,6 @@ public class ItemEntity : Entity
     public DateTime? ElementalEffectExpireTime { get; set; }
     public int ElementalEffectAttackPoint { get; set; }
     public int ElementalEffectMagicPoint { get; set; }
-    public DateTime? CreatedOn { get; set; } // TODO introduce CreatedOn into DbContext as part of softdeletion @Nexitis
-    public DateTime? UpdateTime { get; set; } // TODO introduce ModifiedOn into DbContext as part of softdeletion @Nexitis
     
     public virtual PetEntity PetItem { get; set; }
     public virtual ItemStorageEntity RelatedItemStorage { get; set; }

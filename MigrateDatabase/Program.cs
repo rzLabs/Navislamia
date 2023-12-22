@@ -23,6 +23,8 @@ var builder = Host.CreateDefaultBuilder(args)
         configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
         configuration.AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true);
         configuration.AddEnvironmentVariables();
+        
+        
     })
     .ConfigureServices((context, services) =>
     {
@@ -88,4 +90,15 @@ var builder = Host.CreateDefaultBuilder(args)
     .UseConsoleLifetime();
 
 var host = builder.Build();
+var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
+using (var scope = scopeFactory.CreateScope())
+{
+    var arcadia = scope.ServiceProvider.GetService<ArcadiaContext>();
+    var telecaster = scope.ServiceProvider.GetService<TelecasterContext>();
+    await arcadia.Database.MigrateAsync();
+    await telecaster.Database.MigrateAsync();
+            
+    Log.Logger.Information("Applied Arcadia migrations: {Migrations}", await arcadia.Database.GetAppliedMigrationsAsync());
+    Log.Logger.Information("Applied Telecaster migrations: {Migrations}", await telecaster.Database.GetAppliedMigrationsAsync());
+}
 host.Run();
