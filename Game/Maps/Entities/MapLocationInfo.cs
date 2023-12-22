@@ -1,6 +1,6 @@
-﻿using Navislamia.Maps.X2D;
+﻿using Navislamia.Game.Maps.X2D;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class MapLocationInfo : PolygonF
 {

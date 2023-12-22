@@ -3,7 +3,7 @@ using System.IO;
 using Objects;
 using static Navislamia.Utilities.StringExtensions;
 
-namespace Navislamia.Maps.Entities;
+namespace Navislamia.Game.Maps.Entities;
 
 public class TerrainSeamlessWorldInfo
 {
@@ -63,32 +63,32 @@ public class TerrainSeamlessWorldInfo
                 continue;
             }
 
-            if ((content = GetStringContent(line, TileLenHeader)) != null)
+            if ((content = line.GetStringContent(TileLenHeader)) != null)
             {
                 TileLength = float.Parse(content);
             }
             
-            if ((content = GetStringContent(line, TileCountPerSegmentHeader)) != null)
+            if ((content = line.GetStringContent(TileCountPerSegmentHeader)) != null)
             {
                 TileCountPerSegment = int.Parse(content);
             }
             
-            if ((content = GetStringContent(line, SegmentCountPerMapHeader)) != null)
+            if ((content = line.GetStringContent(SegmentCountPerMapHeader)) != null)
             {
                 SegmentCountPerMap = int.Parse(content);
             }
             
-            if ((content = GetStringContent(line, FovHeader)) != null)
+            if ((content = line.GetStringContent(FovHeader)) != null)
             {
                 GetFov = float.Parse(content);
             }
             
-            if ((content = GetStringContent(line, MapLayerHeader)) != null)
+            if ((content = line.GetStringContent(MapLayerHeader)) != null)
             {
                 _mapLayer = int.Parse(content);
             }
             
-            if ((content = GetStringContent(line, MapSizeHeader)) != null)
+            if ((content = line.GetStringContent(MapSizeHeader)) != null)
             {
                 if (mapCountX != 0 || mapCountY != 0)
                 {
@@ -119,7 +119,7 @@ public class TerrainSeamlessWorldInfo
                 }
             }
 
-            if ((content = GetStringContent(line, MapFileHeader)) == null)
+            if ((content = line.GetStringContent(MapFileHeader)) == null)
             {
                 continue;
             }

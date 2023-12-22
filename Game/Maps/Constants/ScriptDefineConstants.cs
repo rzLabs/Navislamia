@@ -1,4 +1,4 @@
-namespace Navislamia.Maps.Constants;
+namespace  Navislamia.Game.Maps.Constants;
 
 public class ScriptDefineConstants
 {

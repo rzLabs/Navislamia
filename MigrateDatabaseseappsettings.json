@@ -1,0 +1,57 @@
+{
+  "Server": {
+    "name": "Navislamia",
+    "index": 1,
+    "screenshotUrl": "about:new",
+    "isAdultServer": 0
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.Hosting.Lifetime": "Warning"
+    }
+  },
+  "Logs": {
+      "MinimumLevel": 0,
+      "PacketDebug": true
+  },
+  "Network": {
+    "Auth": {
+      "Ip": "127.0.0.1",
+      "Port": 4502,
+      "Index": 1
+    },
+    "Game": {
+      "Ip": "127.0.0.1",
+      "Port": 4515
+    },
+    "Upload": {
+      "Ip": "127.0.0.1",
+      "Port": 4616
+    },
+    "Backlog": 100,
+    "MaxConnections": 2000,
+    "BufferSize": 32768,
+    "CipherKey": "}h79q~B%al;k'y $E"
+  },
+  "Database": {
+    "DataSource": "localhost",
+    "Port": 5432,
+    "User": "postgres",
+    "Password": "N@vislam1a",
+    "InitialCatalog": "Arcadia"
+  },
+  "Script": {
+    "skip_loading": true
+  },
+  "Map": {
+    "Width": 700000,
+    "Height": 1000000,
+    "MaxLayer": 256,
+    "SkipLoading": true,
+    "SkipLoadingNFA": false,
+    "NoCollisionCheck": false
+    }
+}

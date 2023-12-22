@@ -1,11 +1,11 @@
 using System;
 using System.Threading;
-using DevConsole.Properties;
 using Navislamia.Game;
 using Navislamia.Notification;
 using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Exceptions;
+using DevConsole.Properties;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Navislamia.Command;
@@ -44,7 +44,7 @@ namespace DevConsole
             {
                 throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
             }
-
+            
             try
             {
                 _gameModule.Start(ip, port, backlog);
@@ -53,8 +53,8 @@ namespace DevConsole
             }
             catch (Exception e)
             {
-                StopAsync(cancellationToken);
                 _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
+                StopAsync(cancellationToken);
             }
 
             _commandModule.Init();
