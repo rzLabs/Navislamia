@@ -24,5 +24,7 @@ namespace Navislamia.Configuration.Options
         public int CommandTimeout { get; set; } = 30;
 
         public int CommandTimeoutMigration { get; set; } = 3600;
+        
+        public bool IncludeErrorDetail { get; set; }
     }
 }

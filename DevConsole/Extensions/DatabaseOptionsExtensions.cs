@@ -16,7 +16,8 @@ public static class DatabaseOptionsExtensions
             Password = options.Password,
             SslMode = SslMode.Prefer,
             MaxPoolSize = options.MaxPoolSize ?? 5,
-            CommandTimeout = options.CommandTimeout
+            CommandTimeout = options.CommandTimeout,
+            IncludeErrorDetail = options.IncludeErrorDetail
         };
         
         return connectionStringBuilder.ConnectionString;
