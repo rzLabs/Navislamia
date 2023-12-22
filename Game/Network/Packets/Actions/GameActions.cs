@@ -80,7 +80,7 @@ namespace Navislamia.Network.Packets.Actions
                 _characterLobbyInfo.Name = _character.CharacterName;
                 _characterLobbyInfo.SkinColor = (uint)_character.SkinColor;
                 _characterLobbyInfo.CreateTime = _character.CreatedOn.ToString("yyyy/MM/dd");
-                _characterLobbyInfo.DeleteTime = _character.DeletedOn.ToString("yyyy/MM/dd");
+                _characterLobbyInfo.DeleteTime = _character.DeletedOn?.ToString("yyyy/MM/dd");
 
                 foreach (var _item in  _character.Items.Where(i => i.WearInfo != ItemWearType.None))
                 {
