@@ -1,22 +1,20 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
 using Navislamia.Configuration.Options;
-using Navislamia.Database;
+using Navislamia.Game.Models.Navislamia;
+using Navislamia.Game.Network;
+using Navislamia.Game.Repositories;
 using Navislamia.Notification;
-using Navislamia.Maps;
-using Navislamia.Network;
-using Navislamia.Scripting;
-using Navislamia.Data.Interfaces;
-using Navislamia.Data.Loaders;
+using Navislamia.Game.Maps;
+using Navislamia.Game.Scripting;
+using Navislamia.Game.Services;
 
 namespace Navislamia.Game
 {
     public class GameModule : IGameModule
     {
-        private readonly DbConnectionManager _dbConnectionManager;
         private readonly ScriptContent _scriptContent;
         private readonly INotificationModule _notificationModule;
         private readonly MapContent _mapContent;
@@ -24,49 +22,43 @@ namespace Navislamia.Game
         private readonly ScriptOptions _scriptOptions;
         private readonly MapOptions _mapOptions;
 
-        private List<IRepository> _worldRepositories;
+        private readonly IWorldRepository _worldRepository;
+        private readonly ICharacterService _characterService;
+        private readonly WorldEntity _worldEntity;
 
-        public GameModule() { }
-
-        public GameModule(INotificationModule notificationModule, INetworkModule networkModule, 
-            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IOptions<WorldOptions> worldOptions, IOptions<PlayerOptions> playerOptions)
+        public GameModule(INotificationModule notificationModule, INetworkModule networkModule,
+            IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, IWorldRepository worldRepository, ICharacterService characterService)
         {
             _scriptOptions = scriptOptions.Value;
             _mapOptions = mapOptions.Value;
             _notificationModule = notificationModule;            
             _networkModule = networkModule;
+            _worldRepository = worldRepository;
+            _characterService = characterService;
 
-            _dbConnectionManager = new DbConnectionManager(worldOptions, playerOptions);
+            _worldEntity = worldRepository.LoadWorldIntoMemory();
+
             _scriptContent = new ScriptContent(_notificationModule);
+            
             _mapContent = new MapContent(mapOptions, _notificationModule, _scriptContent);
-            _worldRepositories = new List<IRepository>();
         }
 
         public void Start(string ip, int port, int backlog)
-        {
+        {   
             if (!LoadScripts(_scriptOptions.SkipLoading))
                 return;
 
             if (!LoadMaps(_mapOptions.SkipLoading))
-                return; 
-
-            LoadDbRepositories();
+                return;
 
             _networkModule.Initialize();
+            var maxTime = DateTime.UtcNow.AddSeconds(30);
             
-            while (!_networkModule.IsReady())
+            while (!_networkModule.IsReady)
             {
-                var maxTime = DateTime.UtcNow.AddSeconds(30);
-
-                if (DateTime.UtcNow < maxTime)
-                {
-                    continue;
-                }
-                
-                _notificationModule.WriteError("Network service timed out!");
-                return;
+                // Do nothing
             }
-            
+                
             _networkModule.StartListener();
         }
 
@@ -91,36 +83,6 @@ namespace Navislamia.Game
             }
 
             return _scriptContent.Init();
-        }
-
-        private void LoadDbRepositories()
-        {
-            var loaders = new List<IRepositoryLoader>
-            {
-                new MonsterLoader(_notificationModule, _dbConnectionManager),
-                new PetLoader(_notificationModule, _dbConnectionManager),
-                new ItemLoader(_notificationModule, _dbConnectionManager),
-                new NPCLoader(_notificationModule, _dbConnectionManager),
-                new ETCLoader(_notificationModule, _dbConnectionManager),
-                new StringLoader(_notificationModule, _dbConnectionManager)
-            };
-
-            foreach (var loader in loaders)
-            {
-                try
-                {
-                    loader.Init();
-                }
-                catch (Exception e)
-                {
-                    _notificationModule.WriteError($"{loader.GetType().Name} failed to load![/]{e.Message}");
-                    throw new Exception($"{loader.GetType().Name} failed to load!");
-                }
-
-                _worldRepositories.AddRange(loader.Repositories);
-            }
-
-            _notificationModule.WriteNewLine();
         }
     }
 }

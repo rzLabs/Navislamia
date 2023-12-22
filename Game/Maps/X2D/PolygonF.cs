@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Navislamia.Maps.Enums;
-using static Navislamia.Maps.X2D.X2DUtil;
+using Navislamia.Game.Maps.Enums;
+using static Navislamia.Game.Maps.X2D.X2DUtil;
 
-namespace Navislamia.Maps.X2D;
+namespace Navislamia.Game.Maps.X2D;
 
 public class PolygonF
 {

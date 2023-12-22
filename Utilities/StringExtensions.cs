@@ -109,7 +109,7 @@ namespace Navislamia.Utilities
             return outStr;
         }
 
-        public static string GetStringContent(string line, string header)
+        public static string GetStringContent(this string line, string header)
         {
             return line.StartsWith(header) ? line[header.Length..] : null;
         }

@@ -8,7 +8,7 @@ using Navislamia.Notification;
 using Navislamia.Scripting.Functions;
 using Navislamia.Utilities;
 
-namespace Navislamia.Scripting
+namespace Navislamia.Game.Scripting
 {
     public class ScriptContent
     {

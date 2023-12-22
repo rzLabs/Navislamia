@@ -8,16 +8,17 @@ using Microsoft.Extensions.Options;
 using Serilog.Events;
 
 using Navislamia.Configuration.Options;
-using Navislamia.Maps.Constants;
-using Navislamia.Maps.Entities;
-using Navislamia.Maps.Enums;
-using Navislamia.Maps.X2D;
+using Navislamia.Game.Maps.Constants;
+using Navislamia.Game.Maps.Entities;
+using Navislamia.Game.Maps.Enums;
+using Navislamia.Game.Maps.X2D;
+using Navislamia.Game.Scripting;
 using Navislamia.Notification;
 using Navislamia.Scripting;
 using Objects;
-using static Navislamia.Maps.Entities.ScriptDefine;
+using static Navislamia.Game.Maps.Entities.ScriptDefine;
 
-namespace Navislamia.Maps
+namespace Navislamia.Game.Maps
 {
     public class MapContent
     {
