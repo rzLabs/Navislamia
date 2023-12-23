@@ -4,25 +4,8 @@ using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 
-namespace Navislamia.Network.Packets
+namespace Navislamia.Game.Network.Packets
 {
-    public interface IPacket
-    {
-        public ushort ID { get; }
-
-        public uint Length { get; }
-
-        public byte Checksum { get; }
-
-        public byte[] Data { get; set; }
-
-        public S GetDataStruct<S>();
-
-        public string DumpStructToString();
-
-        public string DumpDataToHexString();
-    }
-
     public class Packet<T> : IPacket where T : new()
     {
         public Packet(ushort id, T dataStruct, int length = 0)

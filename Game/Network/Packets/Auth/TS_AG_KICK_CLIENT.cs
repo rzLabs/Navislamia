@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Navislamia.Game.Network.Packets.Auth;
+namespace Navislamia.Game.Network.Packets;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct TS_AG_KICK_CLIENT
