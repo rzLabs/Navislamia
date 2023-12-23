@@ -1,8 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets;
+﻿using Navislamia.Game.Network.Interfaces;
 
 namespace Navislamia.Game.Network.Entities
 {

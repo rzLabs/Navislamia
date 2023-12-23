@@ -1,27 +1,26 @@
-﻿using Navislamia.Network.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Configuration;
-using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
-using Navislamia.Network.Packets.Game;
-using Navislamia.Network.Packets.Auth;
+using Navislamia.Network.Packets;
 using Navislamia.Game.Services;
 using System.Linq;
+
+using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Models.Arcadia.Enums;
 
 using Serilog;
 
-namespace Navislamia.Network.Packets.Actions
+namespace Navislamia.Game.Network.Packets
 {
-    public class GameActionService : IGameActionService
+    public class GameActionService
     {
         private readonly NetworkOptions _networkOptions;
         IClientService _clientService;
         ILogger _logger = Log.ForContext<GameActionService>();
         ICharacterService _characterService;
 
-        Dictionary<ushort, Func<GameClientService, IPacket, int>> actions = new();
+        Dictionary<ushort, Func<GameClient, IPacket, int>> actions = new();
 
         public GameActionService(IClientService clientService, NetworkOptions networkOptions, ICharacterService characterService)
         {
@@ -35,7 +34,7 @@ namespace Navislamia.Network.Packets.Actions
             actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
         }
 
-        public void Execute(GameClientService client, IPacket msg)
+        public void Execute(GameClient client, IPacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return;
@@ -43,36 +42,36 @@ namespace Navislamia.Network.Packets.Actions
             actions[msg.ID]?.Invoke(client, msg);
         }
 
-        public void RemoveGameClient(string account, GameClientService client)
+        public void RemoveGameClient(string account, GameClient client)
         {
             _clientService.RemoveGameClient(account, client);
         }
         
-        private int OnVersion(GameClientService client, IPacket arg)
+        private int OnVersion(GameClient client, IPacket arg)
         {
             // TODO: properly implement this action
 
             return 0;
         }
 
-        private int OnReport(GameClientService arg1, IPacket arg2)
+        private int OnReport(GameClient arg1, IPacket arg2)
         {
             // TODO: implement me
 
             return 0;
         }
 
-        private int OnCharacterList(GameClientService client, IPacket msg)
+        private int OnCharacterList(GameClient client, IPacket msg)
         {
             var _msg = msg.GetDataStruct<TS_CS_CHARACTER_LIST>();
 
             var _characters = _characterService.GetCharactersByAccountName(_msg.Account, true);
 
-            List<LobbyCharacterInfo> _lobbyCharacters = new List<LobbyCharacterInfo>();
+            List<LobbyCharacterInfoEntity> _lobbyCharacters = new List<LobbyCharacterInfoEntity>();
 
             foreach (var _character in _characters)
             {
-                var _characterLobbyInfo = new LobbyCharacterInfo();
+                var _characterLobbyInfo = new LobbyCharacterInfoEntity();
 
                 _characterLobbyInfo.Level = _character.Lv;
                 _characterLobbyInfo.Job = (int)_character.CurrentJob;
@@ -112,7 +111,7 @@ namespace Navislamia.Network.Packets.Actions
             return 0;
         }
 
-        private int OnAccountWithAuth(GameClientService client, IPacket msg)
+        private int OnAccountWithAuth(GameClient client, IPacket msg)
         {
             var _msg = msg.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
             var _loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN, new(_msg.Account, _msg.OneTimePassword));

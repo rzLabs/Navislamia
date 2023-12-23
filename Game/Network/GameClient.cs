@@ -1,45 +1,27 @@
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets.Game;
 using Navislamia.Network.Packets;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System;
-using Navislamia.Network.Packets.Actions;
-using Navislamia.Game.Models;
-using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Packets.Upload;
+using Navislamia.Game.Network.Packets;
 using Serilog;
+using Navislamia.Game.Network.Entities;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network;
 
-public class GameClientService : ClientEntity
+public class GameClient : Client, IClient
 {
-    ILogger _logger = Log.ForContext<AuthClientService>();
+    static ILogger _logger = Log.ForContext<AuthClient>();
 
     GameActionService _gameActionService;
 
-    public ConnectionInfo Info { get; set; } = new ConnectionInfo();
+    public ConnectionInfoEntity Info { get; set; } = new ConnectionInfoEntity();
 
-    public GameClientService(Socket socket, string cipherKey, GameActionService gameActionService) : base(new CipherConnection(socket, cipherKey))
+    public GameClient(Socket socket, string cipherKey, GameActionService gameActionService) : base(new CipherConnection(socket, cipherKey), _logger)
     {
         _gameActionService = gameActionService;
-    }
 
-    public string ClientTag => $"Game Client @{Connection.RemoteIp}:{Connection.RemotePort}";
-
-    public void Start()
-    {
-        Connection.OnDataReceived = OnDataReceived;
-        Connection.OnDataSent = OnDataSent;
-        Connection.OnDisconnected = OnDisconnect;
-
-        Connection.Start();
-    }
-
-    public void SendMessage(IPacket msg)
-    {
-        Connection.Send(msg.Data);
+        ClientTag = $"Game Client @{Connection.RemoteIp}:{Connection.RemotePort}";
     }
 
     public void SendResult(ushort id, ushort result, int value = 0)
@@ -47,15 +29,15 @@ public class GameClientService : ClientEntity
         SendMessage(new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new(id, result, value)));
     }
 
-    public void SendCharacterList(List<LobbyCharacterInfo> characterList)
+    public void SendCharacterList(List<LobbyCharacterInfoEntity> characterList)
     {
         var _charCount = (ushort)characterList.Count;
 
         var _packetStructLength = Marshal.SizeOf<TS_SC_CHARACTER_LIST>();
-        var _lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfo>();
+        var _lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfoEntity>();
         var _lobbyCharacterBufferLength = _lobbyCharacterStructLength * characterList.Count;
 
-        var _packet = new Packet<TS_SC_CHARACTER_LIST>(2004, new(0, 0, _charCount), (_packetStructLength + _lobbyCharacterBufferLength));
+        var _packet = new Packet<TS_SC_CHARACTER_LIST>(2004, new(0, 0, _charCount), _packetStructLength + _lobbyCharacterBufferLength);
 
         int _charInfoOffset = Marshal.SizeOf<Header>() + _packetStructLength;
 
@@ -69,7 +51,7 @@ public class GameClientService : ClientEntity
         SendMessage(_packet);
     }
 
-    private void OnDataReceived(int bytesReceived)
+    public override void OnDataReceived(int bytesReceived)
     {
         var remainingData = bytesReceived;
 
@@ -80,14 +62,14 @@ public class GameClientService : ClientEntity
 
             if (_header.Length > remainingData)
             {
-                _logger.Warning($"Partial packet received from {ClientTag} !!! ID: {_header.ID} Length: {_header.Length} Available Data: {remainingData}");
+                _logger.Warning("Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}", ClientTag, _header.ID, _header.Length, remainingData);
 
                 return;
             }
 
             if (!_isValidMsg)
             {
-                _logger.Error($"Invalid Message received from {ClientTag}");
+                _logger.Error($"Invalid Message received from {ClientTag} !!!");
 
                 Connection.Disconnect();
 
@@ -101,7 +83,7 @@ public class GameClientService : ClientEntity
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(GamePackets), _header.ID))
             {
-                _logger.Warning($"Undefined packet {_header.ID} (Checksum: {_header.Checksum}, Length: {_header.Length}) received from {ClientTag}");
+                _logger.Warning("Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}", ClientTag, _header.ID, _header.Length, remainingData);
                 continue;
             }
 
@@ -125,17 +107,13 @@ public class GameClientService : ClientEntity
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug($"Packet Received from {ClientTag} ID: {_header.ID} Length: {_header.Length} !!!");
+            _logger.Debug("Packet Received from {clientTag} ID: {id} Length: {length} !!!", ClientTag, msg.ID, msg.Length);
 
             _gameActionService.Execute(this, msg);
         }
     }
 
-    private void OnDataSent(int bytesSent)
-    {
-    }
-
-    private void OnDisconnect()
+    public override void OnDisconnect()
     {
         _gameActionService.RemoveGameClient(Info.AccountName, this);
     }

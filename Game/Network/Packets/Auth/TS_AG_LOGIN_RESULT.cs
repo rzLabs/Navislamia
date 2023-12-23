@@ -5,11 +5,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Packets.Auth
+namespace Navislamia.Game.Network.Packets;
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TS_AG_LOGIN_RESULT
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct TS_AG_LOGIN_RESULT
-    {
-        public ushort Result;
-    }
+    public ushort Result;
 }

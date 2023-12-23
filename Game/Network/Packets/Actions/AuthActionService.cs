@@ -1,22 +1,17 @@
-﻿using Navislamia.Network.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Navislamia.Game.Network;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Network.Packets.Auth;
-
-using Navislamia.Game.Network.Enums;
+using Navislamia.Game.Network.Interfaces;
 
 using Serilog;
 
-namespace Navislamia.Network.Packets.Actions
+namespace Navislamia.Game.Network.Packets
 {
-    public class AuthActionService : IAuthActionService
+    public class AuthActionService
     {
         private readonly IClientService _clientService;
         private readonly ILogger _logger = Log.ForContext<AuthActionService>();
 
-        Dictionary<ushort, Func<AuthClientService, IPacket, int>> actions = new();
+        Dictionary<ushort, Func<AuthClient, IPacket, int>> actions = new();
 
         public AuthActionService(IClientService clientService)
         {
@@ -26,7 +21,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
         }
 
-        public void Execute(AuthClientService client, IPacket msg)
+        public void Execute(AuthClient client, IPacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
             {
@@ -37,7 +32,7 @@ namespace Navislamia.Network.Packets.Actions
         }
 
 
-        private int OnLoginResult(AuthClientService client, IPacket msg)
+        private int OnLoginResult(AuthClient client, IPacket msg)
         {
             var agLogin = msg.GetDataStruct<TS_AG_LOGIN_RESULT>();
 
@@ -55,11 +50,11 @@ namespace Navislamia.Network.Packets.Actions
             return 0;
         }
 
-        private int OnAuthClientLoginResult(AuthClientService client, IPacket msg)
+        private int OnAuthClientLoginResult(AuthClient client, IPacket msg)
         {
             var agClientLogin = msg.GetDataStruct<TS_AG_CLIENT_LOGIN>();
 
-            GameClientService gameClient = null;
+            GameClient gameClient = null;
 
             // Check if the game client connection is queued in AuthAccounts
             if (!_clientService.UnauthorizedGameClients.ContainsKey(agClientLogin.Account))

@@ -9,15 +9,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Network.Entities;
-using Navislamia.Game.Network.Enums;
-using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Services;
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets;
-using Navislamia.Network.Packets.Actions;
-using Navislamia.Network.Packets.Auth;
-using Navislamia.Network.Packets.Upload;
-using Serilog;
+using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets;
 
 namespace Navislamia.Game.Network
 {
@@ -81,7 +75,7 @@ namespace Navislamia.Game.Network
             {
                 while (clientEnumerator.MoveNext())
                 {
-                    GameClientService client = clientEnumerator.Current.Value;
+                    GameClient client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
                     client.Connection.Disconnect();
@@ -94,7 +88,7 @@ namespace Navislamia.Game.Network
             {
                 while (clientEnumerator.MoveNext())
                 {
-                    GameClientService client = clientEnumerator.Current.Value;
+                    GameClient client = clientEnumerator.Current.Value;
 
                     // TODO: send logout packet to client
                     client.Connection.Disconnect();
@@ -252,7 +246,7 @@ namespace Navislamia.Game.Network
 
                 var _gameClient = _clientService.CreateGameClient(_clientSocket);
 
-                _logger.LogDebug($"Game client connected {_gameClient.ClientTag}");
+                _logger.LogDebug("Game client connected {clientTag}", _gameClient.ClientTag);
             }
         }
 

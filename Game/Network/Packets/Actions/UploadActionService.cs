@@ -1,21 +1,17 @@
-using Navislamia.Network.Enums;
-using Navislamia.Network.Packets.Upload;
 using System;
 using System.Collections.Generic;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Game.Network;
-using Navislamia.Game.Network.Enums;
+using Navislamia.Game.Network.Interfaces;
 
 using Serilog;
 
-namespace Navislamia.Network.Packets.Actions
+namespace Navislamia.Game.Network.Packets
 {
-    public class UploadActionService : IUploadActionService
+    public class UploadActionService
     {
         IClientService _clientService;
         ILogger _logger = Log.ForContext<UploadActionService>();
 
-        Dictionary<ushort, Func<UploadClientService, IPacket, int>> actions = new();
+        Dictionary<ushort, Func<UploadClient, IPacket, int>> actions = new();
 
         public UploadActionService(IClientService clientService)
         {
@@ -24,7 +20,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
         }
 
-        public void Execute(UploadClientService client, IPacket msg)
+        public void Execute(UploadClient client, IPacket msg)
         {
             if (!actions.ContainsKey(msg.ID))
                 return;
@@ -32,7 +28,7 @@ namespace Navislamia.Network.Packets.Actions
             actions[msg.ID]?.Invoke(client, msg);
         }
 
-        public int OnLoginResult(UploadClientService client, IPacket msg)
+        public int OnLoginResult(UploadClient client, IPacket msg)
         {
             var _msg = msg.GetDataStruct<TS_US_LOGIN_RESULT>();
 
