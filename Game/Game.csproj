@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\Objects\Objects.csproj" />
   </ItemGroup>
 
   <ItemGroup>

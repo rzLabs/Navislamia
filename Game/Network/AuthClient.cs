@@ -28,16 +28,9 @@ public class AuthClient : Client, IClient
             var _header = new Header(Connection.Peek(Marshal.SizeOf<Header>()));
             var _isValidMsg = _header.Checksum == Header.CalculateChecksum(_header);
 
-            if (_header.Length > remainingData)
-            {
-                _logger.Warning("Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}", ClientTag, _header.ID, _header.Length, remainingData);
-
-                return;
-            }
-
             if (!_isValidMsg)
             {
-                _logger.Error($"Invalid Message received from {ClientTag} !!!");
+                _logger.Error("Invalid Message received from {clientTag} !!!", ClientTag);
 
                 Connection.Disconnect();
 

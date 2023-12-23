@@ -69,7 +69,7 @@ public class GameClient : Client, IClient
 
             if (!_isValidMsg)
             {
-                _logger.Error($"Invalid Message received from {ClientTag} !!!");
+                _logger.Error("Invalid Message received from {clientTag} !!!", ClientTag);
 
                 Connection.Disconnect();
 
