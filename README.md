@@ -8,7 +8,7 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/ismokedrow/navislamia?color=red&label=Open%20Issues&style=flat-square)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed-raw/ismokedrow/navislamia?color=Green&label=Closed%20Issues&style=flat-square)]()
 
-## Foreward
+## Foreword
 
 Navislamia is written and maintained by volunteers for fun. This project does not now, nor will it ever seek monetary reimbursement or gains. It is not our intent to defame or otherwise denigrate the hard work done by developers of the `Arcadia Framework`. More so it is our intent to pay homage to the game all the volunteers and players involved have sunk countless hours and years of their lives into.
 
