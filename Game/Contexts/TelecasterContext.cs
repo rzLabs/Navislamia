@@ -17,6 +17,7 @@ public class TelecasterContext : SoftDeletionContext
     public DbSet<PartyEntity> Parties { get; set; }
     public DbSet<PetEntity> Pets { get; set; }
     public DbSet<SummonEntity> Summons { get; set; }
+    public DbSet<StarterItemsEntity> StarterItems { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -7,4 +7,5 @@ namespace Navislamia.Game.Repositories;
 public interface ICharacterRepository
 {
     IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false);
+    Task CreateCharacterAsync(CharacterEntity character);
 }

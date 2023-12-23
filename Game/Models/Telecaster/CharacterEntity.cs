@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Models.Enums;
-using Jobs = Navislamia.Game.Models.Enums.Jobs;
 
 namespace Navislamia.Game.Models.Telecaster;
 
@@ -38,8 +36,8 @@ public class CharacterEntity : Entity
 	public int Mp { get; set; }
 	public int Stamina { get; set; }
 	public int Havoc { get; set; } // check usage and remove if unused
-	public Jobs CurrentJob { get; set; }
-	public Jobs[] PreviousJobs { get; set; } 
+	public Job CurrentJob { get; set; }
+	public Job[] PreviousJobs { get; set; } 
 	public JobDepth JobDepth { get; set; }
 	public int Jlv { get; set; }
 	public long Jp { get; set; }

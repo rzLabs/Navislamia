@@ -1,6 +1,6 @@
 ﻿namespace Navislamia.Game.Models.Enums;
 
-public enum Jobs
+public enum Job
 {
     Rogue = 100,
     

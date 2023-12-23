@@ -88,9 +88,9 @@ namespace Navislamia.Game.Network.Packets
 
                 foreach (var _item in  _character.Items.Where(i => i.WearInfo != ItemWearType.None))
                 {
-                    _characterLobbyInfo.WearInfo[(int)_item.WearInfo] = _item.ItemResourceId;
-                    _characterLobbyInfo.WearItemEnhanceInfo[(int)_item.WearInfo] = _item.Enhance;
-                    _characterLobbyInfo.WearItemLevelInfo[(int)_item.WearInfo] = _item.Level;
+                    _characterLobbyInfo.WearInfo[(int)_item.WearInfo] = (int)_item.ItemResourceId;
+                    _characterLobbyInfo.WearItemEnhanceInfo[(int)_item.WearInfo] = (int)_item.Enhance;
+                    _characterLobbyInfo.WearItemLevelInfo[(int)_item.WearInfo] = (int)_item.Level;
                     _characterLobbyInfo.WearItemElementalType[(int)_item.WearInfo] = (char)_item.ElementalEffectType;
                 }
 

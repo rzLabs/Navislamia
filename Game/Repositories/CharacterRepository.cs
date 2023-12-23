@@ -28,5 +28,9 @@ public class CharacterRepository : ICharacterRepository
         return query;
     }
 
+    public async Task CreateCharacterAsync(CharacterEntity character)
+    {
+        await _context.Characters.AddAsync(character);
+    }
 
 }

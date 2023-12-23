@@ -10,6 +10,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Maps;
+using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
@@ -90,6 +91,7 @@ public class Program
         services.AddSingleton<IWorldRepository, WorldRepository>();
         services.AddSingleton<ICharacterService, CharacterService>();
         services.AddSingleton<ICharacterRepository, CharacterRepository>();
+        services.AddSingleton<IStarterItemsRepository, StarterItemsRepository>();
     }
 
     private static void ConfigureDataAccess(IServiceCollection services)
@@ -102,8 +104,9 @@ public class Program
                 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
         });
                 
         services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
@@ -114,8 +117,8 @@ public class Program
 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
         });
     }
