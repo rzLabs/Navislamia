@@ -107,7 +107,7 @@ public class GameClient : Client, IClient
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+            _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
             _gameActionService.Execute(this, msg);
         }
