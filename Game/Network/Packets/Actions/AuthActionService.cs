@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Navislamia.Game.Network.Interfaces;
-
 using Serilog;
 
-namespace Navislamia.Game.Network.Packets
+namespace Navislamia.Game.Network.Packets.Actions
 {
     public class AuthActionService
     {

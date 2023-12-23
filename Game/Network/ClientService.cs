@@ -1,18 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-
 using Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Navislamia.Game.Services;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Actions;
 
-
-namespace Navislamia.Game.Network.Entities
+namespace Navislamia.Game.Network
 {
     // TODO: Poll connections by configuration interval
     // TODO: Disconnect/Destroy
@@ -43,9 +40,9 @@ namespace Navislamia.Game.Network.Entities
             }
         }
 
-        public Dictionary<string, GameClient> UnauthorizedGameClients { get; set; } = new Dictionary<string, GameClient>();
+        public Dictionary<string, GameClient> UnauthorizedGameClients { get; set; } = new();
 
-        public Dictionary<string, GameClient> AuthorizedGameClients { get; set; } = new Dictionary<string, GameClient>();
+        public Dictionary<string, GameClient> AuthorizedGameClients { get; set; } = new();
 
         public ClientService(ILogger<ClientService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService)
         {
