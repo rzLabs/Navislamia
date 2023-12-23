@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Configuration;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Network.Packets;
-using Navislamia.Game.Services;
 using System.Linq;
-
-using Navislamia.Game.Network.Interfaces;
+using Configuration;
 using Navislamia.Game.Models.Arcadia.Enums;
-
+using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Services;
+using Navislamia.Network.Packets;
 using Serilog;
 
-namespace Navislamia.Game.Network.Packets
+namespace Navislamia.Game.Network.Packets.Actions
 {
     public class GameActionService
     {

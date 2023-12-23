@@ -10,7 +10,7 @@ using Navislamia.Configuration.Options;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Maps;
-using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;

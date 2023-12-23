@@ -6,6 +6,7 @@ using System;
 using Navislamia.Game.Network.Packets;
 using Serilog;
 using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Packets.Actions;
 
 namespace Navislamia.Game.Network;
 
