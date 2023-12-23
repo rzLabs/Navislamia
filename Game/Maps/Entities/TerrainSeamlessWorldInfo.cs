@@ -3,8 +3,6 @@ using System.IO;
 
 using Navislamia.Game.Filer;
 
-using static Navislamia.Utilities.StringExtensions;
-
 namespace Navislamia.Game.Maps.Entities;
 
 public class TerrainSeamlessWorldInfo

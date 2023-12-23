@@ -76,7 +76,6 @@ public enum ResultCode : ushort
 	ActableOnlyInHuntaholic = 59,
 	IPBlocked = 60,
 
-	// ´ë·Ã °ü·Ã
 	AlreadyInCompete = 61,
 	NotInCompete = 62,
 	WaitingCompeteRequestAnswer = 63,

@@ -94,7 +94,6 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<INetworkModule, NetworkModule>();
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<IGameModule, GameModule>();

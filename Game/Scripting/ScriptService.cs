@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MoonSharp.Interpreter;
 using Navislamia.Scripting.Functions;
-using Navislamia.Utilities;
 
 namespace Navislamia.Game.Scripting
 {
@@ -127,7 +126,7 @@ namespace Navislamia.Game.Scripting
                         string exMsg;
 
                         if (ex is SyntaxErrorException || ex is ScriptRuntimeException)
-                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {StringExtensions.LuaExceptionToString(((InterpreterException)ex).DecoratedMessage)}\n";
+                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {((InterpreterException)ex).DecoratedMessage.DecoratedMessageToString()}\n";
                         else
                             exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
 
