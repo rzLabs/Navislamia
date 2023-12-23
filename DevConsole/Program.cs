@@ -30,7 +30,8 @@ public class Program
     {
         Log.Logger = new LoggerConfiguration()
                             //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
-                            .MinimumLevel.Debug()
+                            .MinimumLevel.Information()
+                            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
                             .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                             .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
                             .CreateLogger();
@@ -89,9 +90,6 @@ public class Program
         services.Configure<ScriptOptions>(context.Configuration.GetSection("Script"));
         services.Configure<MapOptions>(context.Configuration.GetSection("Map"));
         services.Configure<ServerOptions>(context.Configuration.GetSection("Server"));
-
-        Log.Logger.Debug("Environment: {environment}\n", context.HostingEnvironment);
-
     }
 
     private static void ConfigureServices(IServiceCollection services)
