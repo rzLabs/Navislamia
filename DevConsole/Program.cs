@@ -15,8 +15,6 @@ using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
-using Navislamia.Game.Logging.Enrichers;
-
 using Serilog;
 
 namespace DevConsole;

@@ -1,13 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Linq;
 using Serilog.Core;
 using Serilog.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Navislamia.Game.Logging.Enrichers;
+namespace Navislamia.Game;
 
 public class SourceContextEnricher : ILogEventEnricher
 {
@@ -17,14 +12,11 @@ public class SourceContextEnricher : ILogEventEnricher
         {
             var propertyVal = ((ScalarValue)property).Value as string;
 
-            if (propertyVal is not null)
-            {
-                var lastElement = propertyVal.Split('.').LastOrDefault();
+            var lastElement = propertyVal?.Split('.').LastOrDefault();
 
-                if (lastElement is not null)
-                {
-                    logEvent.AddOrUpdateProperty(new LogEventProperty("SourceContext", new ScalarValue(lastElement)));
-                }
+            if (lastElement != null)
+            {
+                logEvent.AddOrUpdateProperty(new LogEventProperty("SourceContext", new ScalarValue(lastElement)));
             }
         }
     }
