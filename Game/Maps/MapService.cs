@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using Serilog.Events;
 
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Maps.Constants;
@@ -13,20 +12,20 @@ using Navislamia.Game.Maps.Entities;
 using Navislamia.Game.Maps.Enums;
 using Navislamia.Game.Maps.X2D;
 using Navislamia.Game.Scripting;
-using Navislamia.Notification;
-using Navislamia.Scripting;
-using Objects;
+
+using Navislamia.Game.Filer;
+
 using static Navislamia.Game.Maps.Entities.ScriptDefine;
+using Microsoft.Extensions.Logging;
 
 namespace Navislamia.Game.Maps
 {
-    public class MapContent
+    public class MapService : IMapService
     {
         private const int AttrCountPerTile = 8;
 
         private readonly MapOptions _mapOptions;
-        private readonly ScriptContent _scriptContent;
-        private readonly INotificationModule _notificationModule;
+        private readonly IScriptService _scriptService;
 
         private static QuadTree _qtLocationInfo;
         private static QuadTree _qtBlockInfo;
@@ -44,11 +43,14 @@ namespace Navislamia.Game.Maps
         private static readonly List<ScriptRegion> RegionList = new();
         private static readonly List<ScriptRegionInfo> ScriptEvents = new();
 
-        public MapContent(IOptions<MapOptions> mapOptions, INotificationModule notificationModule, ScriptContent scriptContent)
+        private readonly ILogger<MapService> _logger;
+
+        public MapService(IOptions<MapOptions> mapOptions, ILogger<MapService> logger, IScriptService scriptContent)
         {
             _mapOptions = mapOptions.Value;
-            _notificationModule = notificationModule;
-            _scriptContent = scriptContent;
+            _scriptService = scriptContent;
+
+            _logger = logger;
 
             _qtLocationInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
             _qtBlockInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
@@ -57,24 +59,7 @@ namespace Navislamia.Game.Maps
             _eventAreaInfo = new Dictionary<int, EventAreaInfo>();
         }
 
-        public void SetDefaultLocation(int x, int y, float mapLength, int locationId)
-        {
-            var locationInfo = new MapLocationInfo();
-
-            PointF[] points = { new(0, 0), new(0, 0), new(0, 0), new(0, 0) };
-            points[0].Set(x * mapLength, y * mapLength);
-            points[1].Set((x + 1) * mapLength, y * mapLength);
-            points[2].Set((x + 1) * mapLength, (y + 1) * mapLength);
-            points[3].Set(x * mapLength, (y + 1) * mapLength);
-
-            locationInfo.Priority = 0x7ffffffe;
-            locationInfo.LocationId = locationId;
-            locationInfo.Set(points);
-
-            RegisterMapLocationInfo(locationInfo);
-        }
-
-        public bool Initialize(string directory)
+        public bool Start(string directory)
         {
             List<Task> tasks = new();
 
@@ -83,13 +68,13 @@ namespace Navislamia.Game.Maps
             tasks.Add(Task.Run(() =>
             {
                 SeamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
-                _notificationModule.WriteSuccess("TerrainSeamlessWorld.cfg loaded!");
+                _logger.LogDebug("TerrainSeamlessWorld.cfg loaded!");
             }));
 
             tasks.Add(Task.Run(() =>
             {
                 PropInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-                _notificationModule.WriteSuccess("TerrainPropInfo.cfg loaded!");
+                _logger.LogDebug("TerrainPropInfo.cfg loaded!");
             }));
 
             try
@@ -101,7 +86,7 @@ namespace Navislamia.Game.Maps
                 {
                     foreach (var t in tasks.Where(t => t.IsFaulted))
                     {
-                        _notificationModule.WriteException(t.Exception);
+                        _logger.LogError(t.Exception.Message); // TODO: should include stack trace
                     }
 
                     return false;
@@ -119,7 +104,7 @@ namespace Navislamia.Game.Maps
                 {
                     for (var x = 0; x < MapCount.CX; ++x)
                     {
-                        _notificationModule.WriteDebug($"Loading map: m{x:D3}_{y:D3}...");
+                        _logger.LogDebug($"Loading map: m{x:D3}_{y:D3}...");
 
                         var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
 
@@ -187,7 +172,7 @@ namespace Navislamia.Game.Maps
 
                         foreach (var t in tasks.Where(t => t.IsFaulted))
                         {
-                            _notificationModule.WriteException(t.Exception);
+                            _logger.LogError(t.Exception.Message); // TODO: needs to include stack trace
                         }
 
                         return false;
@@ -196,20 +181,33 @@ namespace Navislamia.Game.Maps
             }
             catch (Exception ex)
             {
-                _notificationModule.WriteError($"Failed loads maps!");
-                _notificationModule.WriteException(ex);
+                _logger.LogError($"Failed loads maps!"); // TODO: needs to include stack trace
                 return false;
             }
 
-            _notificationModule.WriteSuccess(new[]{
-                "Maps loaded successfully!",
-                $"[green]{MapCount.CX + MapCount.CY}[/] files loaded!"
-            }, true);
+            _logger.LogDebug("{mapCount} Maps loaded successfully!", MapCount.CX + MapCount.CY);
 
             return true;
         }
 
-        public void LoadAttributeFile(string fileName, int x, int y, float attrLen, float mapLength)
+        private void SetDefaultLocation(int x, int y, float mapLength, int locationId)
+        {
+            var locationInfo = new MapLocationInfo();
+
+            PointF[] points = { new(0, 0), new(0, 0), new(0, 0), new(0, 0) };
+            points[0].Set(x * mapLength, y * mapLength);
+            points[1].Set((x + 1) * mapLength, y * mapLength);
+            points[2].Set((x + 1) * mapLength, (y + 1) * mapLength);
+            points[3].Set(x * mapLength, (y + 1) * mapLength);
+
+            locationInfo.Priority = 0x7ffffffe;
+            locationInfo.LocationId = locationId;
+            locationInfo.Set(points);
+
+            RegisterMapLocationInfo(locationInfo);
+        }
+
+        private void LoadAttributeFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
             if (!File.Exists(fileName))
             {
@@ -256,7 +254,7 @@ namespace Navislamia.Game.Maps
             }
         }
 
-        public void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
+        private void LoadEventAreaFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
             if (!File.Exists(fileName))
             {
@@ -294,7 +292,7 @@ namespace Navislamia.Game.Maps
             }
         }
 
-        public void LoadLocationFile(string fileName, int x, int y, float attrLen, float mapLength)
+        private void LoadLocationFile(string fileName, int x, int y, float attrLen, float mapLength)
         {
             MapLocationInfo locationInfo = new();
 
@@ -338,7 +336,7 @@ namespace Navislamia.Game.Maps
                 if (charSize > 1)
                 {
                     var script = stream.ReadString(charSize);
-                    _scriptContent.RunString(script);
+                    _scriptService.RunString(script);
                 }
 
                 if (_currentLocationId == 0)
@@ -381,8 +379,7 @@ namespace Navislamia.Game.Maps
 
         private void RegisterMapLocationInfo(MapLocationInfo locationInfo) => _qtLocationInfo.Add(locationInfo);
 
-        public void LoadScriptFile(string fileName, int x, int y, float attrLen, float mapLength,
-            TerrainPropInfo terrainPropInfo)
+        private void LoadScriptFile(string fileName, int x, int y, float attrLen, float mapLength, TerrainPropInfo terrainPropInfo)
         {
             if (!File.Exists(fileName))
             {
@@ -402,13 +399,13 @@ namespace Navislamia.Game.Maps
 
             if (header.Sign != ScriptDefineConstants.NFSFILE_SIGN)
             {
-                _notificationModule.WriteMarkup("[bold red]\t- Invalid script header![/]\n", LogEventLevel.Fatal);
+                _logger.LogError("\t- Invalid script header!\n"); // TODO: may need more info
                 return;
             }
 
             if (header.Version != ScriptDefineConstants.NFSCurrentVer)
             {
-                _notificationModule.WriteMarkup("[red\\t- Invalid script version![/]\n", LogEventLevel.Fatal);
+                _logger.LogError("\t- Invalid script version!\n"); // TODO: may need more info
                 return;
             }
 
@@ -573,7 +570,7 @@ namespace Navislamia.Game.Maps
         {
             if (_propScriptInfo.ContainsKey(propId))
             {
-                _notificationModule.WriteWarning($"Duplicate prop index: {propId}");
+                _logger.LogWarning("Duplicate prop index: {propId}", propId);
                 return;
             }
 
@@ -589,7 +586,6 @@ namespace Navislamia.Game.Maps
 
             _propScriptInfo.Add(propId, tag);
         }
-
-
     }
 }
+

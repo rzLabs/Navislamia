@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
-namespace Objects
+namespace Navislamia.Game.Filer
 {
     public struct KPoint
     {

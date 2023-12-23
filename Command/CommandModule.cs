@@ -1,18 +1,18 @@
 ﻿using System;
-using Navislamia.Notification;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Navislamia.Command.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Navislamia.Command
 {
     public class CommandModule : ICommandModule
     {
         CommandApp commandApp;
-        INotificationModule notificationSVC;
         IConfiguration _configService;
+        ILogger<CommandModule> _logger;
 
         string _input;
 
@@ -22,9 +22,9 @@ namespace Navislamia.Command
             set => _input = value;
         }
 
-        public CommandModule(INotificationModule notificaftionModule, IConfiguration configurationService)
+        public CommandModule(ILogger<CommandModule> logger, IConfiguration configurationService)
         {
-            notificationSVC = notificaftionModule;
+            _logger = logger;
             _configService = configurationService;
         }
 
@@ -33,9 +33,7 @@ namespace Navislamia.Command
         {
             var registrations = new ServiceCollection();
             var registrar = new TypeRegistrar(registrations);
-
             
-            registrar.RegisterInstance(typeof(INotificationModule), notificationSVC);
             registrar.RegisterInstance(typeof(IConfiguration), _configService);
 
             registrar.Register(typeof(IAbout), typeof(AboutPrinter));
@@ -56,9 +54,9 @@ namespace Navislamia.Command
 
         public int Wait()
         {
-            string idleMessage = "[orange3]Idle... [/][italic orange3](Press ` to enter a command)\n[/]";
+            string idleMessage = "Idle... (Press ` to enter a command)\n";
 
-            notificationSVC.WriteMarkup(idleMessage);
+            _logger.LogInformation(idleMessage);
 
             while (true)
             {
@@ -85,7 +83,7 @@ namespace Navislamia.Command
                 }
                 else if (key.Key == ConsoleKey.Escape)
                 {
-                    notificationSVC.WriteWarning("Navislamia shutting down...");
+                    _logger.LogInformation("Navislamia shutting down...");
                     break;
                 }
             }

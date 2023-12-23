@@ -5,12 +5,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Packets.Game
-{
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct TS_CS_REPORT
-    {
-        public ushort ReportLen;
+namespace Navislamia.Network.Packets;
 
-    }
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TS_CS_REPORT
+{
+    public ushort ReportLen;
+
 }

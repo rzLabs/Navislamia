@@ -1,21 +1,25 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Extensions;
+using DevConsole.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Navislamia.Command;
 using Navislamia.Configuration.Options;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
+using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
+using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
-using Navislamia.Notification;
 using Serilog;
+using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
 namespace DevConsole;
@@ -26,10 +30,14 @@ public class Program
     {
         Log.Logger = new LoggerConfiguration()
                             //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
-                            .MinimumLevel.Verbose()
+                            .MinimumLevel.Information()
+                            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
                             .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                             .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
                             .CreateLogger();
+
+        Log.Logger.Information($"\n{Resources.arcadia}");
+        Log.Logger.Information("Navislamia starting...\n");
 
         var host = CreateHostBuilder(args).Build();
         var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
@@ -40,8 +48,8 @@ public class Program
             await arcadia.Database.MigrateAsync();
             await telecaster.Database.MigrateAsync();
             
-            Log.Logger.Information("Applied Arcadia migrations: {Migrations}", await arcadia.Database.GetAppliedMigrationsAsync());
-            Log.Logger.Information("Applied Telecaster migrations: {Migrations}", await telecaster.Database.GetAppliedMigrationsAsync());
+            Log.Logger.Verbose("Applied Arcadia migrations: {Migrations}\n", await arcadia.Database.GetAppliedMigrationsAsync());
+            Log.Logger.Verbose("Applied Telecaster migrations: {Migrations}\n", await telecaster.Database.GetAppliedMigrationsAsync());
         }
 
         await host.RunAsync();
@@ -86,17 +94,16 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<ICommandModule, CommandModule>();
         services.AddSingleton<INetworkModule, NetworkModule>();
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<IGameModule, GameModule>();
-        services.AddSingleton<INotificationModule, NotificationModule>();
-        services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
-        services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+        services.AddSingleton<IClientService, ClientService>();
         services.AddSingleton<IWorldRepository, WorldRepository>();
         services.AddSingleton<ICharacterService, CharacterService>();
         services.AddSingleton<ICharacterRepository, CharacterRepository>();
     }
-    
+
     private static void ConfigureDataAccess(IServiceCollection services)
     {
         services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>

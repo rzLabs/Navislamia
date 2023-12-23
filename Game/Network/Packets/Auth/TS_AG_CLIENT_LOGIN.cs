@@ -1,31 +1,24 @@
-﻿using Navislamia.Network.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
-namespace Navislamia.Network.Packets.Auth
+namespace Navislamia.Game.Network.Packets;
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TS_AG_CLIENT_LOGIN
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct TS_AG_CLIENT_LOGIN
-    {
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 61)]
-        public string Account;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 61)]
+    public string Account;
 
-        public int AccountID;
+    public int AccountID;
 
-        public ushort Result;
+    public ushort Result;
 
-        public byte PcBangMode;
+    public byte PcBangMode;
 
-        public int EventCode;
+    public int EventCode;
 
-        public int Age;
+    public int Age;
 
-        public float ContinuousPlayTime;
+    public float ContinuousPlayTime;
 
-        public float ContinuousLogoutTime;
-    }
+    public float ContinuousLogoutTime;
 }

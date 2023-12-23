@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using Navislamia.Network.Enums;
+﻿using Navislamia.Game.Network.Interfaces;
 
 namespace Navislamia.Game.Network.Entities
 {
@@ -8,10 +6,12 @@ namespace Navislamia.Game.Network.Entities
     {
         public uint PacketVersion;
 
-        public IConnection Connection;
+        public IConnection Connection { get; private set; }
 
-        public ClientType Type { get; set; }
-
+        public ClientEntity(IConnection connection, uint packetVersion = 0)
+        {
+            Connection = connection;
+        }
     }
     
 }

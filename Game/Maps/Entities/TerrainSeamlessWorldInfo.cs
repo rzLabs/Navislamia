@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Objects;
+
+using Navislamia.Game.Filer;
+
 using static Navislamia.Utilities.StringExtensions;
 
 namespace Navislamia.Game.Maps.Entities;

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Navislamia.Network.Enums
+namespace Navislamia.Game.Maps
 {
-    public enum QueueType
+    public interface IMapService
     {
-        Send,
-        Receive
+        bool Start(string directory);
     }
 }
