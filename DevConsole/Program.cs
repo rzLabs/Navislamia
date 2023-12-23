@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Configuration;
 using DevConsole.Extensions;
 using DevConsole.Properties;
@@ -7,20 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Navislamia.Configuration.Options;
 using Navislamia.Game;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Maps;
-using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 
 namespace DevConsole;
 
@@ -28,14 +23,6 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Log.Logger = new LoggerConfiguration()
-                            //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
-                            .MinimumLevel.Information()
-                            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-                            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                            .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
-                            .CreateLogger();
-
         Log.Logger.Information($"\n{Resources.arcadia}");
         Log.Logger.Information("Navislamia starting...\n");
 
@@ -68,15 +55,16 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
-                services.AddLogging(logging => logging.ClearProviders().AddSerilog());
                 services.AddHostedService<Application>();
-
                 ConfigureOptions(services, context);
                 ConfigureServices(services);
                 ConfigureDataAccess(services);
             })
-            .UseSerilog()
-            .UseConsoleLifetime();
+            .UseSerilog((context, configuration) =>
+            {
+                configuration.ReadFrom.Configuration(context.Configuration).Enrich.FromLogContext();
+            });
+
     }
 
     private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
