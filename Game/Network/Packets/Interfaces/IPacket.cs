@@ -16,6 +16,8 @@ namespace Navislamia.Game.Network.Packets
 
         public byte[] Data { get; set; }
 
+        public string StructName { get; }
+
         public S GetDataStruct<S>();
 
         public string DumpStructToString();

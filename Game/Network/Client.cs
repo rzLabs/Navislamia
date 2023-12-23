@@ -42,7 +42,7 @@ namespace Navislamia.Game.Network
         {
             Connection.Send(msg.Data);
 
-            _logger.Debug("Packet ID: {id} Length: {length} sent to {clientTag}", msg.ID, msg.Length, ClientTag);
+            _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
         }
     }
 }

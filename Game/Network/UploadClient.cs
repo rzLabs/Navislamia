@@ -44,7 +44,7 @@ public class UploadClient : Client, IClient
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(UploadPackets), _header.ID))
             {
-                _logger.Warning("Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}", ClientTag, _header.ID, _header.Length, remainingData);
+                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", _header.ID, _header.Length, ClientTag);
                 continue;
             }
 
@@ -55,7 +55,7 @@ public class UploadClient : Client, IClient
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("Packet Received from {clientTag} ID: {id} Length: {length} !!!", ClientTag, msg.ID, msg.Length);
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
             _uploadActionService.Execute(this, msg);
         }
