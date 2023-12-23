@@ -57,7 +57,7 @@ public class AuthClient : Client, IClient
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("Packet Received from {clientTag} ID: {id} Length: {length} !!!", ClientTag, msg.ID, msg.Length);
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
             _authActionService.Execute(this, msg);
         }

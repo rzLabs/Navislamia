@@ -48,6 +48,14 @@ namespace Navislamia.Game.Network.Packets
 
         public byte[] Data { get; set; }
 
+        public string StructName
+        {
+            get
+            {
+                return typeof(T).Name;
+            }
+        }
+
         public S GetDataStruct<S>() => (S)(object)DataStruct;
 
         private void serialize()

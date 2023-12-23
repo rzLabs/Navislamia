@@ -11,7 +11,7 @@ namespace Navislamia.Game.Network;
 
 public class GameClient : Client, IClient
 {
-    static ILogger _logger = Log.ForContext<AuthClient>();
+    static ILogger _logger = Log.ForContext<GameClient>();
 
     GameActionService _gameActionService;
 
@@ -83,14 +83,14 @@ public class GameClient : Client, IClient
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(GamePackets), _header.ID))
             {
-                _logger.Warning("Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}", ClientTag, _header.ID, _header.Length, remainingData);
+                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", _header.ID, _header.Length, ClientTag);
                 continue;
             }
 
             // TM_NONE is a dummy packet sent by the client for...."reasons"
             if (_header.ID == (ushort)GamePackets.TM_NONE)
             {
-                _logger.Debug($"TM_NONE received from {ClientTag}");
+                _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", "TM_NONE", _header.ID, _header.Length, ClientTag);
 
                 continue;
             }
@@ -107,7 +107,7 @@ public class GameClient : Client, IClient
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("Packet Received from {clientTag} ID: {id} Length: {length} !!!", ClientTag, msg.ID, msg.Length);
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
             _gameActionService.Execute(this, msg);
         }

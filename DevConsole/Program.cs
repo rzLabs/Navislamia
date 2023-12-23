@@ -15,6 +15,8 @@ using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
+using Navislamia.Game.Logging.Enrichers;
+
 using Serilog;
 
 namespace DevConsole;
@@ -23,10 +25,11 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Log.Logger.Information($"\n{Resources.arcadia}");
-        Log.Logger.Information("Navislamia starting...\n");
-
         var host = CreateHostBuilder(args).Build();
+
+        Log.Logger.Information($"\n{Resources.arcadia}");
+        Log.Logger.Information("Navislamia starting...");
+
         var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
         using (var scope = scopeFactory.CreateScope())
         {
@@ -62,7 +65,7 @@ public class Program
             })
             .UseSerilog((context, configuration) =>
             {
-                configuration.ReadFrom.Configuration(context.Configuration).Enrich.FromLogContext();
+                configuration.ReadFrom.Configuration(context.Configuration).Enrich.With(new SourceContextEnricher());
             });
 
     }
