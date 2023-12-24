@@ -40,5 +40,6 @@ public class CharacterService : ICharacterService
             character.Items = new List<ItemEntity>();
         }
         await _characterRepository.CreateCharacterAsync(character);
+        await _characterRepository.SaveChangesAsync();
     }
 }

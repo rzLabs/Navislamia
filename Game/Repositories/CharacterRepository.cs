@@ -33,4 +33,9 @@ public class CharacterRepository : ICharacterRepository
         await _context.Characters.AddAsync(character);
     }
 
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
+
 }
