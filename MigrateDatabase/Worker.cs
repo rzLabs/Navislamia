@@ -78,7 +78,7 @@ public class Worker : BackgroundService
         //                     Log.Logger.Information("13: {type}", "StateResource");
         //                     Console.WriteLine();
         //                     Log.Logger.Warning("Selected: {selection}", selection);
-        //                     Log.Logger.Information("go: {type}", "Start transferring");
+        //                     Log.Logger.Information("go: {type}", "StartClient transferring");
         //                     Log.Logger.Information("stop: {type}", "Abort");
         //
         //                     var selected = Console.ReadLine();
@@ -489,8 +489,8 @@ public class Worker : BackgroundService
                 Idx = index[i],
                 ItemResourceId = itemResourceIds[i],
                 Amount = amounts[i],
-                Level = levels[i],
-                Enhance = enhanced[i],
+                Level = (uint)levels[i],
+                Enhance = (uint)enhanced[i],
                 Flag = (ItemFlag)flag[i],
                 GenerateBySource = (ItemGenerateSource)gcode[i],
                 WearInfo = (ItemWearType)wearinfos[i],

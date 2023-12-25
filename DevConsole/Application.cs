@@ -44,7 +44,7 @@ namespace DevConsole
             catch (Exception e)
             {
                 // TODO: write the message and stack trace
-                _logger.LogError($"Failed to start the game service!");
+                _logger.LogError("Failed to start the game service! {exception}", e);
                 StopAsync(cancellationToken);
             }
 

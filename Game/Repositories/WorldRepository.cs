@@ -15,15 +15,19 @@ public class WorldRepository : IWorldRepository
         _options = options;
     }
     
+    // public WorldEntity LoadWorldIntoMemory()
+    // {
+    //     using var arcadiaContext = new ArcadiaContext(_options);
+    //     return new WorldEntity
+    //     {
+    //         ItemResources = new List<ItemResourceEntity>(arcadiaContext.ItemResources),
+    //         LevelResources =  new List<LevelResourceEntity>(arcadiaContext.LevelResources),
+    //         ItemEffectResources = new List<ItemEffectResourceEntity>(arcadiaContext.ItemEffectResources),
+    //         SetItemEffectResources =  new List<SetItemEffectResourceEntity>(arcadiaContext.SetItemEffectResources)
+    //     };
+    // }
     public WorldEntity LoadWorldIntoMemory()
     {
-        using var arcadiaContext = new ArcadiaContext(_options);
-        return new WorldEntity
-        {
-            ItemResources = new List<ItemResourceEntity>(arcadiaContext.ItemResources),
-            LevelResources =  new List<LevelResourceEntity>(arcadiaContext.LevelResources),
-            ItemEffectResources = new List<ItemEffectResourceEntity>(arcadiaContext.ItemEffectResources),
-            SetItemEffectResources =  new List<SetItemEffectResourceEntity>(arcadiaContext.SetItemEffectResources)
-        };
+        return new WorldEntity();
     }
 }

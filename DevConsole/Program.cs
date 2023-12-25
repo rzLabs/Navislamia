@@ -13,10 +13,13 @@ using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Actions;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Serilog;
+using Serilog.Exceptions;
 
 namespace DevConsole;
 
@@ -64,9 +67,10 @@ public class Program
             })
             .UseSerilog((context, configuration) =>
             {
-                configuration.ReadFrom.Configuration(context.Configuration).Enrich.With(new SourceContextEnricher());
+                configuration.ReadFrom.Configuration(context.Configuration)
+                    .Enrich.With(new SourceContextEnricher())
+                    .Enrich.WithExceptionDetails();
             });
-
     }
 
     private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
@@ -84,43 +88,33 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IScriptService, ScriptService>();
-        services.AddSingleton<IMapService, MapService>();
+        // Modules
         services.AddSingleton<IGameModule, GameModule>();
-        services.AddSingleton<IClientService, ClientService>();
+        
+        // Repositories
         services.AddSingleton<IWorldRepository, WorldRepository>();
-        services.AddSingleton<ICharacterService, CharacterService>();
         services.AddSingleton<ICharacterRepository, CharacterRepository>();
         services.AddSingleton<IStarterItemsRepository, StarterItemsRepository>();
+        
+        // Services
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<IMapService, MapService>();
+        services.AddSingleton<INetworkService, NetworkService>();
+        services.AddSingleton<IAuthClientService, AuthClientService>();
+        services.AddSingleton<IUploadClientService, UploadClientService>();
+        services.AddSingleton<IGameClientService, GameClientService>();
+        services.AddSingleton<IAuthActionService, AuthActionService>();
+        services.AddSingleton<IUploadActionService, UploadActionService>();
+        services.AddSingleton<IGameActionService, GameActionService>();
+        services.AddSingleton<ICharacterService, CharacterService>();
+        services.AddSingleton<IBaseClientService, BaseClientService>();
+
     }
 
     private static void ConfigureDataAccess(IServiceCollection services)
     {
-        services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>
-        {
-            var config = serviceProvider.GetService<IConfiguration>();
-            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
-            dbOptions.InitialCatalog = "Arcadia";
-                
-            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-            builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
-            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-
-        });
-                
-        services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
-        {
-            var config = serviceProvider.GetService<IConfiguration>();
-            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
-            dbOptions.InitialCatalog = "Telecaster";
-
-            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-            builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
-            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-
-        });
+        services.AddDbContext<TelecasterContext>();
+        services.AddDbContext<ArcadiaContext>();
     }
 }
 

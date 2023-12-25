@@ -1,143 +1,168 @@
 ﻿using System;
 using System.Collections.Generic;
-using Configuration;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Network.Packets;
-using Navislamia.Game.Services;
 using System.Linq;
-
-using Navislamia.Game.Network.Interfaces;
+using System.Runtime.InteropServices;
+using Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Services;
+using Navislamia.Network.Packets;
 
-using Serilog;
+namespace Navislamia.Game.Network.Packets.Actions;
 
-namespace Navislamia.Game.Network.Packets
+public class GameActionService : IGameActionService
 {
-    public class GameActionService
+    private readonly NetworkOptions _networkOptions;
+    private readonly ILogger<GameActionService> _logger;
+    private readonly ICharacterService _characterService;
+
+    private readonly IBaseClientService _baseClientService;
+
+    public GameActionState State { get; set; }
+
+    private readonly Dictionary<ushort, Action<ClientEntity, IPacket>> _actions = new();
+
+    public GameActionService(IOptions<NetworkOptions> networkOptions, 
+        ICharacterService characterService, ILogger<GameActionService> logger, IBaseClientService baseClientService)
     {
-        private readonly NetworkOptions _networkOptions;
-        IClientService _clientService;
-        ILogger _logger = Log.ForContext<GameActionService>();
-        ICharacterService _characterService;
+        _networkOptions = networkOptions.Value;
+        _characterService = characterService;
+        _logger = logger;
+        _baseClientService = baseClientService;
 
-        Dictionary<ushort, Func<GameClient, IPacket, int>> actions = new();
+        _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
+        _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
+        _actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
+        _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
+    }
 
-        public GameActionService(IClientService clientService, NetworkOptions networkOptions, ICharacterService characterService)
+    public void Execute(ClientEntity client, IPacket packet)
+    {
+        if (!_actions.TryGetValue(packet.ID, out var action))
         {
-            _clientService = clientService;
-            _networkOptions = networkOptions;
-            _characterService = characterService;
-
-            actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
-            actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
-            actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
-            actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
-        }
-
-        public void Execute(GameClient client, IPacket msg)
-        {
-            if (!actions.ContainsKey(msg.ID))
-                return;
-
-            actions[msg.ID]?.Invoke(client, msg);
-        }
-
-        public void RemoveGameClient(string account, GameClient client)
-        {
-            _clientService.RemoveGameClient(account, client);
+            return;
         }
         
-        private int OnVersion(GameClient client, IPacket arg)
+        action?.Invoke(client, packet);
+    }
+
+    private void OnVersion(ClientEntity client, IPacket packet)
+    {
+        // TODO: properly implement this action
+    }
+
+    private void OnReport(ClientEntity client, IPacket packet)
+    {
+        // TODO: implement me
+    }
+
+    private void OnCharacterList(ClientEntity client, IPacket packet)
+    {
+        var message = packet.GetDataStruct<TS_CS_CHARACTER_LIST>();
+        var characters = _characterService.GetCharactersByAccountName(message.Account, true);
+        var lobbyCharacters = new List<LobbyCharacterInfoEntity>();
+
+        foreach (var character in characters)
         {
-            // TODO: properly implement this action
-
-            return 0;
-        }
-
-        private int OnReport(GameClient arg1, IPacket arg2)
-        {
-            // TODO: implement me
-
-            return 0;
-        }
-
-        private int OnCharacterList(GameClient client, IPacket msg)
-        {
-            var _msg = msg.GetDataStruct<TS_CS_CHARACTER_LIST>();
-
-            var _characters = _characterService.GetCharactersByAccountName(_msg.Account, true);
-
-            List<LobbyCharacterInfoEntity> _lobbyCharacters = new List<LobbyCharacterInfoEntity>();
-
-            foreach (var _character in _characters)
+            var characterLobbyInfo = new LobbyCharacterInfoEntity
             {
-                var _characterLobbyInfo = new LobbyCharacterInfoEntity();
+                Level = character.Lv,
+                Job = (int)character.CurrentJob,
+                JobLevel = character.Jlv,
+                ExpPercentage = 0, // TODO: needs to be done by getting values from LevelResourceRepository
+                HP = character.Hp,
+                MP = character.Mp,
+                Permission = character.Permission,
+                IsBanned = 0,
+                Name = character.CharacterName,
+                SkinColor = (uint)character.SkinColor,
+                Sex = character.Sex,
+                Race = character.Race,
+                ModelId = character.Models,
+                HairColorIndex = character.HairColorIndex,
+                HairColorRGB = (uint)character.HairColorRgb,
+                HideEquipFlag = (uint)character.HideEquipFlag,
+                TextureID = character.TextureId,
+                CreateTime = character.CreatedOn.ToString("yyyy/MM/dd"),
+                DeleteTime = character.DeletedOn?.ToString("yyyy/MM/dd") ?? "9999/12/01",
+            };
 
-                _characterLobbyInfo.Level = _character.Lv;
-                _characterLobbyInfo.Job = (int)_character.CurrentJob;
-                _characterLobbyInfo.JobLevel = _character.Jlv;
-                _characterLobbyInfo.ExpPercentage = 0; // TODO: needs to be done by getting values from LevelResourceRepository
-                _characterLobbyInfo.HP = _character.Hp;
-                _characterLobbyInfo.MP = _character.Mp;
-                _characterLobbyInfo.Permission = _character.Permission;
-                _characterLobbyInfo.IsBanned = 0;
-                _characterLobbyInfo.Name = _character.CharacterName;
-                _characterLobbyInfo.SkinColor = (uint)_character.SkinColor;
-                _characterLobbyInfo.CreateTime = _character.CreatedOn.ToString("yyyy/MM/dd");
-                _characterLobbyInfo.DeleteTime = _character.DeletedOn?.ToString("yyyy/MM/dd") ?? "9999/12/01";
-
-                foreach (var _item in  _character.Items.Where(i => i.WearInfo != ItemWearType.None))
-                {
-                    _characterLobbyInfo.WearInfo[(int)_item.WearInfo] = (int)_item.ItemResourceId;
-                    _characterLobbyInfo.WearItemEnhanceInfo[(int)_item.WearInfo] = (int)_item.Enhance;
-                    _characterLobbyInfo.WearItemLevelInfo[(int)_item.WearInfo] = (int)_item.Level;
-                    _characterLobbyInfo.WearItemElementalType[(int)_item.WearInfo] = (char)_item.ElementalEffectType;
-                }
-
-                _characterLobbyInfo.Sex = _character.Sex;
-                _characterLobbyInfo.Race = _character.Race;
-
-                _characterLobbyInfo.ModelId = _character.Models;
-                _characterLobbyInfo.HairColorIndex = _character.HairColorIndex;
-                _characterLobbyInfo.HairColorRGB = (uint)_character.HairColorRgb;
-                _characterLobbyInfo.HideEquipFlag = (uint)_character.HideEquipFlag;
-                _characterLobbyInfo.TextureID = _character.TextureId;
-
-                _lobbyCharacters.Add(_characterLobbyInfo);
+            foreach (var item in  character.Items.Where(i => i.WearInfo != ItemWearType.None))
+            {
+                characterLobbyInfo.WearInfo[(int)item.WearInfo] = (int)item.ItemResourceId;
+                characterLobbyInfo.WearItemEnhanceInfo[(int)item.WearInfo] = (int)item.Enhance;
+                characterLobbyInfo.WearItemLevelInfo[(int)item.WearInfo] = (int)item.Level;
+                characterLobbyInfo.WearItemElementalType[(int)item.WearInfo] = (char)item.ElementalEffectType;
             }
 
-            client.SendCharacterList(_lobbyCharacters);
-
-            return 0;
+            lobbyCharacters.Add(characterLobbyInfo);
         }
 
-        private int OnAccountWithAuth(GameClient client, IPacket msg)
+        SendCharacterList(client, lobbyCharacters);
+    }
+    
+    private void SendCharacterList(ClientEntity client, List<LobbyCharacterInfoEntity> characterList)
+    {
+        var charCount = (ushort)characterList.Count;
+
+        var packetStructLength = Marshal.SizeOf<TS_SC_CHARACTER_LIST>();
+        var lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfoEntity>();
+        var lobbyCharacterBufferLength = lobbyCharacterStructLength * characterList.Count;
+
+        var data = new TS_SC_CHARACTER_LIST(0, 0, charCount);
+        var packet = new Packet<TS_SC_CHARACTER_LIST>(2004, data, packetStructLength + lobbyCharacterBufferLength);
+
+        var charInfoOffset = Marshal.SizeOf<Header>() + packetStructLength;
+
+        foreach (var character in characterList)
         {
-            var _msg = msg.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
-            var _loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN, new(_msg.Account, _msg.OneTimePassword));
+            Buffer.BlockCopy(character.StructToByte(), 0, packet.Data, charInfoOffset, lobbyCharacterStructLength);
 
-            var connMax = _networkOptions.MaxConnections;
-
-            if (_clientService.ClientCount > connMax)
-            {
-                client.SendResult(msg.ID, (ushort)ResultCode.LimitMax);
-                return 1;
-            }
-
-            if (string.IsNullOrEmpty(client.Info.AccountName))
-            {
-                if (_clientService.UnauthorizedGameClients.ContainsKey(_msg.Account))
-                {
-                    client.SendResult(msg.ID, (ushort)ResultCode.AccessDenied);
-                    return 1;
-                }
-
-                _clientService.UnauthorizedGameClients.Add(_msg.Account, client);
-            }
-
-            _clientService.AuthClient.SendMessage(_loginInfo);
-
-            return 0;
+            charInfoOffset += lobbyCharacterStructLength;
         }
+        
+        client.Connection.Send(packet.Data);
+    }
+
+    private void OnAccountWithAuth(ClientEntity client, IPacket packet)
+    {
+        var message = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
+        var connMax = _networkOptions.MaxConnections;
+        var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
+            new TS_GA_CLIENT_LOGIN(message.Account, message.OneTimePassword));
+
+        if (State.AuthorizedClients.Count > connMax)
+        {
+            SendResult(client, packet.ID, (ushort)ResultCode.LimitMax);
+        }
+
+        if (string.IsNullOrEmpty(client.ConnectionData.AccountName))
+        {
+            if (!client.IsAuthorized)
+            {
+                SendResult(client, packet.ID, (ushort)ResultCode.AccessDenied);
+            }
+            
+            State.UnauthorizedClients.Add(client);
+        }
+        
+        //auth client should send this
+        _baseClientService.SendMessage(client, loginInfo);
+    }
+    
+    public void SendResult(ClientEntity client, ushort id, ushort result, int value = 0)
+    {
+        var message = new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new TS_SC_RESULT(id, result, value));
+        SendMessage(client, message);
+    }
+    
+    public void SendMessage(ClientEntity client, IPacket msg)
+    {
+        client.Connection.Send(msg.Data);
+        _logger.LogDebug("{name} ({id}) Length: {length} sent to {clientTag}", 
+            msg.StructName, msg.ID, msg.Length, client.Type);
     }
 }

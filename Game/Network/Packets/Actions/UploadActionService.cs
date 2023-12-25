@@ -1,49 +1,44 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using Navislamia.Game.Network.Interfaces;
 
-using Serilog;
+namespace Navislamia.Game.Network.Packets.Actions;
 
-namespace Navislamia.Game.Network.Packets
+public class UploadActionService : IUploadActionService
 {
-    public class UploadActionService
+    private readonly ILogger<UploadActionService> _logger;
+
+    private readonly Dictionary<ushort, Action<UploadClientService, IPacket>> _actions = new();
+
+    public UploadActionService(ILogger<UploadActionService> logger)
     {
-        IClientService _clientService;
-        ILogger _logger = Log.ForContext<UploadActionService>();
+        _logger = logger;
 
-        Dictionary<ushort, Func<UploadClient, IPacket, int>> actions = new();
+        _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
+    }
 
-        public UploadActionService(IClientService clientService)
+    public void Execute(UploadClientService clientService, IPacket packet)
+    {
+        if (!_actions.TryGetValue(packet.ID, out var action))
         {
-            _clientService = clientService;
+            return;
+        }
+            
+        action?.Invoke(clientService, packet);
+    }
 
-            actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
+    public void OnLoginResult(UploadClientService clientService, IPacket packet)
+    {
+        var msg = packet.GetDataStruct<TS_US_LOGIN_RESULT>();
+
+        if (msg.Result > 0)
+        {
+            _logger.LogError("Failed to register to the Auth Server!");
+            throw new Exception();
+
         }
 
-        public void Execute(UploadClient client, IPacket msg)
-        {
-            if (!actions.ContainsKey(msg.ID))
-                return;
-
-            actions[msg.ID]?.Invoke(client, msg);
-        }
-
-        public int OnLoginResult(UploadClient client, IPacket msg)
-        {
-            var _msg = msg.GetDataStruct<TS_US_LOGIN_RESULT>();
-
-            if (_msg.Result > 0)
-            {
-                _logger.Error("Failed to register to the Upload Server!");
-
-                return 1;
-            }
-
-            _clientService.UploadReady = true;
-
-            _logger.Debug("Successfully registered to the Upload Server!");
-
-            return 0;
-        }
+        _logger.LogDebug("Successfully registered to the Upload Server!");
     }
 }

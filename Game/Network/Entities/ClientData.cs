@@ -2,7 +2,7 @@
 
 namespace Navislamia.Game.Network.Entities
 {
-    public class ConnectionInfoEntity
+    public class ClientData
     {
         public string AccountName { get; set; }
 
