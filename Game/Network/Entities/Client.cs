@@ -8,7 +8,7 @@ public class Client
     public ClientType Type { get; set; }
     public Connection Connection { get; set; }
     public string ClientTag { get; set; }
-    public bool IsAuthorized { get; set; } = false;
+    public bool LoggedIn { get; set; } = false;
 
     public virtual void OnDataSent(int bytesSent) { }
 

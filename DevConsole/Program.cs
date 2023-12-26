@@ -11,10 +11,7 @@ using Navislamia.Game;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
-using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Interfaces;
-using Navislamia.Game.Network.Packets;
-using Navislamia.Game.Network.Packets.Actions;
 using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
@@ -100,12 +97,6 @@ public class Program
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<INetworkService, NetworkService>();
-        services.AddSingleton<IAuthClientService, AuthClientService>();
-        services.AddSingleton<IUploadClientService, UploadClientService>();
-        services.AddSingleton<IGameClientService, GameClientService>();
-        services.AddSingleton<IAuthActionService, AuthActionService>();
-        services.AddSingleton<IUploadActionService, UploadActionService>();
-        services.AddSingleton<IGameActionService, GameActionService>();
         services.AddSingleton<ICharacterService, CharacterService>();
     }
 

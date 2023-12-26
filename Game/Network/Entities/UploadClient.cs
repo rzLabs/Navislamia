@@ -1,21 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Navislamia.Game.Network.Packets;
-using Navislamia.Game.Network.Packets.Actions;
 using Navislamia.Game.Network.Packets.Enums;
 
 namespace Navislamia.Game.Network.Entities;
 
 public class UploadClient : Client
 {
-    private readonly UploadActionService _action = new();
-    
+    private readonly Dictionary<ushort, Action<UploadClient, IPacket>> _actions = new();
+
     public UploadClient()
     {
         Type = ClientType.Upload;
-        IsAuthorized = true;
+        LoggedIn = true;
+        
+        _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
+
     }
     
     public void CreateClientConnection(string ip, int port)
@@ -75,7 +78,32 @@ public class UploadClient : Client
             // _logger.LogDebug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
             //     msg.Length, _uploadClientHandler.Client.ClientTag);
 
-            _action.Execute(this, msg);
+            Execute(this, msg);
         }
+    }
+    
+    public void Execute(UploadClient client, IPacket packet)
+    {
+        if (!_actions.TryGetValue(packet.ID, out var action))
+        {
+            return;
+        }
+            
+        action?.Invoke(client, packet);
+    }
+
+    public void OnLoginResult(UploadClient client, IPacket packet)
+    {
+        var msg = packet.GetDataStruct<TS_US_LOGIN_RESULT>();
+
+        if (msg.Result > 0)
+        {
+            // _logger.LogError("Failed to register to the Auth Server!");
+            throw new Exception();
+
+        }
+
+        // _logger.LogDebug("Successfully registered to the Upload Server!");
+        Console.WriteLine("Successfully registered to the Upload Server!");
     }
 }
