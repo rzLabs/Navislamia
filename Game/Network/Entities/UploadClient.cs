@@ -15,10 +15,7 @@ public class UploadClient : Client
     public UploadClient()
     {
         Type = ClientType.Upload;
-        LoggedIn = true;
-        
         _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
-
     }
     
     public void CreateClientConnection(string ip, int port)

@@ -19,18 +19,27 @@ public class AuthClient : Client
     public AuthClient(List<GameClient> gameClients)
     {
         Type = ClientType.Auth;
-        LoggedIn = true;
-
         GameClients = gameClients;
         
         _actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
         _actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
+        _actions[(ushort)AuthPackets.TS_GA_CLIENT_LOGOUT] = OnClientLogout;
     }
 
     public void SetAffectedGameClient(GameClient client)
     {
         AffectedGameClient = client;
     }
+
+    public void OnClientLogout(AuthClient client, IPacket packet)
+    {
+        if (AffectedGameClient.LoggedIn)
+        {
+            // TODO AffectedGameClient.ContinuousPlayTime 
+            AffectedGameClient.Connection.Disconnect();
+        }
+    }
+    
     public void CreateClientConnection(string ip, int port)
     {
         if (!IPAddress.TryParse(ip, out var ipParsed))
@@ -82,7 +91,8 @@ public class AuthClient : Client
             {
                 (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
                 (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
-
+                (ushort)AuthPackets.TS_GA_CLIENT_LOGOUT => new Packet<TS_GA_CLIENT_LOGOUT>(msgBuffer),
+                
                 _ => throw new Exception("Unknown Packet Type")
             };
 

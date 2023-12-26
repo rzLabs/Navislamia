@@ -36,7 +36,6 @@ public class NetworkService : INetworkService
         return AuthClient.Connection.Connected && UploadClient.Connection.Connected;
     }
     
-    // TODO Idea: communication service that sends packets to clients? which then react?
     public void SendMessageToAuth(IPacket packet)
     {
         AuthClient.SendMessage(packet);

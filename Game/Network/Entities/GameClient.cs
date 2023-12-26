@@ -29,6 +29,7 @@ public class GameClient : Client
     public float LastContinuousPlayTimeProcTime;
     public string NameToDelete { get; set; }
     public bool StorageSecurityCheck { get; set; } = false;
+    public bool LoggedIn { get; set; }
     public int MaxConnections { get; set; } // to avoid injecting options into the client itself, i pass it through the service, find a 
     
     private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
@@ -126,11 +127,11 @@ public class GameClient : Client
 
             // _logger.LogDebug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, client.ClientTag);
 
-            Execute(this, AuthClient, msg);
+            Execute(this, msg);
         }
     }
     
-    public void Execute(GameClient client, AuthClient authClient, IPacket packet)
+    public void Execute(GameClient client, IPacket packet)
     {
         if (_actions.TryGetValue(packet.ID, out var action))
         {
@@ -230,7 +231,7 @@ public class GameClient : Client
 
         if (string.IsNullOrEmpty(client.AccountName))
         {
-            if (!client.LoggedIn)
+            if (client.LoggedIn)
             {
                 client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
             }
