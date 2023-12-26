@@ -2,8 +2,8 @@
 
 namespace Navislamia.Game.Network.Interfaces;
 
-public interface IUploadClientService: IBaseClientService
+public interface IUploadClientService
 {
     void CreateUploadClient();
-    ClientEntity GetClient();
+    UploadClient GetClient();
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Navislamia.Game.Models.Arcadia.Enums;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Interfaces;
@@ -19,27 +19,19 @@ public class GameActionService : IGameActionService
     private readonly ILogger<GameActionService> _logger;
     private readonly ICharacterService _characterService;
 
-    private readonly IBaseClientService _baseClientService;
+    public GameActionState State { get; set; } = new();
 
-    public GameActionState State { get; set; }
+    private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
 
-    private readonly Dictionary<ushort, Action<ClientEntity, IPacket>> _actions = new();
-
-    public GameActionService(IOptions<NetworkOptions> networkOptions, 
-        ICharacterService characterService, ILogger<GameActionService> logger, IBaseClientService baseClientService)
+    public GameActionService()
     {
-        _networkOptions = networkOptions.Value;
-        _characterService = characterService;
-        _logger = logger;
-        _baseClientService = baseClientService;
-
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
         _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
         _actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
     }
 
-    public void Execute(ClientEntity client, IPacket packet)
+    public void Execute(GameClient client, IPacket packet)
     {
         if (!_actions.TryGetValue(packet.ID, out var action))
         {
@@ -49,17 +41,17 @@ public class GameActionService : IGameActionService
         action?.Invoke(client, packet);
     }
 
-    private void OnVersion(ClientEntity client, IPacket packet)
+    private void OnVersion(GameClient client, IPacket packet)
     {
         // TODO: properly implement this action
     }
 
-    private void OnReport(ClientEntity client, IPacket packet)
+    private void OnReport(GameClient client, IPacket packet)
     {
         // TODO: implement me
     }
 
-    private void OnCharacterList(ClientEntity client, IPacket packet)
+    private void OnCharacterList(GameClient client, IPacket packet)
     {
         var message = packet.GetDataStruct<TS_CS_CHARACTER_LIST>();
         var characters = _characterService.GetCharactersByAccountName(message.Account, true);
@@ -104,7 +96,7 @@ public class GameActionService : IGameActionService
         SendCharacterList(client, lobbyCharacters);
     }
     
-    private void SendCharacterList(ClientEntity client, List<LobbyCharacterInfoEntity> characterList)
+    private void SendCharacterList(GameClient client, List<LobbyCharacterInfoEntity> characterList)
     {
         var charCount = (ushort)characterList.Count;
 
@@ -126,43 +118,33 @@ public class GameActionService : IGameActionService
         
         client.Connection.Send(packet.Data);
     }
-
-    private void OnAccountWithAuth(ClientEntity client, IPacket packet)
+    
+    private void OnAccountWithAuth(GameClient client, IPacket packet)
     {
         var message = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
-        var connMax = _networkOptions.MaxConnections;
+        var connMax = client.MaxConnections;
         var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
             new TS_GA_CLIENT_LOGIN(message.Account, message.OneTimePassword));
 
         if (State.AuthorizedClients.Count > connMax)
         {
-            SendResult(client, packet.ID, (ushort)ResultCode.LimitMax);
+            client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
         }
 
-        if (string.IsNullOrEmpty(client.ConnectionData.AccountName))
+        if (string.IsNullOrEmpty(client.AccountName))
         {
             if (!client.IsAuthorized)
             {
-                SendResult(client, packet.ID, (ushort)ResultCode.AccessDenied);
+                client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
             }
-            
-            State.UnauthorizedClients.Add(client);
         }
         
         //auth client should send this
-        _baseClientService.SendMessage(client, loginInfo);
+        client.SendMessage(loginInfo);
     }
     
-    public void SendResult(ClientEntity client, ushort id, ushort result, int value = 0)
-    {
-        var message = new Packet<TS_SC_RESULT>((ushort)GamePackets.TM_SC_RESULT, new TS_SC_RESULT(id, result, value));
-        SendMessage(client, message);
-    }
     
-    public void SendMessage(ClientEntity client, IPacket msg)
-    {
-        client.Connection.Send(msg.Data);
-        _logger.LogDebug("{name} ({id}) Length: {length} sent to {clientTag}", 
-            msg.StructName, msg.ID, msg.Length, client.Type);
-    }
+    // originally in auth actions
+    
+    
 }

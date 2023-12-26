@@ -178,7 +178,7 @@ public class GameModule : IGameModule
         {
             var serverName = _serverOptions.Name;
 
-            var msg = new Packet<TS_SU_LOGIN>((ushort)UploadPackets.TS_SU_LOGIN, new(serverName));
+            var msg = new Packet<TS_SU_LOGIN>((ushort)UploadPackets.TS_SU_LOGIN, new TS_SU_LOGIN(serverName));
 
             _networkService.SendMessageToUpload(msg);
         }

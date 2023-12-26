@@ -13,10 +13,7 @@ public interface INetworkService
     
     void CreateAuthClient();
     void CreateUploadClient();
-    ClientEntity CreateGameClient(Socket socket);
-
-    ClientEntity GetAuthClient();
-    ClientEntity GetUploadClient();
+    GameClient CreateGameClient(Socket socket);
 
     void SendMessageToAuth(IPacket packet);
 

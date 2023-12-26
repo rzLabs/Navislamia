@@ -37,14 +37,15 @@ public class NetworkService : INetworkService
                _uploadClientService.GetClient().Connection.Connected;
     }
     
+    // TODO Idea: communication service that sends packets to clients? which then react?
     public void SendMessageToAuth(IPacket packet)
     {
-        _authClientService.SendMessage(_authClientService.GetClient(), packet);
+        _authClientService.GetClient().SendMessage(packet);
     }
     
     public void SendMessageToUpload(IPacket packet)
     {
-        _uploadClientService.SendMessage(_uploadClientService.GetClient(), packet);
+        _uploadClientService.GetClient().SendMessage(packet);
     }
 
     public void CreateAuthClient()
@@ -57,17 +58,7 @@ public class NetworkService : INetworkService
         _uploadClientService.CreateUploadClient();
     }
 
-    public ClientEntity GetAuthClient()
-    {
-        return _authClientService.GetClient();
-    }
-
-    public ClientEntity GetUploadClient()
-    {
-        return _uploadClientService.GetClient();
-    }
-
-    public ClientEntity CreateGameClient(Socket socket)
+    public GameClient CreateGameClient(Socket socket)
     {
        return  _gameClientService.CreateGameClient(socket);
     }

@@ -2,8 +2,8 @@
 
 namespace Navislamia.Game.Network.Interfaces;
 
-public interface IAuthClientService : IBaseClientService
+public interface IAuthClientService
 {
     void CreateAuthClient();
-    ClientEntity GetClient();
+    AuthClient GetClient();
 }

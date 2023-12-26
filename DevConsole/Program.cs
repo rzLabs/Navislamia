@@ -107,8 +107,6 @@ public class Program
         services.AddSingleton<IUploadActionService, UploadActionService>();
         services.AddSingleton<IGameActionService, GameActionService>();
         services.AddSingleton<ICharacterService, CharacterService>();
-        services.AddSingleton<IBaseClientService, BaseClientService>();
-
     }
 
     private static void ConfigureDataAccess(IServiceCollection services)
