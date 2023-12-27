@@ -12,14 +12,12 @@ namespace Navislamia.Game.Network.Entities;
 public class AuthClient : Client
 {
     private readonly Dictionary<ushort, Action<AuthClient, IPacket>> _actions = new();
-    private List<GameClient> GameClients { get; set; }
 
-    public GameClient AffectedGameClient { get;set; }
+    private GameClient AffectedGameClient { get;set; }
     
-    public AuthClient(List<GameClient> gameClients)
+    public AuthClient()
     {
         Type = ClientType.Auth;
-        GameClients = gameClients;
         
         _actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
         _actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
@@ -33,7 +31,7 @@ public class AuthClient : Client
 
     public void OnClientLogout(AuthClient client, IPacket packet)
     {
-        if (AffectedGameClient.LoggedIn)
+        if (AffectedGameClient.Authorized)
         {
             // TODO AffectedGameClient.ContinuousPlayTime 
             AffectedGameClient.Connection.Disconnect();
@@ -91,7 +89,7 @@ public class AuthClient : Client
             {
                 (ushort)AuthPackets.TS_AG_LOGIN_RESULT => new Packet<TS_AG_LOGIN_RESULT>(msgBuffer),
                 (ushort)AuthPackets.TS_AG_CLIENT_LOGIN => new Packet<TS_AG_CLIENT_LOGIN>(msgBuffer),
-                (ushort)AuthPackets.TS_GA_CLIENT_LOGOUT => new Packet<TS_GA_CLIENT_LOGOUT>(msgBuffer),
+                // (ushort)AuthPackets.TM_AG_KICK_CLIENT => new Packet<TM_AG_KICK_CLIENT>(msgBuffer),
                 
                 _ => throw new Exception("Unknown Packet Type")
             };
@@ -133,7 +131,7 @@ public class AuthClient : Client
     {
         var userLogin = packet.GetDataStruct<TS_AG_CLIENT_LOGIN>();
         // Check if the game networkService connection is queued in AuthAccounts
-        if (AffectedGameClient.LoggedIn)
+        if (AffectedGameClient.Authorized)
         {
             // _logger.LogError("Account register failed for: {accountName}", agClientLogin.Account);
             // TODO: SendLogoutToAuth user is already islogged in, wrong credentials etc -> send logout to auth
@@ -152,7 +150,7 @@ public class AuthClient : Client
                 AffectedGameClient.ContinuousPlayTime = userLogin.ContinuousPlayTime;
                 AffectedGameClient.ContinuousLogoutTime = userLogin.ContinuousLogoutTime;
             }
-            AffectedGameClient.LoggedIn = true;
+            AffectedGameClient.Authorized = true;
         }
 
         AffectedGameClient.SendResult((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, userLogin.Result);

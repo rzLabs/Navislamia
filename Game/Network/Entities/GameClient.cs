@@ -11,7 +11,7 @@ using Navislamia.Network.Packets;
 
 namespace Navislamia.Game.Network.Entities;
 
-public class GameClient : Client
+public class GameClient : Client, IDisposable
 {
     public string AccountName { get; set; }
     public List<string> CharacterList { get; set; } = new();
@@ -29,7 +29,7 @@ public class GameClient : Client
     public float LastContinuousPlayTimeProcTime;
     public string NameToDelete { get; set; }
     public bool StorageSecurityCheck { get; set; } = false;
-    public bool LoggedIn { get; set; }
+    public bool Authorized { get; set; }
     public int MaxConnections { get; set; } // to avoid injecting options into the client itself, i pass it through the service, find a 
     
     private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
@@ -43,7 +43,7 @@ public class GameClient : Client
     {
         AuthClient = authClient;
         Type = ClientType.Game;
-        LoggedIn = false;
+        Authorized = false;
         Connection = new CipherConnection(socket, cipherKey);
         MaxConnections = maxConnections;
         _characterService = characterService;
@@ -62,6 +62,14 @@ public class GameClient : Client
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
         Connection.Start();;
+    }
+
+    public override void OnDisconnect()
+    {
+        var packet = new Packet<TS_GA_CLIENT_LOGOUT>((ushort)AuthPackets.TS_GA_CLIENT_LOGOUT, new TS_GA_CLIENT_LOGOUT(AccountName, (uint)ContinuousPlayTime));
+        AuthClient.SendMessage(packet);
+        Authorized = false;
+        Dispose();
     }
 
     public void SendResult(ushort id, ushort result, int value = 0)
@@ -231,12 +239,23 @@ public class GameClient : Client
 
         if (string.IsNullOrEmpty(client.AccountName))
         {
-            if (client.LoggedIn)
+            if (client.Authorized)
             {
                 client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
             }
         }
         
         AuthClient.SendMessage(loginInfo);
+    }
+
+    public void Dispose()
+    {
+        if (Connection != null)
+        {
+            Connection.Disconnect();
+            Connection = null;
+        }
+        
+        GC.SuppressFinalize(this);
     }
 }

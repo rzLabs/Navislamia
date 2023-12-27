@@ -54,7 +54,7 @@ public class NetworkService : INetworkService
             return;
         }
 
-        AuthClient = new AuthClient(GameClients);
+        AuthClient = new AuthClient();
         AuthClient.CreateClientConnection(_networkOptions.Auth.Ip, _networkOptions.Auth.Port);
     }
 
