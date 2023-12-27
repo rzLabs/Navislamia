@@ -9,12 +9,7 @@ namespace Navislamia.Game.Contexts;
 
 public class ArcadiaContext : SoftDeletionContext
 {
-    private readonly DatabaseOptions _dbOptions;
-
-    public ArcadiaContext(DbContextOptions<ArcadiaContext> options, IOptions<DatabaseOptions> dbOptions) : base(options)
-    {
-        _dbOptions = dbOptions.Value;
-    }
+    public ArcadiaContext(DbContextOptions<ArcadiaContext> options) : base(options) { }
 
     public DbSet<ChannelResourceEntity> ChannelResources { get; set; }
     public DbSet<GlobalVariableEntity> GlobalVariables { get; set; }
@@ -30,15 +25,6 @@ public class ArcadiaContext : SoftDeletionContext
     public DbSet<StateResourceEntity> StateResources { get; set; }
     public DbSet<StatResourceEntity> StatResources { get; set; }
     public DbSet<ModelEffectResourceEntity> ModelEffectResources { get; set; }
-    
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        _dbOptions.InitialCatalog = "Arcadia";
-        optionsBuilder
-            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-            .UseNpgsql(_dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

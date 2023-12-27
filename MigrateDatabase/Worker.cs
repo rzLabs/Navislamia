@@ -19,7 +19,6 @@ public class Worker : BackgroundService
 {
     private readonly DbContextOptions<MssqlArcadiaContext> _mssqlOptions;
     private readonly DbContextOptions<ArcadiaContext> _psqlArcadiaContext;
-    private readonly IOptions<DatabaseOptions> _dbOptions;
 
     private readonly DbContextOptions<TelecasterContext> _psqlTelecasterContext;
     private readonly IMapper _mapper;
@@ -29,13 +28,12 @@ public class Worker : BackgroundService
     
     public Worker(DbContextOptions<MssqlArcadiaContext> mssqlOptions, 
         DbContextOptions<ArcadiaContext> psqlArcadiaContext, 
-        DbContextOptions<TelecasterContext> psqlTelecasterContext, IMapper mapper, IOptions<DatabaseOptions> dbOptions)
+        DbContextOptions<TelecasterContext> psqlTelecasterContext, IMapper mapper)
     {
         _mssqlOptions = mssqlOptions;
         _psqlArcadiaContext = psqlArcadiaContext;
         _psqlTelecasterContext = psqlTelecasterContext;
         _mapper = mapper;
-        _dbOptions = dbOptions;
     }
     
     protected override async Task ExecuteAsync(CancellationToken token)
@@ -650,7 +648,7 @@ public class Worker : BackgroundService
             mappedItem.EnhanceValues = enhanceValues;
             mappedItem.EnhanceIds = enhanceIds.Length != 0 ? enhanceIds : null;
     
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var summonExists = psqlContext.SummonResources.Any(s => s.Id == item.summon_id);
                 if (!summonExists)
@@ -710,7 +708,7 @@ public class Worker : BackgroundService
             var mappedItem = _mapper.Map<LevelResourceEntity>(item);
             
     
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.LevelResources.FirstOrDefault(i => i.Level == item.level);
                 if (existingEntity != null)
@@ -776,7 +774,7 @@ public class Worker : BackgroundService
         }
         foreach (var entity in entities)
         {
-            await using var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions);
+            await using var psqlContext = new ArcadiaContext(_psqlArcadiaContext);
             
             var existingEntity = await psqlContext.Set<T>().FindAsync(entity.Id);
             if (existingEntity != null)
@@ -811,7 +809,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<StatResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.StatResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -851,7 +849,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<ChannelResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.ChannelResources.FirstOrDefault(i => i.Id == item.id);
                 if (existingEntity != null)
@@ -892,7 +890,7 @@ public class Worker : BackgroundService
     
             var mappedItem = _mapper.Map<EffectResourceEntity>(item);
     
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.EffectResources.FirstOrDefault(i => i.Id == item.resource_effect_file_id);
@@ -934,7 +932,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<ItemEffectResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var existingEntity = psqlContext.ItemEffectResources.FirstOrDefault(i => i.Id == item.id && i.OrdinalId == item.ordinal_id);
                 if (existingEntity != null)
@@ -983,7 +981,7 @@ public class Worker : BackgroundService
 
                 var mappedItem = _mapper.Map<SummonResourceEntity>(item);
 
-                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
                 {
                     // ModelResource doesnt exist yet so id will be null 
                     var existingModel = psqlContext.ModelEffectResources.Any(m => m.Id == mappedItem.ModelId);
@@ -1077,7 +1075,7 @@ public class Worker : BackgroundService
             mappedItem.OptTypes = optTypes;
             mappedItem.OptValues = optValues;
 
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEffect = psqlContext.EffectResources.Any(e => e.Id == mappedItem.EffectId);
@@ -1133,7 +1131,7 @@ public class Worker : BackgroundService
             
             var mappedItem = _mapper.Map<EnhanceResourceEntity>(item);
 
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 var requiredItemExists = psqlContext.ItemResources.Any(i => i.Id == mappedItem.RequiredItemId);
                 if (!requiredItemExists)
@@ -1184,7 +1182,7 @@ public class Worker : BackgroundService
 
                 var mappedItem = _mapper.Map<SkillResourceEntity>(item);
             
-                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+                await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
                 {
                     var existingSkillResource = psqlContext.SkillResources.Any(s => s.UpgradeIntoSkillId == mappedItem.Id);
                     if (!existingSkillResource)
@@ -1268,7 +1266,7 @@ public class Worker : BackgroundService
 
             var mappedItem = _mapper.Map<StateResourceEntity>(item);
             
-            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext, _dbOptions))
+            await using (var psqlContext = new ArcadiaContext(_psqlArcadiaContext))
             {
                 // DO NOT USE context.AddRange(entities) too many entities will crash the worker
                 var existingEntity = psqlContext.StateResources.FirstOrDefault(i => i.Id == item.state_id);

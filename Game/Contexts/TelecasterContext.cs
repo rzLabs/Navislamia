@@ -8,18 +8,7 @@ namespace Navislamia.Game.Contexts;
 
 public class TelecasterContext : SoftDeletionContext
 {
-    private readonly DatabaseOptions _dbOptions;
-
-    public TelecasterContext(DbContextOptions<TelecasterContext> options, IOptions<DatabaseOptions> dbOptions) :
-        base(options)
-    {
-        _dbOptions = dbOptions.Value;
-    }
-
-    public TelecasterContext(DbContextOptions<TelecasterContext> psqlTelecasterContext)
-    {
-        throw new System.NotImplementedException();
-    }
+    public TelecasterContext(DbContextOptions<TelecasterContext> options) : base(options) { }
 
     public DbSet<AllianceEntity> Alliances { get; set; }
     public DbSet<AuctionEntity> Auctions { get; set; }
@@ -33,15 +22,6 @@ public class TelecasterContext : SoftDeletionContext
     public DbSet<SummonEntity> Summons { get; set; }
     public DbSet<StarterItemsEntity> StarterItems { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        _dbOptions.InitialCatalog = "Telecaster";
-        optionsBuilder
-            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-            .UseNpgsql(_dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    }
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ConfigureAuctions(modelBuilder);

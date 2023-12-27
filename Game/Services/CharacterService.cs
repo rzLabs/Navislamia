@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Navislamia.Game.Models.Telecaster;
 using Navislamia.Game.Repositories;
+using Navislamia.Game.Repositories.Interfaces;
 
 namespace Navislamia.Game.Services;
 
@@ -21,11 +22,13 @@ public class CharacterService : ICharacterService
         return _characterRepository.GetCharactersByAccountName(accountName, withItems);
     }
 
-    public async Task CreateCharacter(CharacterEntity character, bool withStarterItems = false)
+    public async Task CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
     {
         if (withStarterItems)
         {
-            var starterItems = _starterItemsRepository.GetStarterItemsByJobAsync(character.CurrentJob);
+            character.Items ??= new List<ItemEntity>();
+            
+            var starterItems = await _starterItemsRepository.GetStarterItemsByJobAsync(character.CurrentJob);
             foreach (var starterItem in starterItems)
             {
                 character.Items.Add(new ItemEntity
@@ -37,8 +40,8 @@ public class CharacterService : ICharacterService
                     RemainingTime = starterItem.ValidForSeconds
                 });
             }
-            character.Items = new List<ItemEntity>();
         }
+        
         await _characterRepository.CreateCharacterAsync(character);
         await _characterRepository.SaveChangesAsync();
     }

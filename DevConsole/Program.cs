@@ -13,6 +13,7 @@ using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Repositories;
+using Navislamia.Game.Repositories.Interfaces;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Serilog;
@@ -102,8 +103,30 @@ public class Program
 
     private static void ConfigureDataAccess(IServiceCollection services)
     {
-        services.AddDbContext<TelecasterContext>();
-        services.AddDbContext<ArcadiaContext>();
+        services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>
+        {
+            var config = serviceProvider.GetService<IConfiguration>();
+            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+            dbOptions.InitialCatalog = "Arcadia";
+                
+            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+            builder
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        });
+                
+        services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
+        {
+            var config = serviceProvider.GetService<IConfiguration>();
+            var dbOptions = config.GetSection("Database").Get<DatabaseOptions>();
+            dbOptions.InitialCatalog = "Telecaster";
+
+            // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
+            builder
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
+        });
     }
 }
 

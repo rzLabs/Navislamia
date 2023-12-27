@@ -4,21 +4,24 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Navislamia.Game.Contexts;
 using Navislamia.Game.Models.Telecaster;
+using Navislamia.Game.Repositories.Interfaces;
 
 namespace Navislamia.Game.Repositories;
 
 public class CharacterRepository : ICharacterRepository
 {
-    private readonly TelecasterContext _context;
-    
-    public CharacterRepository(TelecasterContext context)
+    private readonly DbContextOptions<TelecasterContext> _options;
+
+    public CharacterRepository(DbContextOptions<TelecasterContext> options)
     {
-        _context = context;
+        _options = options;
     }
     
     public IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false)
     {
-        var query = _context.Characters.Where(c => c.AccountName == accountName);
+        using var context = new TelecasterContext(_options);
+
+        var query = context.Characters.Where(c => c.AccountName == accountName);
 
         if (withItems)
         {
@@ -30,12 +33,14 @@ public class CharacterRepository : ICharacterRepository
 
     public async Task CreateCharacterAsync(CharacterEntity character)
     {
-        await _context.Characters.AddAsync(character);
+        await using var context = new TelecasterContext(_options);
+        await context.Characters.AddAsync(character);
     }
 
     public async Task SaveChangesAsync()
     {
-        await _context.SaveChangesAsync();
+        await using var context = new TelecasterContext(_options);
+        await context.SaveChangesAsync();
     }
 
 }

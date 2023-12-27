@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Navislamia.Game.Models.Telecaster;
 
-namespace Navislamia.Game.Repositories;
+namespace Navislamia.Game.Repositories.Interfaces;
 
 public interface ICharacterRepository
 {
