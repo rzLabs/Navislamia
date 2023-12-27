@@ -8,11 +8,13 @@ using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
 using Navislamia.Game.Services;
 using Navislamia.Network.Packets;
+using Serilog;
 
 namespace Navislamia.Game.Network.Entities;
 
 public class GameClient : Client, IDisposable
 {
+    private readonly ILogger _logger = Log.ForContext<UploadClient>();
     public string AccountName { get; set; }
     public List<string> CharacterList { get; set; } = new();
     // TODO: StructPlayer Player;
@@ -39,7 +41,8 @@ public class GameClient : Client, IDisposable
     
     private readonly ICharacterService _characterService;
     
-    public GameClient(Socket socket, string cipherKey, int maxConnections, ICharacterService characterService, AuthClient authClient)
+    public GameClient(Socket socket, string cipherKey, int maxConnections, ICharacterService characterService, 
+        AuthClient authClient)
     {
         AuthClient = authClient;
         Type = ClientType.Game;
@@ -52,7 +55,6 @@ public class GameClient : Client, IDisposable
         _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
         _actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
-        
     }
     
     public void CreateClientConnection()
@@ -89,16 +91,16 @@ public class GameClient : Client, IDisposable
 
             if (header.Length > remainingData)
             {
-                // _logger.LogWarning(
-                //     "Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}",
-                //     client.ClientTag, header.ID, header.Length, remainingData);
+                _logger.Warning(
+                    "Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}",
+                    ClientTag, header.ID, header.Length, remainingData);
                 Console.WriteLine($"Partial packet received from {ClientTag}");
                 return;
             }
 
             if (!isValidMsg)
             {
-                // _logger.LogError("Invalid Message received from {clientTag} !!!", client.ClientTag);
+                _logger.Error("Invalid Message received from {clientTag} !!!", ClientTag);
                 Connection.Disconnect();
                 throw new Exception($"Invalid Message recieved from {ClientTag}");
             }
@@ -110,20 +112,19 @@ public class GameClient : Client, IDisposable
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(GamePackets), header.ID))
             {
-                // _logger.LogDebug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID, header.Length, client.ClientTag);
+                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID, header.Length, ClientTag);
                 continue;
             }
 
             // TM_NONE is a dummy packet sent by the clientService for...."reasons"
             if (header.ID == (ushort)GamePackets.TM_NONE)
             {
-                // _logger.LogDebug("{name}({id}) Length: {length} received from {clientTag}", "TM_NONE", header.ID, header.Length, client.ClientTag);
+                _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", "TM_NONE", header.ID, header.Length, ClientTag);
                 continue;
             }
 
             IPacket msg = header.ID switch
             {
-                // Game
                 //(ushort)GamePackets.TM_NONE => null,
                 (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
                 (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
@@ -133,7 +134,7 @@ public class GameClient : Client, IDisposable
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            // _logger.LogDebug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, client.ClientTag);
+            _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
             Execute(this, msg);
         }
@@ -161,11 +162,11 @@ public class GameClient : Client, IDisposable
     {
         var message = packet.GetDataStruct<TS_CS_CHARACTER_LIST>();
         var characters = _characterService.GetCharactersByAccountName(message.Account, true);
-        var lobbyCharacters = new List<LobbyCharacterInfoEntity>();
+        var lobbyCharacters = new List<LobbyCharacterInfo>();
 
         foreach (var character in characters)
         {
-            var characterLobbyInfo = new LobbyCharacterInfoEntity
+            var characterLobbyInfo = new LobbyCharacterInfo
             {
                 Level = character.Lv,
                 Job = (int)character.CurrentJob,
@@ -202,12 +203,12 @@ public class GameClient : Client, IDisposable
         SendCharacterList(client, lobbyCharacters);
     }
     
-    private void SendCharacterList(GameClient client, List<LobbyCharacterInfoEntity> characterList)
+    private void SendCharacterList(GameClient client, List<LobbyCharacterInfo> characterList)
     {
         var charCount = (ushort)characterList.Count;
 
         var packetStructLength = Marshal.SizeOf<TS_SC_CHARACTER_LIST>();
-        var lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfoEntity>();
+        var lobbyCharacterStructLength = Marshal.SizeOf<LobbyCharacterInfo>();
         var lobbyCharacterBufferLength = lobbyCharacterStructLength * characterList.Count;
 
         var data = new TS_SC_CHARACTER_LIST(0, 0, charCount);

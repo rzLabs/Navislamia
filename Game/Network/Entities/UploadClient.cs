@@ -5,11 +5,13 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
+using Serilog;
 
 namespace Navislamia.Game.Network.Entities;
 
 public class UploadClient : Client
 {
+    private readonly ILogger _logger = Log.ForContext<UploadClient>();
     private readonly Dictionary<ushort, Action<UploadClient, IPacket>> _actions = new();
 
     public UploadClient()
@@ -60,8 +62,8 @@ public class UploadClient : Client
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(UploadPackets), header.ID))
             {
-                // _logger.LogDebug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID,
-                    // header.Length, _uploadClientHandler.Client.ClientTag);
+                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID,
+                    header.Length, ClientTag);
                 continue;
             }
 
@@ -72,14 +74,14 @@ public class UploadClient : Client
                 _ => throw new Exception("Unknown Packet Type")
             };
             
-            // _logger.LogDebug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
-            //     msg.Length, _uploadClientHandler.Client.ClientTag);
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
+                msg.Length, ClientTag);
 
             Execute(this, msg);
         }
     }
     
-    public void Execute(UploadClient client, IPacket packet)
+    private void Execute(UploadClient client, IPacket packet)
     {
         if (!_actions.TryGetValue(packet.ID, out var action))
         {
@@ -89,18 +91,17 @@ public class UploadClient : Client
         action?.Invoke(client, packet);
     }
 
-    public void OnLoginResult(UploadClient client, IPacket packet)
+    private void OnLoginResult(UploadClient client, IPacket packet)
     {
         var msg = packet.GetDataStruct<TS_US_LOGIN_RESULT>();
 
         if (msg.Result > 0)
         {
-            // _logger.LogError("Failed to register to the Auth Server!");
+            _logger.Error("Failed to register to the Upload Server!");
             throw new Exception();
 
         }
 
-        // _logger.LogDebug("Successfully registered to the Upload Server!");
-        Console.WriteLine("Successfully registered to the Upload Server!");
+        _logger.Debug("Successfully registered to the Upload Server!");
     }
 }

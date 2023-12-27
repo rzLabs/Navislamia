@@ -3,7 +3,7 @@
 namespace Navislamia.Game.Network.Entities;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct LobbyCharacterInfoEntity
+public struct LobbyCharacterInfo
 {
     public int Sex;
     public int Race;
@@ -49,7 +49,7 @@ public struct LobbyCharacterInfoEntity
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 24)]
     public char[] WearItemElementalType;
 
-    public LobbyCharacterInfoEntity()
+    public LobbyCharacterInfo()
     {
         WearInfo = new int[24];
         WearItemLevelInfo = new int[24];

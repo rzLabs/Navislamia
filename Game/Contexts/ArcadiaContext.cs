@@ -16,11 +16,6 @@ public class ArcadiaContext : SoftDeletionContext
         _dbOptions = dbOptions.Value;
     }
 
-    public ArcadiaContext(DbContextOptions<ArcadiaContext> psqlArcadiaContext)
-    {
-        throw new System.NotImplementedException();
-    }
-
     public DbSet<ChannelResourceEntity> ChannelResources { get; set; }
     public DbSet<GlobalVariableEntity> GlobalVariables { get; set; }
     public DbSet<ItemResourceEntity> ItemResources { get; set; }

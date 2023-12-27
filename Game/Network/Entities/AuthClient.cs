@@ -6,11 +6,14 @@ using System.Runtime.InteropServices;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Network.Packets.Enums;
+using Serilog;
 
 namespace Navislamia.Game.Network.Entities;
 
 public class AuthClient : Client
 {
+    private readonly ILogger _logger = Log.ForContext<AuthClient>();
+
     private readonly Dictionary<ushort, Action<AuthClient, IPacket>> _actions = new();
 
     private GameClient AffectedGameClient { get;set; }
@@ -121,19 +124,16 @@ public class AuthClient : Client
             throw new Exception("Failed to register to the Auth Server!");
         }
         
-        Console.WriteLine("Successfully registered to the Auth Server!");
-        // _logger.LogDebug("Successfully registered to the Auth Server!");
+        _logger.Debug("Successfully registered to the Auth Server!");
     }
 
-    // Only gameclient is affected but its an auth packet so the action should be performed here.
-    // Thats why the first parameter is authclient
     private void OnAuthClientLoginResult(AuthClient authClient, IPacket packet)
     {
         var userLogin = packet.GetDataStruct<TS_AG_CLIENT_LOGIN>();
         // Check if the game networkService connection is queued in AuthAccounts
         if (AffectedGameClient.Authorized)
         {
-            // _logger.LogError("Account register failed for: {accountName}", agClientLogin.Account);
+            _logger.Error("Account register failed for: {accountName}", userLogin.Account);
             // TODO: SendLogoutToAuth user is already islogged in, wrong credentials etc -> send logout to auth
             userLogin.Result = (ushort)ResultCode.AccessDenied;
         }

@@ -74,9 +74,10 @@ public class NetworkService : INetworkService
     {
         var client = new GameClient(socket, _networkOptions.CipherKey, _networkOptions.MaxConnections,
             _characterService, AuthClient);
-        client.CreateClientConnection();
-        GameClients.Add(client);
         
+        client.CreateClientConnection();
+        
+        GameClients.Add(client);
         AuthClient.SetAffectedGameClient(client);
 
         return client;
