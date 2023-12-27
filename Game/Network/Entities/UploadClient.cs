@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
 using Serilog;
@@ -12,22 +13,23 @@ namespace Navislamia.Game.Network.Entities;
 public class UploadClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<UploadClient>();
-    private readonly Dictionary<ushort, Action<UploadClient, IPacket>> _actions = new();
     public bool Ready { get; private set; }
+    private UploadActions Actions { get; }
 
-    public UploadClient(string ip, int port)
+    public UploadClient(string ip, int port, UploadActions uploadActions)
     {
         Type = ClientType.Upload;
         CreateClientConnection(ip, port);
-        
-        _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
+
+        Actions = uploadActions;
     }
 
     private void CreateClientConnection(string ip, int port)
     {
         if (!IPAddress.TryParse(ip, out var ipParsed))
         {
-            throw new Exception($"Failed to parse upload ip: {ip}");
+            _logger.Error("Failed to parse ip {ip} for Upload", ip);
+            return;
         }
         
         var uploadEndpoint = new IPEndPoint(ipParsed, port);
@@ -81,31 +83,12 @@ public class UploadClient : Client
             _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
                 msg.Length, ClientTag);
 
-            Execute(this, msg);
+            Execute(msg);
         }
     }
     
-    private void Execute(UploadClient client, IPacket packet)
+    private void Execute(IPacket packet)
     {
-        if (!_actions.TryGetValue(packet.ID, out var action))
-        {
-            return;
-        }
-            
-        action?.Invoke(client, packet);
-    }
-
-    private void OnLoginResult(UploadClient client, IPacket packet)
-    {
-        var msg = packet.GetDataStruct<TS_US_LOGIN_RESULT>();
-
-        if (msg.Result > 0)
-        {
-            _logger.Error("Failed to register to the Upload Server!");
-            throw new Exception();
-
-        }
-
-        _logger.Debug("Successfully registered to the Upload Server!");
+        Task.Run(() => Actions.Execute(this, packet));
     }
 }

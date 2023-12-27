@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Models.Telecaster;
-using Navislamia.Game.Repositories;
-using Navislamia.Game.Repositories.Interfaces;
 
 namespace Navislamia.Game.Services;
 
@@ -17,9 +16,9 @@ public class CharacterService : ICharacterService
         _characterRepository = characterRepository;
     }
 
-    public IEnumerable<CharacterEntity> GetCharactersByAccountName(string accountName, bool withItems = false)
+    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
     {
-        return _characterRepository.GetCharactersByAccountName(accountName, withItems);
+        return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
     }
 
     public async Task CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)

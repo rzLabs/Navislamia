@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.Models.Navislamia;
 using Navislamia.Game.Network;
-using Navislamia.Game.Repositories;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
@@ -15,6 +14,7 @@ using Navislamia.Game.Network.Packets;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Network.Interfaces;
 
 namespace Navislamia.Game;

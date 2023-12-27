@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Network.Packets.Enums;
@@ -14,40 +16,30 @@ public class AuthClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<AuthClient>();
 
-    private readonly Dictionary<ushort, Action<AuthClient, IPacket>> _actions = new();
-
-    private GameClient AffectedGameClient { get;set; }
     public bool Ready { get; private set; }
+    private readonly AuthActions _actions;
+    public List<GameClient> AuthorizedClients { get; set; }
 
-    public AuthClient(string ip, int port)
+    public AuthClient(string ip, int port, List<GameClient> authorizedClients, AuthActions authActions)
     {
         Type = ClientType.Auth;
-        CreateClientConnection(ip, port);
-        
-        _actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
-        _actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
-        _actions[(ushort)AuthPackets.TS_GA_CLIENT_LOGOUT] = OnClientLogout;
-    }
+        AuthorizedClients = authorizedClients;
+        _actions = authActions;
 
+        CreateClientConnection(ip, port);
+    }
+    
     public void SetAffectedGameClient(GameClient client)
     {
-        AffectedGameClient = client;
-    }
-
-    private void OnClientLogout(AuthClient client, IPacket packet)
-    {
-        if (AffectedGameClient.Authorized)
-        {
-            // TODO AffectedGameClient.ContinuousPlayTime 
-            AffectedGameClient.Connection.Disconnect();
-        }
+        _actions.SetAffectedGameClient(client);
     }
     
     private void CreateClientConnection(string ip, int port)
     {
         if (!IPAddress.TryParse(ip, out var ipParsed))
         {
-            throw new Exception($"Failed to parse auth ip: {ip}");
+            _logger.Error("Failed to parse ip {ip} for auth", ip);
+            return;
         }
         
         var authEndPoint = new IPEndPoint(ipParsed, port);
@@ -86,8 +78,8 @@ public class AuthClient : Client
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(AuthPackets), header.ID))
             {
-                // _logger.LogDebug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID,
-                //     header.Length, ClientTag);
+                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID,
+                    header.Length, ClientTag);
                 continue;
             }
 
@@ -100,62 +92,17 @@ public class AuthClient : Client
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            // _logger.LogDebug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
-            //     msg.Length, ClientTag);
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
+                msg.Length, ClientTag);
 
-            Execute(this, msg);
+            Execute(msg);
         }
         
     }
     
-    private void Execute(AuthClient client, IPacket packet)
+    private void Execute(IPacket packet)
     {
-        if (!_actions.TryGetValue(packet.ID, out var action))
-        {
-            return;
-        }
-
-        action?.Invoke(client, packet);
-    }
-    
-    private void OnLoginResult(AuthClient client, IPacket packet)
-    {
-        var msg = packet.GetDataStruct<TS_AG_LOGIN_RESULT>();
-
-        if (msg.Result > 0)
-        {
-            throw new Exception("Failed to register to the Auth Server!");
-        }
-        
-        _logger.Debug("Successfully registered to the Auth Server!");
-    }
-
-    private void OnAuthClientLoginResult(AuthClient authClient, IPacket packet)
-    {
-        var userLogin = packet.GetDataStruct<TS_AG_CLIENT_LOGIN>();
-        // Check if the game networkService connection is queued in AuthAccounts
-        if (AffectedGameClient.Authorized)
-        {
-            _logger.Error("Account register failed for: {accountName}", userLogin.Account);
-            // TODO: SendLogoutToAuth user is already islogged in, wrong credentials etc -> send logout to auth
-            userLogin.Result = (ushort)ResultCode.AccessDenied;
-        }
-        else
-        {
-            if (userLogin.Result == (ushort)ResultCode.Success)
-            {
-                AffectedGameClient.AccountName = userLogin.Account;
-                AffectedGameClient.AccountId = userLogin.AccountID;
-                AffectedGameClient.AuthVerified = true;
-                AffectedGameClient.PcBangMode = userLogin.PcBangMode;
-                AffectedGameClient.EventCode = userLogin.EventCode;
-                AffectedGameClient.Age = userLogin.Age;
-                AffectedGameClient.ContinuousPlayTime = userLogin.ContinuousPlayTime;
-                AffectedGameClient.ContinuousLogoutTime = userLogin.ContinuousLogoutTime;
-            }
-            AffectedGameClient.Authorized = true;
-        }
-
-        AffectedGameClient.SendResult((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, userLogin.Result);
+        // TODO test if this actually allows concurrent executen or if it waits to finish this task
+        Task.Run(() => _actions.Execute(this, packet));
     }
 }

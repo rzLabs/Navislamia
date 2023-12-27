@@ -1,5 +1,5 @@
-﻿using DevConsole.Extensions;
-using Navislamia.Configuration.Options;
+﻿using Navislamia.Configuration.Options;
+using Navislamia.Game.DataAccess.Extensions;
 using Npgsql;
 
 namespace Tests.DataAccess;
@@ -7,13 +7,6 @@ namespace Tests.DataAccess;
 [TestFixture]
 public class DatabaseOptionsTests
 {
-
-    [SetUp]
-    public void Setup()
-    {
-        
-    }
-    
     [Test]
     public void DatabaseOptions_ReturnsConnectionString_WhenOptionsAreValid()
     {

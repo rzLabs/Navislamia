@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using MigrateDatabase.MigrationContexts;
 using MigrateDatabase.MssqlEntities.Arcadia;
 using Navislamia.Configuration.Options;
-using Navislamia.Game.Contexts;
+using Navislamia.Game.DataAccess.Contexts;
 using Navislamia.Game.Models;
 using Navislamia.Game.Models.Arcadia;
 using Navislamia.Game.Models.Arcadia.Enums;

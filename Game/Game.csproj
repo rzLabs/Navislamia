@@ -27,9 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Game\" />
-    <Folder Include="Migrations\Arcadia\" />
-    <Folder Include="Migrations\Telecaster\" />
+    <Folder Include="DataAccess\" />
   </ItemGroup>
 
 </Project>
