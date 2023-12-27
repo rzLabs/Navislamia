@@ -17,10 +17,12 @@ public class AuthClient : Client
     private readonly Dictionary<ushort, Action<AuthClient, IPacket>> _actions = new();
 
     private GameClient AffectedGameClient { get;set; }
-    
-    public AuthClient()
+    public bool Ready { get; private set; }
+
+    public AuthClient(string ip, int port)
     {
         Type = ClientType.Auth;
+        CreateClientConnection(ip, port);
         
         _actions[(ushort)AuthPackets.TS_AG_LOGIN_RESULT] = OnLoginResult;
         _actions[(ushort)AuthPackets.TS_AG_CLIENT_LOGIN] = OnAuthClientLoginResult;
@@ -32,7 +34,7 @@ public class AuthClient : Client
         AffectedGameClient = client;
     }
 
-    public void OnClientLogout(AuthClient client, IPacket packet)
+    private void OnClientLogout(AuthClient client, IPacket packet)
     {
         if (AffectedGameClient.Authorized)
         {
@@ -41,7 +43,7 @@ public class AuthClient : Client
         }
     }
     
-    public void CreateClientConnection(string ip, int port)
+    private void CreateClientConnection(string ip, int port)
     {
         if (!IPAddress.TryParse(ip, out var ipParsed))
         {
@@ -58,7 +60,8 @@ public class AuthClient : Client
         Connection.OnDataSent = OnDataSent;
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
-        Connection.Start();;
+        Connection.Start();
+        Ready = true;
     }
 
     public override void OnDataReceived(int bytesReceived)
@@ -105,7 +108,7 @@ public class AuthClient : Client
         
     }
     
-    public void Execute(AuthClient client, IPacket packet)
+    private void Execute(AuthClient client, IPacket packet)
     {
         if (!_actions.TryGetValue(packet.ID, out var action))
         {

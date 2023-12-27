@@ -21,7 +21,6 @@ public class NetworkService : INetworkService
     private AuthClient AuthClient { get; set; }
     private UploadClient UploadClient { get; set; }
     private List<GameClient> GameClients { get; set; } = new();
-    
     private readonly NetworkOptions _networkOptions;
 
     public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService)
@@ -33,7 +32,7 @@ public class NetworkService : INetworkService
     
     public bool IsReady()
     {
-        return AuthClient.Connection.Connected && UploadClient.Connection.Connected;
+        return AuthClient.Ready && UploadClient.Ready;
     }
     
     public void SendMessageToAuth(IPacket packet)
@@ -54,8 +53,7 @@ public class NetworkService : INetworkService
             return;
         }
 
-        AuthClient = new AuthClient();
-        AuthClient.CreateClientConnection(_networkOptions.Auth.Ip, _networkOptions.Auth.Port);
+        AuthClient = new AuthClient(_networkOptions.Auth.Ip, _networkOptions.Auth.Port);
     }
 
     public void CreateUploadClient()
@@ -66,8 +64,7 @@ public class NetworkService : INetworkService
             return;
         }
 
-        UploadClient = new UploadClient();
-        UploadClient.CreateClientConnection(_networkOptions.Upload.Ip, _networkOptions.Upload.Port);
+        UploadClient = new UploadClient(_networkOptions.Upload.Ip, _networkOptions.Upload.Port);
     }
 
     public GameClient CreateGameClient(Socket socket)

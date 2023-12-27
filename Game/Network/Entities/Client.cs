@@ -18,8 +18,6 @@ public class Client
 
     public virtual void OnDataReceived(int bytesReceived) { }
 
-    public virtual void OnDisconnect(string accountName) { }
-    
     public virtual void SendMessage(IPacket msg)
     {
         Connection.Send(msg.Data);

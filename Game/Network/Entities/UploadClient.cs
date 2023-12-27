@@ -13,14 +13,17 @@ public class UploadClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<UploadClient>();
     private readonly Dictionary<ushort, Action<UploadClient, IPacket>> _actions = new();
+    public bool Ready { get; private set; }
 
-    public UploadClient()
+    public UploadClient(string ip, int port)
     {
         Type = ClientType.Upload;
+        CreateClientConnection(ip, port);
+        
         _actions[(ushort)UploadPackets.TS_US_LOGIN_RESULT] = OnLoginResult;
     }
-    
-    public void CreateClientConnection(string ip, int port)
+
+    private void CreateClientConnection(string ip, int port)
     {
         if (!IPAddress.TryParse(ip, out var ipParsed))
         {
@@ -37,7 +40,8 @@ public class UploadClient : Client
         Connection.OnDataSent = OnDataSent;
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
-        Connection.Start();;
+        Connection.Start();
+        Ready = true;
     }
     
     public override void OnDataReceived(int bytesReceived)
