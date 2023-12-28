@@ -13,15 +13,19 @@ namespace Navislamia.Game.Network.Entities;
 public class UploadClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<UploadClient>();
+    private readonly NetworkService _networkService;
+    private readonly UploadActions _actions;
+    
     public bool Ready { get; private set; }
-    private UploadActions Actions { get; }
-
-    public UploadClient(string ip, int port, UploadActions uploadActions)
+    
+    public UploadClient(NetworkService networkService)
     {
+        _networkService = networkService;
+        _actions = _networkService.UploadActions;
+        
         Type = ClientType.Upload;
-        CreateClientConnection(ip, port);
-
-        Actions = uploadActions;
+        
+        CreateClientConnection(_networkService.Options.Upload.Ip, _networkService.Options.Upload.Port);
     }
 
     private void CreateClientConnection(string ip, int port)
@@ -89,6 +93,6 @@ public class UploadClient : Client
     
     private void Execute(IPacket packet)
     {
-        Task.Run(() => Actions.Execute(this, packet));
+        Task.Run(() => _actions.Execute(this, packet));
     }
 }

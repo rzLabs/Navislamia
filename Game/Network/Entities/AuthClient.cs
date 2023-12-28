@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Configuration;
+using Microsoft.Extensions.Options;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Auth;
@@ -15,18 +17,19 @@ namespace Navislamia.Game.Network.Entities;
 public class AuthClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<AuthClient>();
-
-    public bool Ready { get; private set; }
+    private readonly NetworkService _networkService;
     private readonly AuthActions _actions;
-    public List<GameClient> AuthorizedClients { get; set; }
-
-    public AuthClient(string ip, int port, List<GameClient> authorizedClients, AuthActions authActions)
+    
+    public bool Ready { get; private set; }
+    
+    public AuthClient(NetworkService networkService)
     {
+        _networkService = networkService;
+        _actions = _networkService.AuthActions;
+        
         Type = ClientType.Auth;
-        AuthorizedClients = authorizedClients;
-        _actions = authActions;
 
-        CreateClientConnection(ip, port);
+        CreateClientConnection(_networkService.Options.Auth.Ip, _networkService.Options.Auth.Port);
     }
     
     public void SetAffectedGameClient(GameClient client)
@@ -102,7 +105,7 @@ public class AuthClient : Client
     
     private void Execute(IPacket packet)
     {
-        // TODO test if this actually allows concurrent executen or if it waits to finish this task
+        // TODO somehow set related gameclient here 
         Task.Run(() => _actions.Execute(this, packet));
     }
 }

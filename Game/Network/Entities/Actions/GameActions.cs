@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Configuration;
 using Navislamia.Game.Models.Arcadia.Enums;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Services;
@@ -15,15 +16,16 @@ public class GameActions
 {
     private readonly ILogger _logger = Log.ForContext<GameActions>();
     private readonly ICharacterService _characterService;
-    
+    private readonly NetworkService _networkService;
+
     private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
     public AuthClient AuthClient { get; set; }
     public List<GameClient> AuthorizedClients { get; set; }
 
-    public GameActions(ICharacterService characterService, List<GameClient> authorizedClients)
+    public GameActions(List<GameClient> authorizedClients, ICharacterService characterService, NetworkService networkService)
     {
         _characterService = characterService;
-        
+        _networkService = networkService;
         AuthorizedClients = authorizedClients;
 
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
@@ -122,11 +124,10 @@ public class GameActions
     private void OnAccountWithAuth(GameClient client, IPacket packet)
     {
         var message = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
-        var connMax = client.MaxConnections;
         var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
             new TS_GA_CLIENT_LOGIN(message.Account, message.OneTimePassword));
 
-        if (AuthorizedClients.Count > connMax)
+        if (AuthorizedClients.Count > _networkService.Options.MaxConnections)
         {
             client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
         }

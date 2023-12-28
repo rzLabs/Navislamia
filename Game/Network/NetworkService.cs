@@ -18,26 +18,25 @@ public class NetworkService : INetworkService
 {
     private readonly ILogger<NetworkService> _logger;
     private readonly ICharacterService _characterService;
-    private readonly NetworkOptions _networkOptions;
+    public readonly NetworkOptions Options;
 
-    private AuthClient AuthClient { get; set; }
-    private UploadClient UploadClient { get; set; }
-    private List<GameClient> GameClients { get; set; } = new();
+    public AuthClient AuthClient { get; set; }
+    public UploadClient UploadClient { get; set; }
+    public List<GameClient> GameClients { get; set; } = new();
     
-    private readonly AuthActions _authActions;
-    private readonly UploadActions _uploadActions;
-    private readonly GameActions _gameActions;
-
+    public readonly AuthActions AuthActions;
+    public readonly UploadActions UploadActions;
+    public readonly GameActions GameActions;
 
     public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService)
     {
         _logger = logger;
         _characterService = characterService;
-        _networkOptions = networkOptions.Value;
+        Options = networkOptions.Value;
 
-        _authActions = new AuthActions(GameClients);
-        _uploadActions = new UploadActions();
-        _gameActions = new GameActions(_characterService, GameClients);
+        AuthActions = new AuthActions(GameClients);
+        UploadActions = new UploadActions();
+        GameActions = new GameActions(GameClients, _characterService, this);
     }
 
     public bool IsReady()
@@ -63,8 +62,8 @@ public class NetworkService : INetworkService
             return;
         }
 
-        AuthClient = new AuthClient(_networkOptions.Auth.Ip, _networkOptions.Auth.Port, GameClients, _authActions);
-        _gameActions.AuthClient = AuthClient;
+        AuthClient = new AuthClient(this);
+        GameActions.AuthClient = AuthClient;
     }
 
     public void CreateUploadClient()
@@ -75,16 +74,14 @@ public class NetworkService : INetworkService
             return;
         }
 
-        UploadClient = new UploadClient(_networkOptions.Upload.Ip, _networkOptions.Upload.Port, _uploadActions);
+        UploadClient = new UploadClient(this);
     }
 
     public GameClient CreateGameClient(Socket socket)
     {
-        var client = new GameClient(socket, _networkOptions.CipherKey, _networkOptions.MaxConnections,
-            _characterService, AuthClient, GameClients, _gameActions);
+        var client = new GameClient(socket, this);
         
         client.CreateClientConnection();
-        
         AuthClient.SetAffectedGameClient(client);
 
         return client;

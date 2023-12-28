@@ -4,56 +4,30 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Arcadia.Enums;
+using Configuration;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
-using Navislamia.Game.Services;
 using Navislamia.Network.Packets;
 using Serilog;
 
 namespace Navislamia.Game.Network.Entities;
 
-public class GameClient : Client, IDisposable
+public class GameClient : ExtendedGameClient, IDisposable
 {
     private readonly ILogger _logger = Log.ForContext<GameClient>();
-    
-    public string AccountName { get; set; }
-    public List<string> CharacterList { get; set; } = new();
-    // TODO: StructPlayer Player;
-    public int AccountId { get; set; }
-    public int Version { get; set; }
-    public float LastReadTime { get; set; }
-    public bool AuthVerified { get; set; }
-    public byte PcBangMode { get; set; }
-    public int EventCode { get; set; }
-    public int Age { get; set; }
-    public int AgeLimitFlags { get; set; }
-    public float ContinuousPlayTime { get; set; }
-    public float ContinuousLogoutTime { get; set; }
-    public float LastContinuousPlayTimeProcTime;
-    public string NameToDelete { get; set; }
-    public bool StorageSecurityCheck { get; set; } = false;
-    public bool Authorized { get; set; }
-    public int MaxConnections { get; set; } // to avoid injecting options into the client itself, i pass it through the service, find a 
-
+    private readonly NetworkService _networkService;
     private readonly GameActions _actions;
-    private AuthClient AuthClient { get; set; }
 
-    private readonly ICharacterService _characterService;
-    
-    public GameClient(Socket socket, string cipherKey, int maxConnections, ICharacterService characterService, 
-        AuthClient authClient, List<GameClient> authorizedClients, GameActions gameActions)
+    public GameClient(Socket socket, NetworkService networkService)
     {
-        AuthClient = authClient;
+        _networkService = networkService;
+        _actions = _networkService.GameActions;
+
         Type = ClientType.Game;
         Authorized = false;
-        Connection = new CipherConnection(socket, cipherKey);
+        Connection = new CipherConnection(socket, _networkService.Options.CipherKey);
 
-        _characterService = characterService;
-        MaxConnections = maxConnections;
-        _actions = gameActions;
     }
     
     public void CreateClientConnection()
@@ -68,7 +42,7 @@ public class GameClient : Client, IDisposable
     public override void OnDisconnect()
     {
         var packet = new Packet<TS_GA_CLIENT_LOGOUT>((ushort)AuthPackets.TS_GA_CLIENT_LOGOUT, new TS_GA_CLIENT_LOGOUT(AccountName, (uint)ContinuousPlayTime));
-        AuthClient.SendMessage(packet);
+        _networkService.AuthClient.SendMessage(packet);
         Authorized = false;
         Dispose();
     }
