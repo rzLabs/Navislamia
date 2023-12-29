@@ -17,24 +17,12 @@ namespace Navislamia.Game.Network.Entities;
 public class AuthClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<AuthClient>();
-    private readonly NetworkService _networkService;
-    private readonly AuthActions _actions;
     
-    public bool Ready { get; private set; }
+    public bool Ready { get; set; }
     
-    public AuthClient(NetworkService networkService)
-    {
-        _networkService = networkService;
-        _actions = _networkService.AuthActions;
-        
-        Type = ClientType.Auth;
-
-        CreateClientConnection(_networkService.Options.Auth.Ip, _networkService.Options.Auth.Port);
-    }
-    
-    public void SetAffectedGameClient(GameClient client)
-    {
-        _actions.SetAffectedGameClient(client);
+    public AuthClient(NetworkService networkService) : base(networkService, ClientType.Auth)
+    {        
+        CreateClientConnection(networkService.Options.Auth.Ip, networkService.Options.Auth.Port);
     }
     
     private void CreateClientConnection(string ip, int port)
@@ -50,13 +38,10 @@ public class AuthClient : Client
         authSock.Connect(authEndPoint.Address, authEndPoint.Port);
 
         Connection = new Connection(authSock);
-        ClientTag = $"{Type} Server @{Connection.LocalIp}:{Connection.LocalPort}";
-
         Connection.OnDataSent = OnDataSent;
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
         Connection.Start();
-        Ready = true;
     }
 
     public override void OnDataReceived(int bytesReceived)
@@ -98,14 +83,8 @@ public class AuthClient : Client
             _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
                 msg.Length, ClientTag);
 
-            Execute(msg);
+            Actions.Execute(this, msg);
         }
         
-    }
-    
-    private void Execute(IPacket packet)
-    {
-        // TODO somehow set related gameclient here 
-        Task.Run(() => _actions.Execute(this, packet));
     }
 }

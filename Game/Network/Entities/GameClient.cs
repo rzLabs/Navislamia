@@ -13,38 +13,20 @@ using Serilog;
 
 namespace Navislamia.Game.Network.Entities;
 
-public class GameClient : ExtendedGameClient, IDisposable
+public class GameClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<GameClient>();
-    private readonly NetworkService _networkService;
-    private readonly GameActions _actions;
-
-    public GameClient(Socket socket, NetworkService networkService)
+    public GameClient(Socket socket, NetworkService networkService) : base(networkService, ClientType.Game)
     {
-        _networkService = networkService;
-        _actions = _networkService.GameActions;
-
-        Type = ClientType.Game;
-        Authorized = false;
-        Connection = new CipherConnection(socket, _networkService.Options.CipherKey);
-
+        Connection = new CipherConnection(socket, networkService.Options.CipherKey);
     }
     
     public void CreateClientConnection()
     {
-        ClientTag = $"{Type} Server @{Connection.RemoteIp}:{Connection.RemotePort}";
         Connection.OnDataSent = OnDataSent;
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
         Connection.Start();;
-    }
-
-    public override void OnDisconnect()
-    {
-        var packet = new Packet<TS_GA_CLIENT_LOGOUT>((ushort)AuthPackets.TS_GA_CLIENT_LOGOUT, new TS_GA_CLIENT_LOGOUT(AccountName, (uint)ContinuousPlayTime));
-        _networkService.AuthClient.SendMessage(packet);
-        Authorized = false;
-        Dispose();
     }
 
     public void SendResult(ushort id, ushort result, int value = 0)
@@ -67,7 +49,7 @@ public class GameClient : ExtendedGameClient, IDisposable
                 _logger.Warning(
                     "Partial packet received from {clientTag} !!! ID: {id} Length: {length} Available Data: {remaining}",
                     ClientTag, header.ID, header.Length, remainingData);
-                Console.WriteLine($"Partial packet received from {ClientTag}");
+
                 return;
             }
 
@@ -92,7 +74,7 @@ public class GameClient : ExtendedGameClient, IDisposable
             // TM_NONE is a dummy packet sent by the clientService for...."reasons"
             if (header.ID == (ushort)GamePackets.TM_NONE)
             {
-                _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", "TM_NONE", header.ID, header.Length, ClientTag);
+                _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", "TM_NONE", header.ID, header.Length, ClientTag);
                 continue;
             }
 
@@ -109,23 +91,7 @@ public class GameClient : ExtendedGameClient, IDisposable
 
             _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
 
-            Execute(msg);
+            Actions.Execute(this, msg);
         }
-    }
-
-    private void Execute(IPacket packet)
-    {
-        Task.Run(() => _actions.Execute(this, packet));
-    }
-
-    public void Dispose()
-    {
-        if (Connection != null)
-        {
-            Connection.Disconnect();
-            Connection = null;
-        }
-        
-        GC.SuppressFinalize(this);
     }
 }

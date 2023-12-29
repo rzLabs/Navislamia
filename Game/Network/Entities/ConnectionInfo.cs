@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Navislamia.Game.Network.Entities;
 
-public class ExtendedGameClient : Client
+public class ConnectionInfo
 {
     public string AccountName { get; set; }
     public List<string> CharacterList { get; set; } = new();
@@ -20,5 +20,4 @@ public class ExtendedGameClient : Client
     public float LastContinuousPlayTimeProcTime;
     public string NameToDelete { get; set; }
     public bool StorageSecurityCheck { get; set; } = false;
-    public bool Authorized { get; set; }
 }

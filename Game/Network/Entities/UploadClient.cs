@@ -13,19 +13,12 @@ namespace Navislamia.Game.Network.Entities;
 public class UploadClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<UploadClient>();
-    private readonly NetworkService _networkService;
-    private readonly UploadActions _actions;
     
-    public bool Ready { get; private set; }
+    public bool Ready { get; set; }
     
-    public UploadClient(NetworkService networkService)
-    {
-        _networkService = networkService;
-        _actions = _networkService.UploadActions;
-        
-        Type = ClientType.Upload;
-        
-        CreateClientConnection(_networkService.Options.Upload.Ip, _networkService.Options.Upload.Port);
+    public UploadClient(NetworkService networkService) : base(networkService, ClientType.Upload)
+    {       
+        CreateClientConnection(networkService.Options.Upload.Ip, networkService.Options.Upload.Port);
     }
 
     private void CreateClientConnection(string ip, int port)
@@ -41,13 +34,10 @@ public class UploadClient : Client
         uploadSock.Connect(uploadEndpoint.Address, uploadEndpoint.Port);
 
         Connection = new Connection(uploadSock);
-        ClientTag = $"{Type} Server @{Connection.LocalIp}:{Connection.LocalPort}";
-
         Connection.OnDataSent = OnDataSent;
         Connection.OnDataReceived = OnDataReceived;
         Connection.OnDisconnected = OnDisconnect;
         Connection.Start();
-        Ready = true;
     }
     
     public override void OnDataReceived(int bytesReceived)
@@ -87,12 +77,7 @@ public class UploadClient : Client
             _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
                 msg.Length, ClientTag);
 
-            Execute(msg);
+            Actions.Execute(this, msg);
         }
-    }
-    
-    private void Execute(IPacket packet)
-    {
-        Task.Run(() => _actions.Execute(this, packet));
     }
 }

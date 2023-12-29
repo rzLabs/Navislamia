@@ -17,26 +17,22 @@ namespace Navislamia.Game.Network;
 public class NetworkService : INetworkService
 {
     private readonly ILogger<NetworkService> _logger;
-    private readonly ICharacterService _characterService;
+    public readonly ICharacterService CharacterService;
     public readonly NetworkOptions Options;
 
     public AuthClient AuthClient { get; set; }
-    public UploadClient UploadClient { get; set; }
-    public List<GameClient> GameClients { get; set; } = new();
     
-    public readonly AuthActions AuthActions;
-    public readonly UploadActions UploadActions;
-    public readonly GameActions GameActions;
+    public UploadClient UploadClient { get; set; }
+    
+    public Dictionary<string, GameClient> UnauthorizedGameClients { get; set; } = new();
+
+    public Dictionary<string, GameClient> AuthorizedGameClients { get; set; } = new();
 
     public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService)
     {
         _logger = logger;
-        _characterService = characterService;
+        CharacterService = characterService;
         Options = networkOptions.Value;
-
-        AuthActions = new AuthActions(GameClients);
-        UploadActions = new UploadActions();
-        GameActions = new GameActions(GameClients, _characterService, this);
     }
 
     public bool IsReady()
@@ -63,7 +59,6 @@ public class NetworkService : INetworkService
         }
 
         AuthClient = new AuthClient(this);
-        GameActions.AuthClient = AuthClient;
     }
 
     public void CreateUploadClient()
@@ -82,7 +77,6 @@ public class NetworkService : INetworkService
         var client = new GameClient(socket, this);
         
         client.CreateClientConnection();
-        AuthClient.SetAffectedGameClient(client);
 
         return client;
     }

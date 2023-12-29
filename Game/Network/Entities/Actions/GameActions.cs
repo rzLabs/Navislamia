@@ -10,23 +10,22 @@ using Navislamia.Game.Services;
 using Navislamia.Network.Packets;
 using Serilog;
 
+using Navislamia.Game.Network.Interfaces;
+
 namespace Navislamia.Game.Network.Entities.Actions;
 
-public class GameActions
+public class GameActions : IActions
 {
     private readonly ILogger _logger = Log.ForContext<GameActions>();
     private readonly ICharacterService _characterService;
     private readonly NetworkService _networkService;
 
     private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
-    public AuthClient AuthClient { get; set; }
-    public List<GameClient> AuthorizedClients { get; set; }
-
-    public GameActions(List<GameClient> authorizedClients, ICharacterService characterService, NetworkService networkService)
+   
+    public GameActions(NetworkService networkService)
     {
-        _characterService = characterService;
         _networkService = networkService;
-        AuthorizedClients = authorizedClients;
+        _characterService = networkService.CharacterService;
 
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
         _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
@@ -34,11 +33,11 @@ public class GameActions
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
     }
     
-    public void Execute(GameClient client, IPacket packet)
+    public void Execute(Client client, IPacket packet)
     {
         if (_actions.TryGetValue(packet.ID, out var action))
         {
-            Task.Run(() => action?.Invoke(client, packet));
+            action?.Invoke(client as GameClient, packet);
         }
     }
     
@@ -123,23 +122,28 @@ public class GameActions
     
     private void OnAccountWithAuth(GameClient client, IPacket packet)
     {
-        var message = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
-        var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
-            new TS_GA_CLIENT_LOGIN(message.Account, message.OneTimePassword));
+        _logger.Debug("{clientTag} verifying with Auth Server", client.ClientTag);
 
-        if (AuthorizedClients.Count > _networkService.Options.MaxConnections)
+        var msg = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
+        var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
+            new TS_GA_CLIENT_LOGIN(msg.Account, msg.OneTimePassword));
+
+        if (_networkService.AuthorizedGameClients.Count > _networkService.Options.MaxConnections)
         {
             client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
         }
 
-        if (string.IsNullOrEmpty(client.AccountName))
+        if (string.IsNullOrEmpty(client.ConnectionInfo.AccountName))
         {
-            if (client.Authorized)
+            if (_networkService.UnauthorizedGameClients.ContainsKey(msg.Account))
             {
                 client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
+                return;
             }
+
+            _networkService.UnauthorizedGameClients.Add(msg.Account, client);
         }
     
-        AuthClient.SendMessage(loginInfo);
+        _networkService.AuthClient.SendMessage(loginInfo);
     }
 }
