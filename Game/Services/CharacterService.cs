@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Telecaster;
 
 namespace Navislamia.Game.Services;
 
@@ -21,7 +21,7 @@ public class CharacterService : ICharacterService
         return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
     }
 
-    public async Task CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
+    public async Task<CharacterEntity>  CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
     {
         if (withStarterItems)
         {
@@ -41,8 +41,10 @@ public class CharacterService : ICharacterService
             }
         }
         
-        await _characterRepository.CreateCharacterAsync(character);
+        var result = await _characterRepository.CreateCharacterAsync(character);
         await _characterRepository.SaveChangesAsync();
+        
+        return result;
     }
 
     public bool CharacterExists(string characterName)

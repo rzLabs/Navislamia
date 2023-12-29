@@ -2,8 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Navislamia.Game.DataAccess.Entities;
 using Navislamia.Game.DataAccess.Extensions;
-using Navislamia.Game.Models;
 
 namespace Navislamia.Game.DataAccess.Contexts;
 

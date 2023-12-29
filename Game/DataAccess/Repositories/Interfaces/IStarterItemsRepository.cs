@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Navislamia.Game.Models.Enums;
-using Navislamia.Game.Models.Telecaster;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 
 namespace Navislamia.Game.DataAccess.Repositories.Interfaces;
 

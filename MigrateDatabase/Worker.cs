@@ -6,11 +6,10 @@ using MigrateDatabase.MigrationContexts;
 using MigrateDatabase.MssqlEntities.Arcadia;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.DataAccess.Contexts;
-using Navislamia.Game.Models;
-using Navislamia.Game.Models.Arcadia;
-using Navislamia.Game.Models.Arcadia.Enums;
-using Navislamia.Game.Models.Enums;
-using Navislamia.Game.Models.Telecaster;
+using Navislamia.Game.DataAccess.Entities;
+using Navislamia.Game.DataAccess.Entities.Arcadia;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Serilog;
 
 namespace MigrateDatabase;
