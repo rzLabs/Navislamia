@@ -36,6 +36,11 @@ public class CharacterRepository : ICharacterRepository
         await _context.Characters.AddAsync(character);
     }
 
+    public bool CharacterExists(string characterName)
+    {
+        return _context.Characters.AsNoTracking().Any(c=>c.CharacterName ==  characterName);
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

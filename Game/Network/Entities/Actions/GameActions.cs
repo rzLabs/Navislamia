@@ -11,6 +11,11 @@ using Navislamia.Network.Packets;
 using Serilog;
 
 using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets.Game;
+using Navislamia.Game.Network.Extensions;
+using Navislamia.Game.Models.Telecaster;
+
+using Navislamia.Game.Models.Enums;
 
 namespace Navislamia.Game.Network.Entities.Actions;
 
@@ -28,11 +33,13 @@ public class GameActions : IActions
         _characterService = networkService.CharacterService;
 
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
-        _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
-        _actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
+        _actions.Add((ushort)GamePackets.TM_CS_REPORT, OnReport);
+        _actions.Add((ushort)GamePackets.TM_CS_CHARACTER_LIST, OnCharacterList);
+        _actions.Add((ushort)GamePackets.TM_CS_CREATE_CHARACTER, OnCreateCharacter);
+        _actions.Add((ushort)GamePackets.TM_CS_CHECK_CHARACTER_NAME, OnCheckCharacterName);
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
     }
-    
+
     public void Execute(Client client, IPacket packet)
     {
         if (_actions.TryGetValue(packet.ID, out var action))
@@ -119,7 +126,78 @@ public class GameActions : IActions
         client.Connection.Send(packet.Data);
         
     }
-    
+
+    private void OnCreateCharacter(GameClient client, IPacket packet)
+    {
+        var _createMsg = packet.GetDataStruct<TS_CS_CREATE_CHARACTER>();
+
+        var _formattedName = _createMsg.Info.Name.FormatName();
+
+        var _character = new CharacterEntity() // We don't need to pass all info, most of it is safely ignored and should default when inserted to Character table
+        {
+            AccountName = client.ConnectionInfo.AccountName,
+            CharacterName = _formattedName,
+            Sex = _createMsg.Info.Sex,
+            Race = _createMsg.Info.Race,
+            Models = _createMsg.Info.ModelId,
+            HairColorIndex = _createMsg.Info.HairColorIndex,
+            TextureId = _createMsg.Info.TextureID,
+            SkinColor = (int)_createMsg.Info.SkinColor
+        };
+
+        // TODO: Nexitis this method needs to return a bool
+        // _characterService.CreateCharacterAsync(_character, true);
+
+        // TODO: needs to be like
+        /*
+         * if (!_characterService.CreateCharacterAsync(_character, true)
+         * {
+         *  client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied); // <--- this should never happen
+         * }
+         * 
+         * client.SendResult(packet.ID, (ushort)ResultCode.Success);
+         */
+    }
+
+    private void OnCheckCharacterName(GameClient client, IPacket packet)
+    {
+        var _nameMsg = packet.GetDataStruct<TS_CS_CHECK_CHARACTER_NAME>();
+
+        if (string.IsNullOrEmpty(_nameMsg.Name))
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
+
+            _logger.Debug("Character Name Check Failed! Empty Name for {clientTag} !!!", client.ClientTag);
+
+            return;
+        }
+
+        if (!_nameMsg.Name.IsValidName(4, 18))
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
+
+            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {clientTag} !!!", _nameMsg.Name, client.ClientTag);
+
+            return;
+        }
+
+        if (_characterService.CharacterExists(_nameMsg.Name)) 
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
+
+            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {clientTag} !!!", _nameMsg.Name, client.ClientTag);
+
+            return;
+        }
+
+        // TODO: Nexitis we must check IsBannedWord -> Banned Words are loaded from Arcadia.dbo.BanWordResource
+
+        _logger.Debug("Character Name Check Passed! for {clientTag}", client.ClientTag);
+
+        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+    }
+
+
     private void OnAccountWithAuth(GameClient client, IPacket packet)
     {
         _logger.Debug("{clientTag} verifying with Auth Server", client.ClientTag);

@@ -8,6 +8,7 @@ using Configuration;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Game;
 using Navislamia.Network.Packets;
 using Serilog;
 
@@ -82,9 +83,11 @@ public class GameClient : Client
             {
                 //(ushort)GamePackets.TM_NONE => null,
                 (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
-                (ushort)GamePackets.TS_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
+                (ushort)GamePackets.TM_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
+                (ushort)GamePackets.TM_CS_CREATE_CHARACTER => new Packet<TS_CS_CREATE_CHARACTER>(msgBuffer),
+                (ushort)GamePackets.TM_CS_CHECK_CHARACTER_NAME => new Packet<TS_CS_CHECK_CHARACTER_NAME>(msgBuffer),
                 (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
-                (ushort)GamePackets.TS_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
+                (ushort)GamePackets.TM_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
 
                 _ => throw new Exception("Unknown Packet Type")
             };

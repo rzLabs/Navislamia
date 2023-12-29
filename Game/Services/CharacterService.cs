@@ -44,4 +44,9 @@ public class CharacterService : ICharacterService
         await _characterRepository.CreateCharacterAsync(character);
         await _characterRepository.SaveChangesAsync();
     }
+
+    public bool CharacterExists(string characterName)
+    {
+        return _characterRepository.CharacterExists(characterName);
+    }
 }

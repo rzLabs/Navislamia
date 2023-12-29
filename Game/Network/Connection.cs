@@ -247,21 +247,29 @@ namespace Navislamia.Game.Network
                 return;
             }
             
-            var receiveBytes = Socket?.EndReceive(ar) ?? 0;
-
-            if (receiveBytes <= 0)
+            try
             {
-                return;
+                var receiveBytes = Socket?.EndReceive(ar) ?? 0;
+
+                if (receiveBytes <= 0)
+                {
+                    return;
+                }
+
+                BytesReceived += receiveBytes;
+
+                // set the available data tracker
+                _dataLength += receiveBytes;
+
+                OnDataReceived(_dataLength);
+
+                Listen();
             }
-            
-            BytesReceived += receiveBytes;
-
-            // set the available data tracker
-            _dataLength += receiveBytes;
-
-            OnDataReceived(_dataLength);
-
-            Listen();
+            catch (SocketException sockEx)
+            {
+                // likely a disconnection by the client
+                // this will be caught on the next poll of the client, so lets be silent here
+            }
         }
 
         /// <summary>
