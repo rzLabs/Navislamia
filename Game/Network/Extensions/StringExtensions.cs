@@ -10,19 +10,7 @@ namespace Navislamia.Game.Network.Extensions
     {
         public static bool IsValidName(this string name, int minLength, int maxLength)
         {
-            var _length = name.Length;
-
-            if (_length < minLength || _length > maxLength)
-            {
-                return false;
-            }
-
-            if (name.Any(c => !char.IsLetterOrDigit(c)))
-            {
-                return false;
-            }
-
-            return true;
+            return name.Length >= minLength && name.Length <= maxLength && name.All(char.IsLetterOrDigit);
         }
 
         public static string FormatName(this string name)

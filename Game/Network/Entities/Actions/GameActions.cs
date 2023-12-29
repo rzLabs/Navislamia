@@ -141,78 +141,53 @@ public class GameActions : IActions
             return;
         }
 
-        var characterName = createMsg.Info.Name.FormatName();
+        var selectedArmor = createMsg.Info.WearInfo[(int)ItemWearType.Armor];
+
+        // Set default weapon and armor ids
+        int defaultArmorId;
+        int defaultWeaponId;
+
+        switch ((Race)createMsg.Info.Race)
+        {
+            case Race.Deva:
+                defaultArmorId = selectedArmor == 602 ? 220109 : 220100;
+                defaultWeaponId = 106100;
+                break;
+
+            case Race.Gaia:
+                defaultArmorId = selectedArmor == 602 ? 240109 : 240100;
+                defaultWeaponId = 112100;
+                break;
+
+            case Race.Asura:
+                defaultArmorId = selectedArmor == 602 ? 230109 : 230100;
+                defaultWeaponId = 103100;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(createMsg.Info.Race));
+        }
 
         // We don't need to pass all info, most of it is safely ignored and should default when inserted to Character table
         var character = new CharacterEntity 
         {
             AccountId = client.ConnectionInfo.AccountId,
             AccountName = client.ConnectionInfo.AccountName,
-            CharacterName = characterName,
+            CharacterName = createMsg.Info.Name.FormatName(),
             Sex = createMsg.Info.Sex,
             Race = createMsg.Info.Race,
             Models = createMsg.Info.ModelId,
             HairColorIndex = createMsg.Info.HairColorIndex,
             TextureId = createMsg.Info.TextureID,
             SkinColor = (int)createMsg.Info.SkinColor,
-        };
-
-        var selectedArmor = createMsg.Info.WearInfo[(int)ItemWearType.Armor];
-
-        // Set default weapon and armor ids
-        var defaultArmorId = 0;
-        var defaultWeaponId = 0;
-
-        switch ((Race)character.Race)
-        {
-            case Race.Deva:
+            // Add default gear to the character
+            Items = new List<ItemEntity>
             {
-                    defaultArmorId = 220100;
+                new() { ItemResourceId = defaultArmorId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Armor, GenerateBySource = ItemGenerateSource.Basic },
+                new() { ItemResourceId = defaultWeaponId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Weapon, GenerateBySource = ItemGenerateSource.Basic },
 
-                    if (selectedArmor == 602)
-                    {
-                        defaultArmorId = 220109;
-                    }
-
-                    defaultWeaponId = 106100;
+                // TODO: bag item id should come from config
+                new() { ItemResourceId = 490001, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.BagSlot, GenerateBySource = ItemGenerateSource.Basic}
             }
-            break;
-
-            case Race.Gaia:
-                {
-                    defaultArmorId = 240100;
-
-                    if (selectedArmor == 602)
-                    {
-                        defaultArmorId = 240109;
-                    }
-
-                    defaultWeaponId = 112100;
-                }
-                break;
-
-            case Race.Asura:
-                {
-                    defaultArmorId = 230100;
-
-                    if (selectedArmor == 602)
-                    {
-                        defaultArmorId = 230109;
-                    }
-
-                    defaultWeaponId = 103100;
-                }
-                break;
-        }
-
-        // Add default gear to the character
-        character.Items = new List<ItemEntity>()
-        {
-            new() { ItemResourceId = defaultArmorId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Armor, GenerateBySource = ItemGenerateSource.Basic },
-            new() { ItemResourceId = defaultWeaponId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Weapon, GenerateBySource = ItemGenerateSource.Basic },
-
-            // TODO: bag item id should come from config
-            new() { ItemResourceId = 490001, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.BagSlot, GenerateBySource = ItemGenerateSource.Basic}
         };
 
         var createdEntity = await _characterService.CreateCharacterAsync(character);
@@ -238,7 +213,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
 
-            _logger.Debug("Character Name Check Failed! Empty Name for {accountName}{clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Empty Name for {accountName} {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -247,7 +222,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -256,7 +231,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -265,12 +240,12 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
 
-        _logger.Debug("Character Name Check Passed! for {accountName}{clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
+        _logger.Debug("Character Name Check Passed! for {accountName} {clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
 
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
