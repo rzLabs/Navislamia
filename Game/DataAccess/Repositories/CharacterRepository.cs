@@ -31,6 +31,7 @@ public class CharacterRepository : ICharacterRepository
 
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
+        var count = _context.Characters.AsNoTracking().Count(c => c.AccountId == character.AccountId);
         var result = (await _context.Characters.AddAsync(character)).Entity;
         return result;
     }
