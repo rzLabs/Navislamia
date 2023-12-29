@@ -29,7 +29,7 @@ public class CharacterRepository : ICharacterRepository
         return query;
     }
 
-    public async Task<CharacterEntity>  CreateCharacterAsync(CharacterEntity character)
+    public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
         var result = (await _context.Characters.AddAsync(character)).Entity;
         return result;
@@ -37,7 +37,7 @@ public class CharacterRepository : ICharacterRepository
 
     public bool CharacterExists(string characterName)
     {
-        return _context.Characters.AsNoTracking().Any(c=>c.CharacterName ==  characterName);
+        return _context.Characters.AsNoTracking().Any(c => c.CharacterName ==  characterName);
     }
 
     public async Task SaveChangesAsync()

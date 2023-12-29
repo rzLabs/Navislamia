@@ -21,7 +21,7 @@ public class CharacterService : ICharacterService
         return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
     }
 
-    public async Task<CharacterEntity>  CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
+    public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
     {
         if (withStarterItems)
         {

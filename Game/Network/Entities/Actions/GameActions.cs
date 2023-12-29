@@ -137,6 +137,7 @@ public class GameActions : IActions
         // We don't need to pass all info, most of it is safely ignored and should default when inserted to Character table
         var character = new CharacterEntity 
         {
+            AccountId = client.ConnectionInfo.AccountId,
             AccountName = client.ConnectionInfo.AccountName,
             CharacterName = characterName,
             Sex = createMsg.Info.Sex,
@@ -181,7 +182,7 @@ public class GameActions : IActions
             return;
         }
         
-        if (_bannedWordsRepository.IsBannedWord(nameMsg.Name))
+        if (_bannedWordsRepository.ContainsBannedWord(nameMsg.Name))
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 

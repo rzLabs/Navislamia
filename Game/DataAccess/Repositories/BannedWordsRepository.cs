@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Navislamia.Game.DataAccess.Contexts;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
@@ -17,13 +16,11 @@ public class BannedWordsRepository : IBannedWordsRepository
 
     public bool IsBannedWord(string value)
     {
-        return _context.BannedWordsResources.Any(b =>
-            string.Equals(b.Word, value, StringComparison.CurrentCultureIgnoreCase));
+        return _context.BannedWordsResources.Any(b => b.Word.ToLower() == value.ToLower());
     }
     
     public bool ContainsBannedWord(string value)
     {
-        return _context.BannedWordsResources.Any(b =>
-            b.Word.Contains(value, StringComparison.CurrentCultureIgnoreCase));
+        return _context.BannedWordsResources.Any(b => b.Word.ToLower().Contains(value.ToLower()));
     }
 }
