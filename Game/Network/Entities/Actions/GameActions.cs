@@ -154,11 +154,68 @@ public class GameActions : IActions
             Models = createMsg.Info.ModelId,
             HairColorIndex = createMsg.Info.HairColorIndex,
             TextureId = createMsg.Info.TextureID,
-            SkinColor = (int)createMsg.Info.SkinColor
+            SkinColor = (int)createMsg.Info.SkinColor,
         };
 
+        var selectedArmor = createMsg.Info.WearInfo[(int)ItemWearType.Armor];
 
-        var createdEntity = await _characterService.CreateCharacterAsync(character, true);
+        // Set default weapon and armor ids
+        var defaultArmorId = 0;
+        var defaultWeaponId = 0;
+
+        switch ((Race)character.Race)
+        {
+            case Race.Deva:
+            {
+                    defaultArmorId = 220100;
+
+                    if (selectedArmor == 602)
+                    {
+                        defaultArmorId = 220109;
+                    }
+
+                    defaultWeaponId = 106100;
+            }
+            break;
+
+            case Race.Gaia:
+                {
+                    defaultArmorId = 240100;
+
+                    if (selectedArmor == 602)
+                    {
+                        defaultArmorId = 240109;
+                    }
+
+                    defaultWeaponId = 112100;
+                }
+                break;
+
+            case Race.Asura:
+                {
+                    defaultArmorId = 230100;
+
+                    if (selectedArmor == 602)
+                    {
+                        defaultArmorId = 230109;
+                    }
+
+                    defaultWeaponId = 103100;
+                }
+                break;
+        }
+
+        // Add default gear to the character
+        character.Items = new List<ItemEntity>()
+        {
+            new() { ItemResourceId = defaultArmorId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Armor, GenerateBySource = ItemGenerateSource.Basic },
+            new() { ItemResourceId = defaultWeaponId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Weapon, GenerateBySource = ItemGenerateSource.Basic },
+
+            // TODO: bag item id should come from config
+            new() { ItemResourceId = 490001, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.BagSlot, GenerateBySource = ItemGenerateSource.Basic}
+        };
+
+        var createdEntity = await _characterService.CreateCharacterAsync(character);
 
         if (createdEntity == null)
         {
