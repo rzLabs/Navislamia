@@ -11,6 +11,8 @@ public interface ICharacterRepository
 
     bool CharacterExists(string characterName);
 
+    int CharacterCount(int accountId);
+
     /// <summary>
     /// Avoid using SaveChanges directly from context as it applies modifications directly to the database.
     /// Finish all required operations for a step then call this method

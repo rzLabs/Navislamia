@@ -52,4 +52,9 @@ public class CharacterService : ICharacterService
     {
         return _characterRepository.CharacterExists(characterName);
     }
+
+    public int CharacterCount(int accountId)
+    {
+        return _characterRepository.CharacterCount(accountId);
+    }
 }

@@ -40,6 +40,11 @@ public class CharacterRepository : ICharacterRepository
         return _context.Characters.AsNoTracking().Any(c => c.CharacterName ==  characterName);
     }
 
+    public int CharacterCount(int accountId)
+    {
+        return _context.Characters.AsNoTracking().Count(c=>c.AccountId == accountId);
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

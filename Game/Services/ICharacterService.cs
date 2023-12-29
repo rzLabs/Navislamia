@@ -12,4 +12,6 @@ public interface ICharacterService
 
     bool CharacterExists(string characterName);
 
+    int CharacterCount(int accountId);
+
 }

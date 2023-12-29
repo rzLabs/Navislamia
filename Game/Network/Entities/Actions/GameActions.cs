@@ -132,6 +132,15 @@ public class GameActions : IActions
     {
         var createMsg = packet.GetDataStruct<TS_CS_CREATE_CHARACTER>();
 
+        if (_characterService.CharacterCount(client.ConnectionInfo.AccountId) >= 6)
+        {
+            _logger.Debug("Character create failed! Limit reached! for {accountName}{clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+
+            client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
+
+            return;
+        }
+
         var characterName = createMsg.Info.Name.FormatName();
 
         // We don't need to pass all info, most of it is safely ignored and should default when inserted to Character table
@@ -148,14 +157,18 @@ public class GameActions : IActions
             SkinColor = (int)createMsg.Info.SkinColor
         };
 
+
         var createdEntity = await _characterService.CreateCharacterAsync(character, true);
 
         if (createdEntity == null)
         {
             // Should never happen
-            _logger.Error("Character with name {name} for account {accountName} was not successfully created", character.CharacterName, character.AccountName);
+            _logger.Error("Character create failed! for {accountName}{clientTag} !!!", character.AccountName, client.ClientTag);
+
             client.SendResult(packet.ID, (ushort)ResultCode.DBError);
         }
+
+        _logger.Debug("Character {characterName} successfully created for {accountName}{clientTag}", character.CharacterName, client.ConnectionInfo.AccountName, client.ClientTag);
 
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
@@ -168,7 +181,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
 
-            _logger.Debug("Character Name Check Failed! Empty Name for {clientTag} !!!", client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Empty Name for {accountName}{clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -177,7 +190,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {clientTag} !!!", nameMsg.Name, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -186,7 +199,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {clientTag} !!!", nameMsg.Name, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -195,12 +208,12 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {clientTag} !!!", nameMsg.Name, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {accountName}{clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
 
-        _logger.Debug("Character Name Check Passed! for {clientTag}", client.ClientTag);
+        _logger.Debug("Character Name Check Passed! for {accountName}{clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
 
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
