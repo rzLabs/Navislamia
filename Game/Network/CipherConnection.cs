@@ -7,7 +7,7 @@ using Network.Security;
 namespace Navislamia.Game.Network
 {
     /// <summary>
-    /// Abstraction of the Connection class that provides encode/decode capabilities for Game Client connections
+    /// Abstraction of the Connection class that provides encode/decode capabilities for Game BaseClientService connections
     /// </summary>
     public class CipherConnection : Connection, IConnection
     {

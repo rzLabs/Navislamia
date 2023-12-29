@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Configuration;
-using DevConsole.Extensions;
 using DevConsole.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -8,14 +7,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Navislamia.Configuration.Options;
 using Navislamia.Game;
-using Navislamia.Game.Contexts;
+using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Extensions;
+using Navislamia.Game.DataAccess.Repositories;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
 using Navislamia.Game.Network.Interfaces;
-using Navislamia.Game.Repositories;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Serilog;
+using Serilog.Exceptions;
 
 namespace DevConsole;
 
@@ -63,9 +65,10 @@ public class Program
             })
             .UseSerilog((context, configuration) =>
             {
-                configuration.ReadFrom.Configuration(context.Configuration).Enrich.With(new SourceContextEnricher());
+                configuration.ReadFrom.Configuration(context.Configuration)
+                    .Enrich.With(new SourceContextEnricher())
+                    .Enrich.WithExceptionDetails();
             });
-
     }
 
     private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
@@ -83,13 +86,19 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        // Modules
+        services.AddSingleton<IGameModule, GameModule>();
+        
+        // Repositories
+        services.AddSingleton<IWorldRepository, WorldRepository>();
+        services.AddSingleton<ICharacterRepository, CharacterRepository>();
+        services.AddSingleton<IStarterItemsRepository, StarterItemsRepository>();
+        
+        // Services
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IMapService, MapService>();
-        services.AddSingleton<IGameModule, GameModule>();
-        services.AddSingleton<IClientService, ClientService>();
-        services.AddSingleton<IWorldRepository, WorldRepository>();
+        services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<ICharacterService, CharacterService>();
-        services.AddSingleton<ICharacterRepository, CharacterRepository>();
     }
 
     private static void ConfigureDataAccess(IServiceCollection services)

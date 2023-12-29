@@ -1,13 +1,13 @@
 using System.Reflection;
 using AutoMapper;
-using DevConsole.Extensions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MigrateDatabase;
 using MigrateDatabase.Mappers;
 using MigrateDatabase.MigrationContexts;
 using Navislamia.Configuration.Options;
-using Navislamia.Game.Contexts;
+using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Extensions;
 using Serilog;
 using SqlConnectionStringBuilder = System.Data.SqlClient.SqlConnectionStringBuilder;
 

@@ -25,10 +25,10 @@ public class ItemEntity : Entity
     public virtual ItemStorageEntity ItemStorage { get; set; }
     
     public int Idx { get; set; } // probably for sorting e.g. Item place in warehouse rename to slot/uiSlot?
-    public int ItemResourceId { get; set; } 
+    public long ItemResourceId { get; set; } 
     public long Amount { get; set; }
-    public int Level { get; set; }
-    public int Enhance { get; set; }
+    public uint Level { get; set; }
+    public uint Enhance { get; set; }
     public int EtherealDurability { get; set; }
     public int Endurance { get; set; }
     public ItemFlag Flag { get; set; }

@@ -18,7 +18,7 @@ namespace Navislamia.Game.Network
     {
         internal Socket Socket;
 
-        internal bool _disconnectSignaled = false;
+        internal bool DisconnectSignaled;
 
         internal volatile int BytesSent;
         internal volatile int BytesReceived;
@@ -26,10 +26,10 @@ namespace Navislamia.Game.Network
         private int _dataLength = 0;
         internal byte[] ReceiveBuffer = new byte[32768];
 
-        internal ConcurrentQueue<byte[]> SendQueue = new ConcurrentQueue<byte[]>();
+        internal ConcurrentQueue<byte[]> SendQueue = new();
 
-        internal CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        internal CancellationToken cancellationToken;
+        internal CancellationTokenSource CancellationTokenSource = new();
+        internal CancellationToken CancellationToken;
 
         /// <summary>
         /// Event triggered when data has been sent to the remote connection. (includes count of bytes sent)
@@ -40,7 +40,7 @@ namespace Navislamia.Game.Network
         /// Event triggered when data has been received from the remote connection (includes count of bytes received)
         /// </summary>
         public Action<int> OnDataReceived { get; set; }
-
+        
         /// <summary>
         /// Event triggered when the remote connection has disconnected
         /// </summary>
@@ -84,10 +84,8 @@ namespace Navislamia.Game.Network
         {
             get
             {
-                var _localEP = Socket?.LocalEndPoint as IPEndPoint;
-
-                if (_localEP is not null)
-                    return _localEP.Address.ToString();
+                if (Socket?.LocalEndPoint is IPEndPoint localEp)
+                    return localEp.Address.ToString();
 
                 return default;
             }
@@ -100,10 +98,8 @@ namespace Navislamia.Game.Network
         {
             get
             {
-                var _localEP = Socket?.LocalEndPoint as IPEndPoint;
-
-                if (_localEP is not null)
-                    return _localEP.Port;
+                if (Socket?.LocalEndPoint is IPEndPoint localEp)
+                    return localEp.Port;
 
                 return -1;
             }
@@ -116,10 +112,8 @@ namespace Navislamia.Game.Network
         {
             get
             {
-                var _remoteEP = Socket?.RemoteEndPoint as IPEndPoint;
-
-                if ( _remoteEP is not null)
-                    return _remoteEP.Address.ToString();
+                if ( Socket?.RemoteEndPoint is IPEndPoint remoteEp)
+                    return remoteEp.Address.ToString();
 
                 return default;
             }
@@ -132,10 +126,8 @@ namespace Navislamia.Game.Network
         {
             get
             {
-                var _remoteEP = Socket?.RemoteEndPoint as IPEndPoint;
-
-                if (_remoteEP is not null)
-                    return _remoteEP.Port;
+                if (Socket?.RemoteEndPoint is IPEndPoint remoteEp)
+                    return remoteEp.Port;
 
                 return -1;
             }
@@ -144,28 +136,17 @@ namespace Navislamia.Game.Network
         /// <summary>
         /// Checks if the wrapped socket is connected via polling
         /// </summary>
-        public bool Connected
-        {
-            get
-            {
-                if (!Socket.Connected || Socket.Poll(1000, SelectMode.SelectRead) && Socket.Available == 0 || _disconnectSignaled)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-        }
+        public bool Connected => Socket.Connected && (!Socket.Poll(1000, SelectMode.SelectRead) || Socket.Available != 0) && !DisconnectSignaled;
 
         /// <summary>
         /// Starts internal processes like checking for disconnect, sending messages and begins listening
         /// </summary>
         public virtual void Start()
         {
-            cancellationToken = cancellationTokenSource.Token;
+            CancellationToken = CancellationTokenSource.Token;
 
-            Task.Run(checkForDisconnect, cancellationToken);
-            Task.Run(SendLoop, cancellationToken);
+            Task.Run(CheckForDisconnect, CancellationToken);
+            Task.Run(SendLoop, CancellationToken);
 
             Listen();
         }
@@ -210,7 +191,6 @@ namespace Navislamia.Game.Network
         /// <param name="buffer">Message data to be sent</param>
         public virtual void Send(byte[] buffer)
         {
-
             SendQueue.Enqueue(buffer);
         }
 
@@ -218,39 +198,41 @@ namespace Navislamia.Game.Network
         /// Loop through the send queue and send any available data as long as the connection hasn't been disconnected
         /// </summary>
         /// <returns>Nothing</returns>
-        public virtual async Task SendLoop()
+        protected virtual async Task SendLoop()
         {
             while (true)
             {
                 while (!SendQueue.IsEmpty)
                 {
-                    if (!_disconnectSignaled)
+                    if (DisconnectSignaled)
                     {
-                        byte[] sendBuffer;
-
-                        if (SendQueue.TryDequeue(out sendBuffer))
-                        {
-                            var sentBytes = await Socket.SendAsync(sendBuffer, SocketFlags.None);
-
-                            if (sentBytes > 0)
-                                OnDataSent(sentBytes);
-                        }
+                        continue;
                     }
+
+                    if (!SendQueue.TryDequeue(out var sendBuffer))
+                    {
+                        continue;
+                    }
+                    
+                    var sentBytes = await Socket.SendAsync(sendBuffer, SocketFlags.None);
+
+                    if (sentBytes > 0)
+                        OnDataSent(sentBytes);
                 }
 
-                await Task.Delay(100);
+                await Task.Delay(100, CancellationToken);
             }
         }
 
         /// <summary>
         /// Listen for new data sent by the remote connection as long as the connection hasn't been disconnected
         /// </summary>
-        public virtual void Listen()
+        protected virtual void Listen()
         {
-            if (!_disconnectSignaled)
+            if (!DisconnectSignaled)
             {
                 // receive the data into the receive buffer @ the current data length (to preserve any partial packets that may remain in the buffer)
-                Socket.BeginReceive(ReceiveBuffer, _dataLength, ReceiveBuffer.Length - _dataLength, SocketFlags.None, onReceive, Socket);
+                Socket.BeginReceive(ReceiveBuffer, _dataLength, ReceiveBuffer.Length - _dataLength, SocketFlags.None, OnReceive, Socket);
             }
         }
 
@@ -258,57 +240,60 @@ namespace Navislamia.Game.Network
         /// Receives data from the remote connection and add trigger hooked actions for the data to be processed, then trigger listen again
         /// </summary>
         /// <param name="ar"></param>
-        private void onReceive(IAsyncResult ar)
+        private void OnReceive(IAsyncResult ar)
         {
-            if (!_disconnectSignaled)
+            if (DisconnectSignaled)
             {
-                var receiveBytes = Socket.EndReceive(ar);
-
-                if (receiveBytes > 0)
-                {
-                    BytesReceived += receiveBytes;
-
-                    // set the available data tracker
-                    _dataLength += receiveBytes;
-
-                    OnDataReceived(_dataLength);
-
-                    Listen();
-                }
+                return;
             }
+            
+            var receiveBytes = Socket?.EndReceive(ar) ?? 0;
+
+            if (receiveBytes <= 0)
+            {
+                return;
+            }
+            
+            BytesReceived += receiveBytes;
+
+            // set the available data tracker
+            _dataLength += receiveBytes;
+
+            OnDataReceived(_dataLength);
+
+            Listen();
         }
 
         /// <summary>
         /// Check if the remote connection has disconnected and trigger disconnect events accordingly
         /// </summary>
         /// <returns>Nothing</returns>
-        private async Task checkForDisconnect()
+        private async Task CheckForDisconnect()
         {
             while (true) 
             {
                 if (!Connected)
                 {
-                    onDisconnect();
+                    OnDisconnect();
                 }
 
-                await Task.Delay(100);
+                await Task.Delay(100, CancellationToken);
             }
         }
 
         /// <summary>
         /// Perform actions related to a connection disconnecting
         /// </summary>
-        private void onDisconnect()
+        private void OnDisconnect()
         {
+            CancellationTokenSource.Cancel();
 
-            cancellationTokenSource.Cancel();
-
-            if (!_disconnectSignaled)
+            if (!DisconnectSignaled)
             {
                 OnDisconnected();
             }
 
-            _disconnectSignaled = true;
+            DisconnectSignaled = true;
         }
     }
 }
