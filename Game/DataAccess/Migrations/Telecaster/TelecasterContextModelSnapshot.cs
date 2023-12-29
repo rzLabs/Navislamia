@@ -730,46 +730,6 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Pets", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.StarterItemsEntity", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("Amount")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("Enhancement")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Job")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Level")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("ResourceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("ValidForSeconds")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StarterItems", (string)null);
-                });
-
             modelBuilder.Entity("Navislamia.Game.Models.Telecaster.SummonEntity", b =>
                 {
                     b.Property<long>("Id")

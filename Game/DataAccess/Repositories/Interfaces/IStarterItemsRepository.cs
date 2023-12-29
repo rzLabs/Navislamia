@@ -7,5 +7,5 @@ namespace Navislamia.Game.DataAccess.Repositories.Interfaces;
 
 public interface IStarterItemsRepository
 {
-    Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Job job);
+    Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Race race);
 }

@@ -24,8 +24,8 @@ public class StarterItemsRepository : IStarterItemsRepository
 
     }
     
-    public async Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Job job)
+    public async Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Race race)
     {
-        return _context.StarterItems.Where(s => s.Job == job);
+        return _context.StarterItems.Where(s => s.Race == race);
     }
 }

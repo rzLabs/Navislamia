@@ -4,8 +4,8 @@ namespace Navislamia.Game.DataAccess.Entities.Telecaster;
 
 public class StarterItemsEntity : Entity
 {
-    public Job Job { get; set; }
-    public long ResourceId { get; set; }
+    public Race Race { get; set; }
+    public long ItemId { get; set; }
     public uint Level { get; set; }
     public uint Enhancement { get; set; }
     public uint Amount { get; set; }

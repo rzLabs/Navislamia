@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
 
@@ -27,12 +28,12 @@ public class CharacterService : ICharacterService
         {
             character.Items ??= new List<ItemEntity>();
             
-            var starterItems = await _starterItemsRepository.GetStarterItemsByJobAsync(character.CurrentJob);
+            var starterItems = await _starterItemsRepository.GetStarterItemsByJobAsync((Race)character.Race);
             foreach (var starterItem in starterItems)
             {
                 character.Items.Add(new ItemEntity
                 {
-                    ItemResourceId = starterItem.ResourceId,
+                    ItemResourceId = starterItem.ItemId,
                     Level = starterItem.Level,
                     Enhance = starterItem.Enhancement,
                     Amount = starterItem.Amount,
