@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Navislamia.Game.Models;
-using Navislamia.Game.Models.Arcadia;
+using Navislamia.Game.DataAccess.Entities.Arcadia;
 
 namespace Navislamia.Game.DataAccess.Contexts;
 
@@ -22,6 +21,7 @@ public class ArcadiaContext : SoftDeletionContext
     public DbSet<StateResourceEntity> StateResources { get; set; }
     public DbSet<StatResourceEntity> StatResources { get; set; }
     public DbSet<ModelEffectResourceEntity> ModelEffectResources { get; set; }
+    public DbSet<BannedWordsResourceEntity> BannedWordsResources { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +36,13 @@ public class ArcadiaContext : SoftDeletionContext
         ConfigureEnhanceResource(modelBuilder);
         ConfigureLevelResource(modelBuilder);
         ConfigureModelEffectResource(modelBuilder);
+        ConfigureBannedWordsResource(modelBuilder);
+    }
+    
+    private static void ConfigureBannedWordsResource(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<BannedWordsResourceEntity>()
+            .HasKey(b => new { b.Id, b.Word });
     }
 
     private static void ConfigureModelEffectResource(ModelBuilder modelBuilder)

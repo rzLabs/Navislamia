@@ -1,5 +1,4 @@
 using System.Net.Sockets;
-using FluentAssertions;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets.Enums;

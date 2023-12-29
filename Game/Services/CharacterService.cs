@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Telecaster;
 
 namespace Navislamia.Game.Services;
 
@@ -21,18 +22,18 @@ public class CharacterService : ICharacterService
         return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
     }
 
-    public async Task CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
+    public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
     {
         if (withStarterItems)
         {
             character.Items ??= new List<ItemEntity>();
             
-            var starterItems = await _starterItemsRepository.GetStarterItemsByJobAsync(character.CurrentJob);
+            var starterItems = await _starterItemsRepository.GetStarterItemsByJobAsync((Race)character.Race);
             foreach (var starterItem in starterItems)
             {
                 character.Items.Add(new ItemEntity
                 {
-                    ItemResourceId = starterItem.ResourceId,
+                    ItemResourceId = starterItem.ItemId,
                     Level = starterItem.Level,
                     Enhance = starterItem.Enhancement,
                     Amount = starterItem.Amount,
@@ -41,7 +42,19 @@ public class CharacterService : ICharacterService
             }
         }
         
-        await _characterRepository.CreateCharacterAsync(character);
+        var result = await _characterRepository.CreateCharacterAsync(character);
         await _characterRepository.SaveChangesAsync();
+        
+        return result;
+    }
+
+    public bool CharacterExists(string characterName)
+    {
+        return _characterRepository.CharacterExists(characterName);
+    }
+
+    public int CharacterCount(int accountId)
+    {
+        return _characterRepository.CharacterCount(accountId);
     }
 }

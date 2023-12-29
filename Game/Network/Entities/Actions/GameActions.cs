@@ -4,13 +4,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Configuration;
-using Navislamia.Game.Models.Arcadia.Enums;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Services;
 using Navislamia.Network.Packets;
 using Serilog;
 
 using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets.Game;
+using Navislamia.Game.Network.Extensions;
 
 namespace Navislamia.Game.Network.Entities.Actions;
 
@@ -18,6 +22,7 @@ public class GameActions : IActions
 {
     private readonly ILogger _logger = Log.ForContext<GameActions>();
     private readonly ICharacterService _characterService;
+    private readonly IBannedWordsRepository _bannedWordsRepository;
     private readonly NetworkService _networkService;
 
     private readonly Dictionary<ushort, Action<GameClient, IPacket>> _actions = new();
@@ -25,14 +30,17 @@ public class GameActions : IActions
     public GameActions(NetworkService networkService)
     {
         _networkService = networkService;
+        _bannedWordsRepository = networkService.BannedWordsRepository;
         _characterService = networkService.CharacterService;
 
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
-        _actions.Add((ushort)GamePackets.TS_CS_REPORT, OnReport);
-        _actions.Add((ushort)GamePackets.TS_CS_CHARACTER_LIST, OnCharacterList);
+        _actions.Add((ushort)GamePackets.TM_CS_REPORT, OnReport);
+        _actions.Add((ushort)GamePackets.TM_CS_CHARACTER_LIST, OnCharacterList);
+        _actions.Add((ushort)GamePackets.TM_CS_CREATE_CHARACTER, OnCreateCharacter);
+        _actions.Add((ushort)GamePackets.TM_CS_CHECK_CHARACTER_NAME, OnCheckCharacterName);
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
     }
-    
+
     public void Execute(Client client, IPacket packet)
     {
         if (_actions.TryGetValue(packet.ID, out var action))
@@ -119,7 +127,130 @@ public class GameActions : IActions
         client.Connection.Send(packet.Data);
         
     }
-    
+
+    private async void OnCreateCharacter(GameClient client, IPacket packet)
+    {
+        var createMsg = packet.GetDataStruct<TS_CS_CREATE_CHARACTER>();
+
+        if (_characterService.CharacterCount(client.ConnectionInfo.AccountId) >= 6)
+        {
+            _logger.Debug("Character create failed! Limit reached! for {accountName}{clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+
+            client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
+
+            return;
+        }
+
+        var selectedArmor = createMsg.Info.WearInfo[(int)ItemWearType.Armor];
+
+        // Set default weapon and armor ids
+        int defaultArmorId;
+        int defaultWeaponId;
+
+        switch ((Race)createMsg.Info.Race)
+        {
+            case Race.Deva:
+                defaultArmorId = selectedArmor == 602 ? 220109 : 220100;
+                defaultWeaponId = 106100;
+                break;
+
+            case Race.Gaia:
+                defaultArmorId = selectedArmor == 602 ? 240109 : 240100;
+                defaultWeaponId = 112100;
+                break;
+
+            case Race.Asura:
+                defaultArmorId = selectedArmor == 602 ? 230109 : 230100;
+                defaultWeaponId = 103100;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(createMsg.Info.Race));
+        }
+
+        // We don't need to pass all info, most of it is safely ignored and should default when inserted to Character table
+        var character = new CharacterEntity 
+        {
+            AccountId = client.ConnectionInfo.AccountId,
+            AccountName = client.ConnectionInfo.AccountName,
+            CharacterName = createMsg.Info.Name.FormatName(),
+            Sex = createMsg.Info.Sex,
+            Race = createMsg.Info.Race,
+            Models = createMsg.Info.ModelId,
+            HairColorIndex = createMsg.Info.HairColorIndex,
+            TextureId = createMsg.Info.TextureID,
+            SkinColor = (int)createMsg.Info.SkinColor,
+            // Add default gear to the character
+            Items = new List<ItemEntity>
+            {
+                new() { ItemResourceId = defaultArmorId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Armor, GenerateBySource = ItemGenerateSource.Basic },
+                new() { ItemResourceId = defaultWeaponId, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.Weapon, GenerateBySource = ItemGenerateSource.Basic },
+
+                // TODO: bag item id should come from config
+                new() { ItemResourceId = 490001, Level = 1, Amount = 1, Endurance = 50, WearInfo = ItemWearType.BagSlot, GenerateBySource = ItemGenerateSource.Basic}
+            }
+        };
+
+        var createdEntity = await _characterService.CreateCharacterAsync(character);
+
+        if (createdEntity == null)
+        {
+            // Should never happen
+            _logger.Error("Character create failed! for {accountName}{clientTag} !!!", character.AccountName, client.ClientTag);
+
+            client.SendResult(packet.ID, (ushort)ResultCode.DBError);
+        }
+
+        _logger.Debug("Character {characterName} successfully created for {accountName}{clientTag}", character.CharacterName, client.ConnectionInfo.AccountName, client.ClientTag);
+
+        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+    }
+
+    private void OnCheckCharacterName(GameClient client, IPacket packet)
+    {
+        var nameMsg = packet.GetDataStruct<TS_CS_CHECK_CHARACTER_NAME>();
+
+        if (string.IsNullOrEmpty(nameMsg.Name))
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
+
+            _logger.Debug("Character Name Check Failed! Empty Name for {accountName} {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+
+            return;
+        }
+
+        if (!nameMsg.Name.IsValidName(4, 18))
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
+
+            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+
+            return;
+        }
+        
+        if (_bannedWordsRepository.ContainsBannedWord(nameMsg.Name))
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
+
+            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+
+            return;
+        }
+
+        if (_characterService.CharacterExists(nameMsg.Name)) 
+        {
+            client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
+
+            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+
+            return;
+        }
+
+        _logger.Debug("Character Name Check Passed! for {accountName} {clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
+
+        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+    }
+
+
     private void OnAccountWithAuth(GameClient client, IPacket packet)
     {
         _logger.Debug("{clientTag} verifying with Auth Server", client.ClientTag);

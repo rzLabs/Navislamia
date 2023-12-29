@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Network.Entities;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Interfaces;
@@ -18,6 +19,7 @@ public class NetworkService : INetworkService
 {
     private readonly ILogger<NetworkService> _logger;
     public readonly ICharacterService CharacterService;
+    public readonly IBannedWordsRepository BannedWordsRepository;
     public readonly NetworkOptions Options;
 
     public AuthClient AuthClient { get; set; }
@@ -28,10 +30,11 @@ public class NetworkService : INetworkService
 
     public Dictionary<string, GameClient> AuthorizedGameClients { get; set; } = new();
 
-    public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService)
+    public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService, IBannedWordsRepository bannedWordsRepository)
     {
         _logger = logger;
         CharacterService = characterService;
+        BannedWordsRepository = bannedWordsRepository;
         Options = networkOptions.Value;
     }
 

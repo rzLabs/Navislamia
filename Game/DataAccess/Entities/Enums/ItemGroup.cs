@@ -1,0 +1,36 @@
+﻿namespace Navislamia.Game.DataAccess.Entities.Enums
+{
+    public enum ItemGroup
+    {
+        Etc = 0,
+        Weapon = 1,
+        Armor = 2,
+        Shield = 3,
+        Helm = 4,
+        Glove = 5,
+        Boots = 6,
+        Belt = 7,
+        Mantle = 8,
+        Accessory = 9,
+        Skillcard = 10,
+        Itemcard = 11,
+        Spellcard = 12,
+        Summoncard = 13,
+        Face = 15,
+        Underwear = 16,
+        Bag = 17,
+        PetCage = 18,
+        StrikeCube = 21,
+        DefenceCube = 22,
+        SkillCube = 23,
+        RestorationCube = 24,
+        Soulstone = 93,
+        Bullet = 98,
+        Consumable = 99,
+        NpcFace = 100,
+        Deco = 110,
+        Riding = 120,
+        Artifact = 130,
+        EquipmentOnBelt = 140,
+    };
+}

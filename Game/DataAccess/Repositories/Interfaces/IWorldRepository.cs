@@ -1,4 +1,4 @@
-using Navislamia.Game.Models.Navislamia;
+using Navislamia.Game.DataAccess.Entities.Navislamia;
 
 namespace Navislamia.Game.DataAccess.Repositories.Interfaces;
 
