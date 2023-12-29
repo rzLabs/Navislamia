@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Navislamia.Game.DataAccess.Migrations.Arcadia
 {
     [DbContext(typeof(ArcadiaContext))]
-    [Migration("20231229184307_Version0003_IntroduceStarterItemsEntity")]
-    partial class Version0003_IntroduceStarterItemsEntity
+    [Migration("20231229185039_Version0006_IntroduceBannedWordsResource")]
+    partial class Version0006_IntroduceBannedWordsResource
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
