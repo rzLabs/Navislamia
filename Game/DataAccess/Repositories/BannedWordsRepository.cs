@@ -21,6 +21,6 @@ public class BannedWordsRepository : IBannedWordsRepository
     
     public bool ContainsBannedWord(string value)
     {
-        return _context.BannedWordsResources.Any(b => b.Word.ToLower().Contains(value.ToLower()));
+        return _context.BannedWordsResources.Any(b => value.ToLower().Contains(b.Word.ToLower()));
     }
 }
