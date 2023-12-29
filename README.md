@@ -30,7 +30,8 @@ Navislamia is an free, open source, cross platform reimplementation of the Rappe
 
 ### Current State
 
-Game Client login up to `Character List`
+- Game Client login up to `Character List`
+- Character Creation
 
 ## Community
 
