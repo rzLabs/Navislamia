@@ -241,12 +241,7 @@ public class GameActions : IActions
         // TODO: remove self from ranking score
 
         // TODO: update player name to have @ at the front of it and set DeleteOn date
-        var character = _characterService.GetCharacterByName(deleteMsg.Name);
-
-        character.CharacterName = $"@{character.CharacterName}";
-        character.DeletedOn = DateTime.UtcNow;
-
-        _characterService.SaveChanges();
+        _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
 
         _logger.Debug("Character {characterName} successfully deleted for ({accountName}) {clientTag}", deleteMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 

@@ -28,11 +28,6 @@ public class CharacterRepository : ICharacterRepository
         return query;
     }
 
-    public CharacterEntity GetCharacterByName(string characterName)
-    {
-        return _context.Characters.FirstOrDefault(c=>c.CharacterName == characterName);
-    }
-
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
         var result = (await _context.Characters.AddAsync(character)).Entity;
