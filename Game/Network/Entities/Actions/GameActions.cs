@@ -223,6 +223,8 @@ public class GameActions : IActions
             return;
         }
 
+        var deleteMsg = packet.GetDataStruct<TS_CS_DELETE_CHARACTER>();
+
         // TODO: implement delete security
 
         // TODO: check if is guild leader (and send result AccessDenied)
@@ -240,7 +242,7 @@ public class GameActions : IActions
         // TODO: remove self from ranking score
 
         // TODO: update player name to have @ at the front of it and set DeleteOn date
-        // _characterService.DeleteByCharacterNameAsync(char name here)
+        _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
         
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
