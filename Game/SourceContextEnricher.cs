@@ -8,16 +8,17 @@ public class SourceContextEnricher : ILogEventEnricher
 {
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        if (logEvent.Properties.TryGetValue("SourceContext", out var property))
+        if (!logEvent.Properties.TryGetValue("SourceContext", out var property))
         {
-            var propertyVal = ((ScalarValue)property).Value as string;
+            return;
+        }
+        
+        var propertyVal = ((ScalarValue)property).Value as string;
+        var lastElement = propertyVal?.Split('.').LastOrDefault();
 
-            var lastElement = propertyVal?.Split('.').LastOrDefault();
-
-            if (lastElement != null)
-            {
-                logEvent.AddOrUpdateProperty(new LogEventProperty("SourceContext", new ScalarValue(lastElement)));
-            }
+        if (!string.IsNullOrWhiteSpace(lastElement))
+        {
+            logEvent.AddOrUpdateProperty(new LogEventProperty("SourceContext", new ScalarValue(lastElement)));
         }
     }
 }

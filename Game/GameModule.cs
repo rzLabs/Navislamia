@@ -9,7 +9,6 @@ using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Microsoft.Extensions.Logging;
-using Configuration;
 using Navislamia.Game.Network.Packets;
 using System.Net.Sockets;
 using System.Net;

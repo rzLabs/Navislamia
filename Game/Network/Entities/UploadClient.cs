@@ -18,7 +18,7 @@ public class UploadClient : Client
     
     public UploadClient(NetworkService networkService) : base(networkService, ClientType.Upload)
     {       
-        CreateClientConnection(networkService.Options.Upload.Ip, networkService.Options.Upload.Port);
+        CreateClientConnection(networkService.NetworkOptions.Upload.Ip, networkService.NetworkOptions.Upload.Port);
     }
 
     private void CreateClientConnection(string ip, int port)

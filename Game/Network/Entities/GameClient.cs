@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Configuration;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
@@ -18,7 +17,7 @@ public class GameClient : Client
     private readonly ILogger _logger = Log.ForContext<GameClient>();
     public GameClient(Socket socket, NetworkService networkService) : base(networkService, ClientType.Game)
     {
-        Connection = new CipherConnection(socket, networkService.Options.CipherKey);
+        Connection = new CipherConnection(socket, networkService.NetworkOptions.CipherKey);
     }
     
     public void CreateClientConnection()

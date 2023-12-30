@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Configuration;
 using Microsoft.Extensions.Options;
 using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
@@ -22,7 +21,7 @@ public class AuthClient : Client
     
     public AuthClient(NetworkService networkService) : base(networkService, ClientType.Auth)
     {        
-        CreateClientConnection(networkService.Options.Auth.Ip, networkService.Options.Auth.Port);
+        CreateClientConnection(networkService.NetworkOptions.Auth.Ip, networkService.NetworkOptions.Auth.Port);
     }
     
     private void CreateClientConnection(string ip, int port)
