@@ -29,6 +29,11 @@ public class CharacterRepository : ICharacterRepository
         return query;
     }
 
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _context.Characters.FirstOrDefault(c=>c.CharacterName == characterName);
+    }
+
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
         var count = _context.Characters.AsNoTracking().Count(c => c.AccountId == character.AccountId);

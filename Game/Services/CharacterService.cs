@@ -17,6 +17,11 @@ public class CharacterService : ICharacterService
         _characterRepository = characterRepository;
     }
 
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _characterRepository.GetCharacterByName(characterName);
+    }
+
     public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
     {
         return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
@@ -56,5 +61,10 @@ public class CharacterService : ICharacterService
     public int CharacterCount(int accountId)
     {
         return _characterRepository.CharacterCount(accountId);
+    }
+
+    public async void SaveChanges()
+    {
+        await _characterRepository.SaveChangesAsync();
     }
 }
