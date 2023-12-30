@@ -22,7 +22,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.AllianceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AllianceEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -56,7 +56,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Alliances", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.AuctionEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -118,7 +118,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Auctions", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.CharacterEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -350,7 +350,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Characters", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.DungeonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.DungeonEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -392,7 +392,35 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Dungeons", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.GuildEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GlobalVariableEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GlobalVariables", (string)null);
+                });
+
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -491,7 +519,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Guilds", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.ItemEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -532,8 +560,8 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Endurance")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Enhance")
-                        .HasColumnType("integer");
+                    b.Property<long>("Enhance")
+                        .HasColumnType("bigint");
 
                     b.Property<int?>("EquippedBySummonId")
                         .HasColumnType("integer");
@@ -550,11 +578,11 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<int>("Idx")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ItemResourceId")
-                        .HasColumnType("integer");
+                    b.Property<long>("ItemResourceId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
+                    b.Property<long>("Level")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
@@ -584,7 +612,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Items", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.ItemStorageEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -642,7 +670,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("ItemStorages", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PartyEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -684,7 +712,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Parties", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PetEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -730,7 +758,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Pets", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.StarterItemsEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.StarterItemsEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -750,8 +778,8 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<long>("Enhancement")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Job")
-                        .HasColumnType("integer");
+                    b.Property<long>("ItemId")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("Level")
                         .HasColumnType("bigint");
@@ -759,8 +787,8 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("ResourceId")
-                        .HasColumnType("bigint");
+                    b.Property<int>("Race")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ValidForSeconds")
                         .HasColumnType("integer");
@@ -770,7 +798,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("StarterItems", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.SummonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -851,21 +879,21 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.ToTable("Summons", (string)null);
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.AuctionEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "HighestBidder")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "HighestBidder")
                         .WithMany("HighestBidders")
                         .HasForeignKey("HighestBidderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.ItemEntity", "Item")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", "Item")
                         .WithOne("Auction")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.AuctionEntity", "ItemId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", "ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "Seller")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "Seller")
                         .WithMany("Sellers")
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -878,31 +906,31 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.CharacterEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "Guild")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", "Guild")
                         .WithMany("Members")
                         .HasForeignKey("GuildId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.SummonEntity", "MainSummon")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", "MainSummon")
                         .WithOne("MainSummonsMaster")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "MainSummonId");
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "MainSummonId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.PartyEntity", "Party")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", "Party")
                         .WithMany("PartyMembers")
                         .HasForeignKey("PartyId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.PetEntity", "Pet")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", "Pet")
                         .WithOne("Character")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "PetId");
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "PetId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "PreviousGuild")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", "PreviousGuild")
                         .WithMany("PreviousMembers")
                         .HasForeignKey("PreviousGuildId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.SummonEntity", "SubSummon")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", "SubSummon")
                         .WithOne("SubSummonsMaster")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.CharacterEntity", "SubSummonId");
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "SubSummonId");
 
                     b.Navigation("Guild");
 
@@ -917,26 +945,26 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("SubSummon");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.DungeonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.DungeonEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.GuildEntity", "RaidGuild")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", "RaidGuild")
                         .WithMany()
                         .HasForeignKey("RaidGuildId");
 
                     b.Navigation("RaidGuild");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.GuildEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.AllianceEntity", "Alliance")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.AllianceEntity", "Alliance")
                         .WithOne("LeadGuild")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.GuildEntity", "AllianceId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", "AllianceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.DungeonEntity", "Dungeon")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.DungeonEntity", "Dungeon")
                         .WithOne("OwnerGuild")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.GuildEntity", "DungeonId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", "DungeonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -945,13 +973,13 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("Dungeon");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.ItemEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "Character")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "Character")
                         .WithMany("Items")
                         .HasForeignKey("CharacterId");
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.AuctionEntity", "RelatedAuction")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", "RelatedAuction")
                         .WithMany()
                         .HasForeignKey("RelatedAuctionId");
 
@@ -960,29 +988,29 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("RelatedAuction");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.ItemStorageEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "Character")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "Character")
                         .WithOne("ItemStorage")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.ItemStorageEntity", "CharacterId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", "CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.ItemEntity", "Item")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", "Item")
                         .WithOne("ItemStorage")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.ItemStorageEntity", "ItemId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", "ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.AuctionEntity", "RelatedAuction")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", "RelatedAuction")
                         .WithOne("ItemStorage")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.ItemStorageEntity", "RelatedAuctionId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", "RelatedAuctionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.ItemEntity", "RelatedItem")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", "RelatedItem")
                         .WithOne("RelatedItemStorage")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.ItemStorageEntity", "RelatedItemId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", "RelatedItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -995,17 +1023,17 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("RelatedItem");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PartyEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.PartyEntity", "LeadParty")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", "LeadParty")
                         .WithMany("RaidParties")
                         .HasForeignKey("LeadPartyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Navislamia.Game.Models.Telecaster.CharacterEntity", "Leader")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", "Leader")
                         .WithOne("LeadersParty")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.PartyEntity", "LeaderId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", "LeaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1014,39 +1042,39 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("Leader");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PetEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.ItemEntity", "Item")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", "Item")
                         .WithOne("PetItem")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.PetEntity", "ItemId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", "ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.SummonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", b =>
                 {
-                    b.HasOne("Navislamia.Game.Models.Telecaster.ItemEntity", "CardItem")
+                    b.HasOne("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", "CardItem")
                         .WithOne("Summon")
-                        .HasForeignKey("Navislamia.Game.Models.Telecaster.SummonEntity", "CardItemId")
+                        .HasForeignKey("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", "CardItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CardItem");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.AllianceEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AllianceEntity", b =>
                 {
                     b.Navigation("LeadGuild");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.AuctionEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", b =>
                 {
                     b.Navigation("ItemStorage");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.CharacterEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", b =>
                 {
                     b.Navigation("HighestBidders");
 
@@ -1059,19 +1087,19 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("Sellers");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.DungeonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.DungeonEntity", b =>
                 {
                     b.Navigation("OwnerGuild");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.GuildEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", b =>
                 {
                     b.Navigation("Members");
 
                     b.Navigation("PreviousMembers");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.ItemEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", b =>
                 {
                     b.Navigation("Auction");
 
@@ -1084,19 +1112,19 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.Navigation("Summon");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PartyEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", b =>
                 {
                     b.Navigation("PartyMembers");
 
                     b.Navigation("RaidParties");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.PetEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", b =>
                 {
                     b.Navigation("Character");
                 });
 
-            modelBuilder.Entity("Navislamia.Game.Models.Telecaster.SummonEntity", b =>
+            modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", b =>
                 {
                     b.Navigation("MainSummonsMaster");
 

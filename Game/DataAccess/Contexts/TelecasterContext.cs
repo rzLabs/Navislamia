@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Navislamia.Game.Models.Telecaster;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 
 namespace Navislamia.Game.DataAccess.Contexts;
 
@@ -18,9 +18,12 @@ public class TelecasterContext : SoftDeletionContext
     public DbSet<PetEntity> Pets { get; set; }
     public DbSet<SummonEntity> Summons { get; set; }
     public DbSet<StarterItemsEntity> StarterItems { get; set; }
+    public DbSet<GlobalVariableEntity> GlobalVariables { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         ConfigureAuctions(modelBuilder);
         ConfigureCharacters(modelBuilder);
         ConfigureItems(modelBuilder);

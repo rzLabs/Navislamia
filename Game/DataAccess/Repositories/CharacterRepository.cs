@@ -3,19 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Telecaster;
 
 namespace Navislamia.Game.DataAccess.Repositories;
 
 public class CharacterRepository : ICharacterRepository
 {
-    private readonly DbContextOptions<TelecasterContext> _options;
     private readonly TelecasterContext _context;
-
     public CharacterRepository(DbContextOptions<TelecasterContext> options)
     {
-        _options = options;
         _context = new TelecasterContext(options);
     }
     
@@ -31,9 +28,30 @@ public class CharacterRepository : ICharacterRepository
         return query;
     }
 
-    public async Task CreateCharacterAsync(CharacterEntity character)
+    public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
-        await _context.Characters.AddAsync(character);
+        var result = (await _context.Characters.AddAsync(character)).Entity;
+        return result;
+    }
+
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _context.Characters.FirstOrDefault(c => c.CharacterName == characterName);
+    }
+
+    public bool CharacterExists(string characterName)
+    {
+        return _context.Characters.AsNoTracking().Any(c => c.CharacterName == characterName);
+    }
+    
+    public void Delete(CharacterEntity entity)
+    {
+        _context.Characters.Remove(entity);
+    }
+
+    public int CharacterCount(int accountId)
+    {
+        return _context.Characters.AsNoTracking().Count(c=>c.AccountId == accountId);
     }
 
     public async Task SaveChangesAsync()

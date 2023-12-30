@@ -97,6 +97,7 @@ public class Program
         services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<ICharacterService, CharacterService>();
+        services.AddSingleton<IBannedWordsRepository, BannedWordsRepository>();
     }
 
     private static void ConfigureDataAccess(IServiceCollection services)

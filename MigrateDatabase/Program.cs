@@ -6,9 +6,11 @@ using MigrateDatabase;
 using MigrateDatabase.Mappers;
 using MigrateDatabase.MigrationContexts;
 using Navislamia.Configuration.Options;
+using Navislamia.Game;
 using Navislamia.Game.DataAccess.Contexts;
 using Navislamia.Game.DataAccess.Extensions;
 using Serilog;
+using Serilog.Exceptions;
 using SqlConnectionStringBuilder = System.Data.SqlClient.SqlConnectionStringBuilder;
 
 
@@ -81,11 +83,11 @@ var builder = Host.CreateDefaultBuilder(args)
 
         });
     })
-    .ConfigureLogging((context, logging) => {
-        Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
-            .WriteTo.Console().CreateLogger();
-        logging.AddConfiguration(context.Configuration.GetSection("Logging"));
-        logging.AddConsole();
+    .UseSerilog((context, configuration) =>
+    {
+        configuration.ReadFrom.Configuration(context.Configuration)
+            .Enrich.With(new SourceContextEnricher())
+            .Enrich.WithExceptionDetails();
     })
     .UseConsoleLifetime();
 

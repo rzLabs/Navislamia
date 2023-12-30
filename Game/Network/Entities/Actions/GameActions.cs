@@ -134,13 +134,12 @@ public class GameActions : IActions
     {
         var createMsg = packet.GetDataStruct<TS_CS_CREATE_CHARACTER>();
 
-        if (_characterService.CharacterCount(client.ConnectionInfo.AccountId) >=
-            _networkService.ServerOptions.MaxCharactersPerAccount)
+        if (_characterService.CharacterCount(client.ConnectionInfo.AccountId) >= 6)
         {
-            _logger.Debug("Character create failed! Limit reached! for ({accountName}) {clientTag} !!!", 
-                client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character create failed! Limit reached! for ({accountName}) {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
             client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
+
             return;
         }
 

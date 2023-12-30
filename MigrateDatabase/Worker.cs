@@ -6,11 +6,10 @@ using MigrateDatabase.MigrationContexts;
 using MigrateDatabase.MssqlEntities.Arcadia;
 using Navislamia.Configuration.Options;
 using Navislamia.Game.DataAccess.Contexts;
-using Navislamia.Game.Models;
-using Navislamia.Game.Models.Arcadia;
-using Navislamia.Game.Models.Arcadia.Enums;
-using Navislamia.Game.Models.Enums;
-using Navislamia.Game.Models.Telecaster;
+using Navislamia.Game.DataAccess.Entities;
+using Navislamia.Game.DataAccess.Entities.Arcadia;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Serilog;
 
 namespace MigrateDatabase;
@@ -148,7 +147,7 @@ public class Worker : BackgroundService
         //         break;
         // }
 
-        await TransferArcadia(token, null);
+        // await TransferArcadia(token, null);
         await SeedTelecaster(token);
         
         Log.Logger.Warning("Done. You can now close this window.");
@@ -160,6 +159,7 @@ public class Worker : BackgroundService
         await SeedDungeons(token);
         await SeedCharacters(token);
         await SeedItems(token);
+        await SeedStarterItems(token);
     }
 
     private async Task SeedDungeons(CancellationToken token)
@@ -213,14 +213,101 @@ public class Worker : BackgroundService
         
         _finishedSeeds.Add(nameof(DungeonEntity));
     }
+
+    private async Task SeedStarterItems(CancellationToken token)
+    {
+        var starterItems = new List<StarterItemsEntity>
+        {
+            new() {
+                Race = Race.Asura,
+                ItemId = 230100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+                },
+            new() {
+                Race = Race.Asura,
+                ItemId = 103100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Deva,
+                ItemId = 220100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Deva,
+                ItemId = 106100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Gaia,
+                ItemId = 112100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Gaia,
+                ItemId = 240100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            }
+        };
+
+        await using var context = new TelecasterContext(_psqlTelecasterContext);
+        
+        Log.Logger.Information("Seeding {type}: {amount}", nameof(StarterItemsEntity), starterItems.Count);
+
+        var processed = 1;
+        foreach (var entity in starterItems)
+        {
+            Log.Information("Processing... {processed}/{amount}", processed, starterItems.Count);
+
+            if (token.IsCancellationRequested)
+            {
+                Log.Logger.Warning("Stopping...");
+                return;
+            }
+            
+            var existingEntity = context.StarterItems.FirstOrDefault(d => d.Id == entity.Id);
+            if (existingEntity != null)
+            {
+                context.StarterItems.Update(entity);
+            }
+            else
+            {
+                context.StarterItems.Add(entity);
+            }
+                
+            await context.SaveChangesAsync(token);
+            
+            processed++;
+            ClearCurrentConsoleLine();
+        }
+        
+        _finishedSeeds.Add(nameof(StarterItemsEntity));
     
+    }
     private async Task SeedCharacters(CancellationToken token)
     {
         var entities = new List<CharacterEntity>
         {
             new()
             {
-                Id = 1,
                 CharacterName = "Aodai",
                 AccountName = "admin",
                 AccountId = 1,
@@ -279,7 +366,6 @@ public class Worker : BackgroundService
             },
             new()
             {
-                Id = 2,
                 CharacterName = "iSmokeDrow",
                 AccountName = "admin",
                 AccountId = 1,
@@ -339,7 +425,6 @@ public class Worker : BackgroundService
             },
             new()
             {
-                Id = 3,
                 CharacterName = "Nexitis",
                 AccountName = "admin",
                 AccountId = 1,

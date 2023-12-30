@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Enums;
-using Navislamia.Game.Models.Telecaster;
 
 namespace Navislamia.Game.DataAccess.Repositories;
 
@@ -24,8 +24,8 @@ public class StarterItemsRepository : IStarterItemsRepository
 
     }
     
-    public async Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Job job)
+    public async Task<IEnumerable<StarterItemsEntity>> GetStarterItemsByJobAsync(Race race)
     {
-        return _context.StarterItems.Where(s => s.Job == job);
+        return _context.StarterItems.Where(s => s.Race == race);
     }
 }

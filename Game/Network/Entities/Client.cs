@@ -91,8 +91,6 @@ public class Client : IDisposable
     public virtual void SendMessage(IPacket msg)
     {
         Connection.Send(msg.Data);
-
-        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
     }
 
     public void Dispose()

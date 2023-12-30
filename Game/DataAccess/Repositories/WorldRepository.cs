@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Entities.Arcadia;
+using Navislamia.Game.DataAccess.Entities.Navislamia;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Models.Arcadia;
-using Navislamia.Game.Models.Navislamia;
 
 namespace Navislamia.Game.DataAccess.Repositories;
 

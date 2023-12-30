@@ -39,7 +39,14 @@ public class UploadClient : Client
         Connection.OnDisconnected = OnDisconnect;
         Connection.Start();
     }
-    
+
+    public override void SendMessage(IPacket msg)
+    {
+        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+
+        base.SendMessage(msg);
+    }
+
     public override void OnDataReceived(int bytesReceived)
     {
         var remainingData = bytesReceived;
