@@ -2,13 +2,13 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Interfaces;
+using Navislamia.Game.Network.Packets.Upload;
 using Serilog;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 public class UploadClient : Client
 {
@@ -33,16 +33,18 @@ public class UploadClient : Client
         var uploadSock = new Socket(uploadEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         uploadSock.Connect(uploadEndpoint.Address, uploadEndpoint.Port);
 
-        Connection = new Connection(uploadSock);
-        Connection.OnDataSent = OnDataSent;
-        Connection.OnDataReceived = OnDataReceived;
-        Connection.OnDisconnected = OnDisconnect;
+        Connection = new Connection(uploadSock)
+        {
+            OnDataSent = OnDataSent,
+            OnDataReceived = OnDataReceived,
+            OnDisconnected = OnDisconnect
+        };
         Connection.Start();
     }
 
     public override void SendMessage(IPacket msg)
     {
-        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.Id, msg.Length, ClientTag);
 
         base.SendMessage(msg);
     }
@@ -54,7 +56,7 @@ public class UploadClient : Client
         while (remainingData > Marshal.SizeOf<Header>())
         {
             var header = new Header(Connection.Peek(Marshal.SizeOf<Header>()));
-            var isValidMsg = header.Checksum == Header.CalculateChecksum(header);
+            var isValidMsg = header.Checksum == header.CalculateChecksum();
 
             if (!isValidMsg)
             {
@@ -81,7 +83,7 @@ public class UploadClient : Client
                 _ => throw new Exception("Unknown Packet Type")
             };
             
-            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.Id,
                 msg.Length, ClientTag);
 
             Actions.Execute(this, msg);

@@ -15,6 +15,9 @@ using System.Threading.Tasks;
 using Navislamia.Game.DataAccess.Entities.Navislamia;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets.Auth;
+using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Upload;
 
 namespace Navislamia.Game;
 

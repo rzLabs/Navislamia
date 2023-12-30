@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Auth;
+using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Serilog;
 
-using Navislamia.Game.Network.Interfaces;
-
-namespace Navislamia.Game.Network.Entities.Actions;
+namespace Navislamia.Game.Network.Clients.Actions;
 
 public class AuthActions : IActions
 {
@@ -26,7 +26,7 @@ public class AuthActions : IActions
     
     public void Execute(Client client, IPacket packet)
     {
-        if (!_actions.TryGetValue(packet.ID, out var action))
+        if (!_actions.TryGetValue(packet.Id, out var action))
         {
             return;
         }

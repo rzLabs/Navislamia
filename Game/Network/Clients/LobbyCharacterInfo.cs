@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct LobbyCharacterInfo

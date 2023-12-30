@@ -1,17 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Serilog;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 public class AuthClient : Client
 {
@@ -36,16 +33,18 @@ public class AuthClient : Client
         var authSock = new Socket(authEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         authSock.Connect(authEndPoint.Address, authEndPoint.Port);
 
-        Connection = new Connection(authSock);
-        Connection.OnDataSent = OnDataSent;
-        Connection.OnDataReceived = OnDataReceived;
-        Connection.OnDisconnected = OnDisconnect;
+        Connection = new Connection(authSock)
+        {
+            OnDataSent = OnDataSent,
+            OnDataReceived = OnDataReceived,
+            OnDisconnected = OnDisconnect
+        };
         Connection.Start();
     }
 
     public override void SendMessage(IPacket msg)
     {
-        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.Id, msg.Length, ClientTag);
 
         base.SendMessage(msg);
     }
@@ -57,7 +56,7 @@ public class AuthClient : Client
         while (remainingData > Marshal.SizeOf<Header>())
         {
             var header = new Header(Connection.Peek(Marshal.SizeOf<Header>()));
-            var isValidMsg = header.Checksum == Header.CalculateChecksum(header);
+            var isValidMsg = header.Checksum == header.CalculateChecksum();
 
             if (!isValidMsg)
             {
@@ -86,7 +85,7 @@ public class AuthClient : Client
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID,
+            _logger.Debug("{name}({id}) Length: {length} received from {clientTag}", msg.StructName, msg.Id,
                 msg.Length, ClientTag);
 
             Actions.Execute(this, msg);

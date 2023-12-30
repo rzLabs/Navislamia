@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Navislamia.Game.DataAccess.Entities;
 using Navislamia.Game.DataAccess.Entities.Arcadia;
 
 namespace Navislamia.Game.DataAccess.Contexts;

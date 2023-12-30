@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Interfaces;
+using Navislamia.Game.Network.Packets.Upload;
 using Serilog;
 
-using Navislamia.Game.Network.Interfaces;
-
-namespace Navislamia.Game.Network.Entities.Actions;
+namespace Navislamia.Game.Network.Clients.Actions;
 
 public class UploadActions : IActions
 {
@@ -38,7 +40,7 @@ public class UploadActions : IActions
     
     public void Execute(Client client, IPacket packet)
     {
-        if (!_actions.TryGetValue(packet.ID, out var action))
+        if (!_actions.TryGetValue(packet.Id, out var action))
         {
             return;
         }

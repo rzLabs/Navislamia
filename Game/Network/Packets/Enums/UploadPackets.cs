@@ -1,4 +1,4 @@
-﻿namespace Navislamia.Game.Network.Packets;
+﻿namespace Navislamia.Game.Network.Packets.Enums;
 
 public enum UploadPackets : ushort
 {

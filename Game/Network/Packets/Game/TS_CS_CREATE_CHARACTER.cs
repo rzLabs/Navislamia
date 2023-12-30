@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-
-using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Clients;
 
 namespace Navislamia.Game.Network.Packets.Game
 {

@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 
 using Navislamia.Game.Network.Interfaces;
-using Network.Security;
+using Navislamia.Game.Network.Security;
 
 namespace Navislamia.Game.Network
 {
@@ -11,8 +11,8 @@ namespace Navislamia.Game.Network
     /// </summary>
     public class CipherConnection : Connection, IConnection
     {
-        XRC4Cipher _sendCipher = new XRC4Cipher();
-        XRC4Cipher _receiveCipher = new XRC4Cipher();
+        Xrc4Cipher _sendCipher = new();
+        Xrc4Cipher _receiveCipher = new();
 
         /// <summary>
         /// Creates a new instance of the cipher connection wrapper abstraction

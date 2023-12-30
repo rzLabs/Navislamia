@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Navislamia.World.Entities;
 
-using Navislamia.World.Entities;
-
-namespace Navislamia.Entities
+namespace Navislamia.Game.Entities
 {
     public class GameObject : WorldObject
     {

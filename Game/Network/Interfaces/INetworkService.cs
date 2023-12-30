@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using Navislamia.Game.Network.Entities;
+using Navislamia.Game.Network.Clients;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Interfaces;
 
 namespace Navislamia.Game.Network.Interfaces;
 

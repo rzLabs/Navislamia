@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Navislamia.Game.Network.Packets;
+namespace Navislamia.Game.Network.Packets.Upload;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct TS_SU_LOGIN
