@@ -240,7 +240,7 @@ public class GameActions : IActions
         // TODO: remove self from ranking score
 
         // TODO: update player name to have @ at the front of it and set DeleteOn date
-        _characterService.DeleteByCharacterNameAsync(char name here)
+        // _characterService.DeleteByCharacterNameAsync(char name here)
         
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
