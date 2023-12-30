@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 public class ConnectionInfo
 {

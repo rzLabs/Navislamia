@@ -1,149 +1,122 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Network.Security
+namespace Navislamia.Game.Network.Security;
+
+public class Rc4Cipher
 {
-    public class RC4Cipher
+    private State _state = new();
+
+    public void Init(string key, int keyLen = 0) => PrepareKey(key, keyLen); 
+
+    public void Code(byte[] source, byte[] destination, int length) => CodeBlock(source, destination, length);
+
+    public void Encode(byte[] source, byte[] destination, int length) => CodeBlock(source, destination, length);
+
+    public void Decode(byte[] source, byte[] destination, int length) => CodeBlock(source, destination, length);
+
+    public State GetState() => _state;
+
+    public void LoadStateFrom(State aState) => _state = aState;
+
+    private void PrepareKey(string key, int keyLen)
     {
-        public bool Init(string key, int keyLen = 0) => prepareKey(state, key, keyLen); // Can be 0 because prepareKey will automatically generate keyLen from key.Length if length == 0
-
-        public void Code(byte[] source, byte[] destination, int length) => codeBlock(state, source, destination, length);
-
-        public void Encode(byte[] source, byte[] destination, int length) => codeBlock(state, source, destination, length);
-
-        public void Decode(byte[] source, byte[] destination, int length) => codeBlock(state, source, destination, length);
-
-        public State GetState() => state;
-
-        public void LoadStateFrom(State aState) => state = aState;
-
-        bool prepareKey(State mState, string key, int keyLen)
+        if (string.IsNullOrEmpty(key))
         {
-            if (string.IsNullOrEmpty(key))
-                return false;
+            return;
+        }
 
-            if (keyLen == 0)
-                keyLen = key.Length;
+        if (keyLen == 0)
+        {
+            keyLen = key.Length;
+        }
+        
+        for (var i = 0; i < 256; i++)
+        {
+            _state.S[i] = Convert.ToByte(i);
+        }
 
-            int i, j = 0;
+        var keyBuffer = new byte[256];
 
-            for (i = 0; i < 256; i++)
-                state.S[i] = Convert.ToByte(i);
-
-            byte[] _key = new byte[256];
-
-            j = 0;
+        var j = 0;
             
-            for (i = 0; i < 256; i++)
+        for (var i = 0; i < 256; i++)
+        {
+            keyBuffer[i] = Convert.ToByte(key[j++]);
+
+            if (j >= keyLen)
             {
-                _key[i] = Convert.ToByte(key[j++]);
-
-                if (j >= keyLen)
-                    j = 0;
+                j = 0;
             }
+        }
 
-            j = 0;
-            for (i = 0; i < 256; i++)
-            {
-                j += state.S[j] + _key[j];
-                j &= 0xff;
+        j = 0;
+        for (var i = 0; i < 256; i++)
+        {
+            j += _state.S[j] + keyBuffer[j];
+            j &= 0xff;
 
-                var swappedBytes = swapByte(state.S[i], state.S[j]);
+            var swappedBytes = SwapByte(_state.S[i], _state.S[j]);
 
-                state.S[i] = swappedBytes.Item1;
-                state.S[j] = swappedBytes.Item2;
-            }
+            _state.S[i] = swappedBytes.Item1;
+            _state.S[j] = swappedBytes.Item2;
+        }
 
-            state.X = 0;
-            state.Y = 0;
+        _state.X = 0;
+        _state.Y = 0;
       
-            skipFor(ref state, 1013);
+        SkipFor(1013);
+    }
 
-            return true;
-        }
+    private void CodeBlock(byte[] source, byte[] destination, int len)
+    {
+        int x = _state.X, y = _state.Y;
+        int d = 0, s = 0;
 
-        void codeBlock(State state, byte[] source, byte[] destination, int len)
+        while (len-- > 0)
         {
-            int x = state.X, y = state.Y;
-            int d = 0, s = 0;
+            ++x;
+            x &= 0xff;
+            int sx = _state.S[x];
 
-            while (len-- > 0)
-            {
-                ++x;
-                x &= 0xff;
-                int sx = state.S[x];
+            y += sx;
+            y &= 0xff;
+            int sy = _state.S[y];
 
-                y += sx;
-                y &= 0xff;
-                int sy = state.S[y];
+            _state.S[x] = (byte)sy;
+            _state.S[y] = (byte)sx;
 
-                state.S[x] = (byte)sy;
-                state.S[y] = (byte)sx;
-
-                destination[d++] = Convert.ToByte(source[s++] ^ state.S[(sx + sy) & 0xff]);
-            }
-
-            state.X = x;
-            state.Y = y;
+            destination[d++] = Convert.ToByte(source[s++] ^ _state.S[(sx + sy) & 0xff]);
         }
 
-        void skipFor(ref State state, int len)
+        _state.X = x;
+        _state.Y = y;
+    }
+
+    private void SkipFor(int len)
+    {
+        int x = _state.X, y = _state.Y;
+
+        while (len-- > 0)
         {
-            int x = state.X, y = state.Y;
+            ++x;
+            x &= 0xff;
+            int sx = _state.S[x];
 
-            while (len-- > 0)
-            {
-                ++x;
-                x &= 0xff;
-                int sx = state.S[x];
+            y += sx;
+            y &= 0xff;
+            int sy = _state.S[y];
 
-                y += sx;
-                y &= 0xff;
-                int sy = state.S[y];
-
-                state.S[x] = (byte)sy;
-                state.S[y] = (byte)sx;
-            }
-
-            state.X = x;
-            state.Y = y;
+            _state.S[x] = (byte)sy;
+            _state.S[y] = (byte)sx;
         }
 
-        Tuple<byte, byte> swapByte(byte a, byte b)
-        {
-            byte t = a;
-            a = b;
-            b = t;
+        _state.X = x;
+        _state.Y = y;
+    }
 
-            return new Tuple<byte, byte>(a, b);
-        }
-
-        public State state = new State(256);
-
-        public class State
-        {
-            public State(int length = 256)
-            {
-                X = 0;
-                Y = 0;
-                S = new byte[length];
-            }
-
-            public State(State state)
-            {
-                X = state.X;
-                Y = state.Y;
-                S = new byte[256];
-
-                for (int i = 0; i < state.S.Length; i++)
-                    S[i] = state.S[i];
-            }
-
-            public int X, Y;
-            public byte[] S;
-        }
+    private static Tuple<byte, byte> SwapByte(byte a, byte b)
+    {
+        (a, b) = (b, a);
+        return new Tuple<byte, byte>(a, b);
     }
 }

@@ -13,6 +13,7 @@ public interface ICharacterService
     bool CharacterExists(string characterName);
 
     int CharacterCount(int accountId);
+    
     CharacterEntity GetCharacterByName(string characterName);
 
     Task DeleteCharacterByNameAsync(string characterName);

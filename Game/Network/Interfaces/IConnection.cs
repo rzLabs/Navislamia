@@ -22,7 +22,7 @@ namespace Navislamia.Game.Network.Interfaces
 
         ReadOnlySpan<byte> Peek(int length);
 
-        byte[] Read(int length);
+        byte[] Read(int input);
 
         void Send(byte[] buffer);
 

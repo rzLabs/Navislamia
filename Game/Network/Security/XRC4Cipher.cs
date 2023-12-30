@@ -1,52 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Navislamia.Game.Network.Security;
 
-namespace Network.Security
+public class Xrc4Cipher : ICipher
 {
-    public class TImpl : RC4Cipher { }
+    private readonly Rc4Cipher _cipher;
 
-    public class XRC4Cipher : ICipher
+    public Xrc4Cipher()
     {
-        public XRC4Cipher()
-        {
-            Impl = new TImpl();
-            Clear();
-        }
-
-        public void SetKey(string key) => Impl.Init(key, key.Length);
-
-        public void Clear() => Impl.Init("Neat & Simple", 0);
-
-        public void Decode(byte[] source, byte[] destination, int length, bool isPeek = false)
-        {
-            if (isPeek)
-                tryCipher(source, destination, length);
-            else
-                doCipher(source, destination, length);
-        }
-
-        public void Encode(byte[] source, byte[] destination, int length, bool isPeek = false)
-        {
-            if (isPeek)
-                tryCipher(source, destination, length);
-            else
-                doCipher(source, destination, length);
-        }
-
-        void tryCipher(byte[] source, byte[] destination, int length)
-        {
-            RC4Cipher.State backup = new RC4Cipher.State(Impl.GetState());
-
-            doCipher(source, destination, length);
-
-            Impl.LoadStateFrom(backup);
-        }
-
-        void doCipher(byte[] source, byte[] destination, int length) => Impl.Code(source, destination, length);
-
-        TImpl Impl;
+        _cipher = new Rc4Cipher();
+        Clear();
     }
+
+    public void SetKey(string key) => _cipher.Init(key, key.Length);
+
+    public void Clear() => _cipher.Init("Neat & Simple");
+
+    public void Decode(byte[] source, byte[] destination, int length, bool isPeek = false)
+    {
+        if (isPeek)
+        {
+            TryCipher(source, destination, length);
+        }
+        else
+        {
+            DoCipher(source, destination, length);
+        }
+    }
+
+    public void Encode(byte[] source, byte[] destination, int length, bool isPeek = false)
+    {
+        if (isPeek)
+        {
+            TryCipher(source, destination, length);
+        }
+        else
+        {
+            DoCipher(source, destination, length);
+        }
+    }
+
+    private void TryCipher(byte[] source, byte[] destination, int length)
+    {
+        var backup = new State(_cipher.GetState());
+
+        DoCipher(source, destination, length);
+
+        _cipher.LoadStateFrom(backup);
+    }
+
+    private void DoCipher(byte[] source, byte[] destination, int length) => _cipher.Code(source, destination, length);
+
 }

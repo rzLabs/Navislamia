@@ -1,154 +1,163 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MoonSharp.Interpreter;
+using Navislamia.Game.Scripting.Functions;
 using Navislamia.Scripting.Functions;
 
-namespace Navislamia.Game.Scripting
+namespace Navislamia.Game.Scripting;
+
+public class ScriptService : IScriptService
 {
-    public class ScriptService : IScriptService
+    private string _scriptsDirectory;
+    private int ScriptCount { get; set; }
+
+    private readonly Script _luaVm = new();
+    private readonly ILogger<ScriptService> _logger;
+
+    public static ScriptService Instance { get; private set; }
+
+    public ScriptService(ILogger<ScriptService> logger)
     {
-        public string ScriptsDirectory;
-        public int ScriptCount { get; set; }
+        _logger = logger;
+        Instance = this;
+    }
 
-        Script luaVM = new();
-        private readonly ILogger _logger;
-
-        public static ScriptService Instance { get; private set; }
-
-        public ScriptService(ILogger<GameModule> logger)
+    public void Start()
+    {
+        try
         {
-            _logger = logger;
+            var scriptDir =
+                Path.Combine(
+                    Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ??
+                    throw new InvalidOperationException(), "Scripts");
+                
+            if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
+            {
+                Directory.CreateDirectory(scriptDir);
+                _logger.LogWarning("Missing directory: .\\Scripts has been created!");
+            }
 
-            Instance = this;
+            _scriptsDirectory = scriptDir;
+
+            RegisterFunctions();
+            LoadScripts();
+
+            _logger.LogDebug("{scriptCount} loaded successfully!", ScriptCount);
+
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(
+                "An exception occured while trying to load scripts!\n\nMessage:\n\t- {Message}\n\n Stack-Trace:\n\t- {StackTrace}",
+                e.Message, e.StackTrace);
+        }
+    }
+
+    public void RegisterFunction(string name, Func<object[], int> function) => _luaVm.Globals[name] = function;
+    public void RegisterFunction(string name, Action<object[]> function) => _luaVm.Globals[name] = function;
+
+    public int RunString(string script)
+    {
+
+        if (string.IsNullOrEmpty(script))
+        {
+            //Log.Error("Cannot RunString for a null script!");
+            return 0;
         }
 
-        public bool Start()
+        try
         {
-            try
+            _luaVm.DoString(script);
+        }
+        catch (ScriptRuntimeException rtEx)
+        {
+            //Log.Error("A runtime exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, rtEx.Message, rtEx.StackTrace);
+            return 0;
+        }
+        catch (SyntaxErrorException sEx)
+        {
+            //Log.Error("A syntax exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, sEx.Message, sEx.StackTrace);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            //Log.Error("An exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, ex.Message, ex.StackTrace);
+            return 0;
+        }
+
+        return 1;
+    }
+
+    private void RegisterFunctions()
+    {
+        RegisterFunction("call_lc_In", MiscFunc.SetCurrentLocationId);
+        RegisterFunction("GetMonsterId", MonsterFunc.GetMonsterId);
+        RegisterFunction("get_value", Player.get_value);
+        //RegisterFunction("get_local", MiscFunc.GetLocal);
+    }
+
+    private void LoadScripts()
+    {
+        if (string.IsNullOrEmpty(_scriptsDirectory) || !Directory.Exists(_scriptsDirectory))
+        {
+            _logger.LogError("ScriptModule failed to load because the scripts directory is null or does not exist!");
+            return;
+        }
+
+        var scriptPaths = Directory.GetFiles(_scriptsDirectory);
+        var scriptTasks = new List<Task>();
+
+        foreach (var path in scriptPaths)
+        {
+            var path1 = path;
+            scriptTasks.Add(Task.Run(() =>
             {
-                string scriptDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Scripts");
-                if (string.IsNullOrEmpty(scriptDir) || !Directory.Exists(scriptDir))
+                try
                 {
-                    Directory.CreateDirectory(scriptDir);
-                    _logger.LogWarning("Missing directory: .\\Scripts has been created!");
+                    _luaVm.DoFile(path1);
                 }
-
-                ScriptsDirectory = scriptDir;
-
-                registerFunctions();
-
-                loadScripts();
-
-                _logger.LogDebug("{scriptCount} loaded successfully!", ScriptCount);
-
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"An exception occured while trying to load scripts!\n\nMessage:\n\t- {e.Message}\n\n Stack-Trace:\n\t- {e.StackTrace}");
-                return false;
-            }
-
-            return true;
-        }
-
-        public void RegisterFunction(string name, Func<object[], int> function) => luaVM.Globals[name] = function;
-
-        public int RunString(string script)
-        {
-
-            if (string.IsNullOrEmpty(script))
-            {
-                //Log.Error("Cannot RunString for a null script!");
-                return 0;
-            }
-
-            try
-            {
-                luaVM.DoString(script);
-            }
-            catch (ScriptRuntimeException rtEx)
-            {
-                //Log.Error("A runtime exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, rtEx.Message, rtEx.StackTrace);
-                return 0;
-            }
-            catch (SyntaxErrorException sEx)
-            {
-                //Log.Error("A syntax exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, sEx.Message, sEx.StackTrace);
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                //Log.Error("An exception occured while executing the lua string: {0}\n- Message: {1}\n- Stack-Trace: {2}", script, ex.Message, ex.StackTrace);
-                return 0;
-            }
-
-            return 1;
-        }
-
-        void registerFunctions()
-        {
-            RegisterFunction("call_lc_In", MiscFunc.SetCurrentLocationID);
-            RegisterFunction("get_monster_id", MonsterFunc.get_monster_id);
-            RegisterFunction("get_value", Player.get_value);
-            //RegisterFunction("get_local", MiscFunc.GetLocal);
-        }
-
-        void loadScripts()
-        {
-            string[] scriptPaths;
-
-            if (string.IsNullOrEmpty(ScriptsDirectory) || !Directory.Exists(ScriptsDirectory))
-            {
-                _logger.LogError("ScriptModule failed to load because the scripts directory is null or does not exist!");
-                return;
-            }
-
-            scriptPaths = Directory.GetFiles(ScriptsDirectory);
-            List<Task> scriptTasks = new List<Task>();
-
-            for (int i = 0; i < scriptPaths.Length; i++)
-            {
-                string path = scriptPaths[i];
-
-                scriptTasks.Add(Task.Run(() =>
+                catch (Exception ex)
                 {
-                    try
+                    if (ex is SyntaxErrorException or ScriptRuntimeException)
                     {
-                        luaVM.DoFile(path);
+                        _logger.LogError("{path} could not be loaded!\n\nMessage: {message}\n)",
+                            Path.GetFileName(path1),
+                            ((InterpreterException)ex).DecoratedMessage.DecoratedMessageToString());
                     }
-                    catch (Exception ex)
+                    else
                     {
-
-                        string exMsg;
-
-                        if (ex is SyntaxErrorException || ex is ScriptRuntimeException)
-                            exMsg = $"{Path.GetFileName(path)} could not be loaded!\n\nMessage: {((InterpreterException)ex).DecoratedMessage.DecoratedMessageToString()}\n";
-                        else
-                            exMsg = $"An exception occured while loading {Path.GetFileName(path)}!\n\nMessage: {ex.Message}\nStack-Trace: {ex.StackTrace}\n";
-
-                        _logger.LogError(exMsg);
+                        _logger.LogError("An exception occured while loading {path}!\n\nMessage: {message}\nStack-Trace: {stacktrace}\n",
+                            Path.GetFileName(path1),
+                            ((InterpreterException)ex).DecoratedMessage.DecoratedMessageToString(), ex.StackTrace);
                     }
-                }));
+                }
+            }));
 
+            ScriptCount++;
+        }
 
-                ScriptCount++;
-            }
+        var t = Task.WhenAll(scriptTasks);
 
-            Task t = Task.WhenAll(scriptTasks);
+        try
+        {
+            t.Wait();
+        }
+        catch
+        {
+            // ignored
+        }
 
-            try
+        foreach (var task in scriptTasks.Where(task => task.IsFaulted))
+        {
+            if (task.Exception != null)
             {
-                t.Wait();
+                _logger.LogError(task.Exception.Message);
             }
-            catch { }
-
-            foreach (var task in scriptTasks)
-                if (task.IsFaulted)
-                    _logger.LogError(task.Exception.Message);
         }
     }
 }

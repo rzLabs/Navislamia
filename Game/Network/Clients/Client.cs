@@ -1,11 +1,13 @@
-using Navislamia.Game.Network.Entities.Actions;
+using System;
+using Navislamia.Game.Network.Clients.Actions;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Auth;
 using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Serilog;
-using System;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 public class Client : IDisposable
 {
@@ -37,6 +39,12 @@ public class Client : IDisposable
                 case ClientType.Game:
                     clientTag += "Client ";
                     break;
+                
+                case ClientType.Unknown:
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             clientTag += $"@{Connection.RemoteIp}:{Connection.RemotePort}";
@@ -56,7 +64,7 @@ public class Client : IDisposable
             ClientType.Auth => new AuthActions(networkService),
             ClientType.Upload => new UploadActions(networkService),
             ClientType.Game => new GameActions(networkService),
-
+            ClientType.Unknown => throw new Exception("Type not associated with any actions!"),
             _ => throw new Exception("Type not associated with any actions!")
         };
     }
@@ -83,6 +91,12 @@ public class Client : IDisposable
                     Dispose();
                 }
                 break;
+            
+            case ClientType.Unknown:
+                break;
+            
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

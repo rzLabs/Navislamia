@@ -1,6 +1,4 @@
 using System.Net.Sockets;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets.Enums;
 
 namespace Tests.Network;

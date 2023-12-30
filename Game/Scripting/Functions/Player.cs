@@ -1,24 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Navislamia.Scripting.Functions;
+﻿namespace Navislamia.Game.Scripting.Functions;
 
 public class Player
 {
     public static int get_value(params object[] args)
     {
-        string playerName;
+        switch (args.Length)
+        {
+            case < 2:
+                return 1;
+            case 3:
+                break;
+        }
 
-        if (args.Length < 2)
-            return 1;
-
-        if (args.Length == 3)
-            playerName = args[2].ToString();
-
-        string key = args[0].ToString();
+        var key = args[0].ToString();
 
         // return pPlayer.GetValue();
 

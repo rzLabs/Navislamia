@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Configuration;
 using DevConsole.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -73,7 +72,6 @@ public class Program
 
     private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
     {
-        services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
         services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
         services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
         services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));

@@ -68,4 +68,8 @@
     </None>
     <None Remove="DevConsole\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Logs\" />
+  </ItemGroup>
 </Project>

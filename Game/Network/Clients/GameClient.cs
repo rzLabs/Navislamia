@@ -1,25 +1,20 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Configuration;
-using Navislamia.Game.Network.Entities.Actions;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
 using Navislamia.Game.Network.Packets.Game;
-using Navislamia.Network.Packets;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Serilog;
 
-namespace Navislamia.Game.Network.Entities;
+namespace Navislamia.Game.Network.Clients;
 
 public class GameClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<GameClient>();
     public GameClient(Socket socket, NetworkService networkService) : base(networkService, ClientType.Game)
     {
-        Connection = new CipherConnection(socket, networkService.Options.CipherKey);
+        Connection = new CipherConnection(socket, networkService.NetworkOptions.CipherKey);
     }
     
     public void CreateClientConnection()
@@ -32,7 +27,7 @@ public class GameClient : Client
 
     public override void SendMessage(IPacket msg)
     {
-        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+        _logger.Debug("{name} ({id}) Length: {length} sent to {clientTag}", msg.StructName, msg.Id, msg.Length, ClientTag);
 
         base.SendMessage(msg);
     }
@@ -56,7 +51,7 @@ public class GameClient : Client
         while (remainingData > Marshal.SizeOf<Header>())
         {
             var header = new Header(Connection.Peek(Marshal.SizeOf<Header>()));
-            var isValidMsg = header.Checksum == Header.CalculateChecksum(header);
+            var isValidMsg = header.Checksum == header.CalculateChecksum();
 
             if (header.Length > remainingData)
             {
@@ -106,7 +101,7 @@ public class GameClient : Client
                 _ => throw new Exception("Unknown Packet Type")
             };
 
-            _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.ID, msg.Length, ClientTag);
+            _logger.Debug("{name} ({id}) Length: {length} received from {clientTag}", msg.StructName, msg.Id, msg.Length, ClientTag);
 
             Actions.Execute(this, msg);
         }

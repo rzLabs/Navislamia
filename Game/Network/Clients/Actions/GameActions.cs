@@ -2,23 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Configuration;
-using Microsoft.VisualBasic;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
+using Navislamia.Game.Network.Extensions;
+using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Auth;
+using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Game;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Navislamia.Game.Services;
-using Navislamia.Network.Packets;
 using Serilog;
 
-using Navislamia.Game.Network.Interfaces;
-using Navislamia.Game.Network.Packets.Game;
-using Navislamia.Game.Network.Extensions;
-using Navislamia.Game.Network.Packets.Enums;
-
-namespace Navislamia.Game.Network.Entities.Actions;
+namespace Navislamia.Game.Network.Clients.Actions;
 
 public class GameActions : IActions
 {
@@ -46,7 +43,7 @@ public class GameActions : IActions
 
     public void Execute(Client client, IPacket packet)
     {
-        if (_actions.TryGetValue(packet.ID, out var action))
+        if (_actions.TryGetValue(packet.Id, out var action))
         {
             action?.Invoke(client as GameClient, packet);
         }
@@ -141,7 +138,7 @@ public class GameActions : IActions
         {
             _logger.Debug("Character create failed! Limit reached! for ({accountName}) {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
-            client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
+            client.SendResult(packet.Id, (ushort)ResultCode.LimitMax);
 
             return;
         }
@@ -203,12 +200,12 @@ public class GameActions : IActions
             // Should never happen
             _logger.Error("Character create failed! for ({accountName}) {clientTag} !!!", character.AccountName, client.ClientTag);
 
-            client.SendResult(packet.ID, (ushort)ResultCode.DBError);
+            client.SendResult(packet.Id, (ushort)ResultCode.DBError);
         }
 
         _logger.Debug("Character {characterName} successfully created for ({accountName}) {clientTag}", character.CharacterName, client.ConnectionInfo.AccountName, client.ClientTag);
 
-        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+        client.SendResult(packet.Id, (ushort)ResultCode.Success);
     }
 
     private void OnDeleteCharacter(GameClient client, IPacket packet)
@@ -244,7 +241,7 @@ public class GameActions : IActions
         // TODO: update player name to have @ at the front of it and set DeleteOn date
         _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
         
-        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+        client.SendResult(packet.Id, (ushort)ResultCode.Success);
     }
 
     private void OnCheckCharacterName(GameClient client, IPacket packet)
@@ -253,7 +250,7 @@ public class GameActions : IActions
 
         if (string.IsNullOrEmpty(nameMsg.Name))
         {
-            client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
+            client.SendResult(packet.Id, (ushort)ResultCode.AccessDenied);
 
             _logger.Debug("Character Name Check Failed! Empty Name for ({accountName}) {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
@@ -262,7 +259,7 @@ public class GameActions : IActions
 
         if (!nameMsg.Name.IsValidName(4, 18))
         {
-            client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
+            client.SendResult(packet.Id, (ushort)ResultCode.InvalidText);
 
             _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
@@ -271,7 +268,7 @@ public class GameActions : IActions
         
         if (_bannedWordsRepository.ContainsBannedWord(nameMsg.Name))
         {
-            client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
+            client.SendResult(packet.Id, (ushort)ResultCode.InvalidText);
 
             _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
@@ -280,7 +277,7 @@ public class GameActions : IActions
 
         if (_characterService.CharacterExists(nameMsg.Name)) 
         {
-            client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
+            client.SendResult(packet.Id, (ushort)ResultCode.AlreadyExist);
 
             _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
@@ -289,7 +286,7 @@ public class GameActions : IActions
 
         _logger.Debug("Character Name Check Passed! for ({accountName}) {clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
 
-        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+        client.SendResult(packet.Id, (ushort)ResultCode.Success);
     }
 
 
@@ -301,16 +298,16 @@ public class GameActions : IActions
         var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
             new TS_GA_CLIENT_LOGIN(msg.Account, msg.OneTimePassword));
 
-        if (_networkService.AuthorizedGameClients.Count > _networkService.Options.MaxConnections)
+        if (_networkService.AuthorizedGameClients.Count > _networkService.NetworkOptions.MaxConnections)
         {
-            client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
+            client.SendResult(packet.Id, (ushort)ResultCode.LimitMax);
         }
 
         if (string.IsNullOrEmpty(client.ConnectionInfo.AccountName))
         {
             if (_networkService.UnauthorizedGameClients.ContainsKey(msg.Account))
             {
-                client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
+                client.SendResult(packet.Id, (ushort)ResultCode.AccessDenied);
                 return;
             }
 

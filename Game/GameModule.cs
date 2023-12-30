@@ -8,7 +8,6 @@ using Navislamia.Game.Maps;
 using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
 using Microsoft.Extensions.Logging;
-using Configuration;
 using Navislamia.Game.Network.Packets;
 using System.Net.Sockets;
 using System.Net;
@@ -16,6 +15,9 @@ using System.Threading.Tasks;
 using Navislamia.Game.DataAccess.Entities.Navislamia;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
 using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Network.Packets.Auth;
+using Navislamia.Game.Network.Packets.Enums;
+using Navislamia.Game.Network.Packets.Upload;
 
 namespace Navislamia.Game;
 
@@ -58,43 +60,35 @@ public class GameModule : IGameModule
         _mapService = mapService;
     }
 
-    public void Start(string ip, int port, int backlog)
-    {   
-        if (!LoadScripts(_scriptOptions.SkipLoading))
-            return;
-
-        if (!LoadMaps(_mapOptions.SkipLoading))
-            return;
-
-        if (!StartNetwork())
-            return;
-
-    }
-
-    private bool LoadMaps(bool skip)
+    public void Start()
     {
-        if (skip)
-        {
-            _logger.LogWarning("Map loading disabled!");
-            return true;
-        }
-
-        // TODO: MapContent should be printing messages
-        return _mapService.Start($"{Directory.GetCurrentDirectory()}\\Maps");
+        LoadScripts();
+        LoadMaps();
+        StartNetwork();
     }
 
-    private bool LoadScripts(bool skip)
+    private void LoadMaps()
     {
-        if (skip)
+        if (_mapOptions.SkipLoading)
         {
-            _logger.LogWarning("Script loading disabled!");
-            return true;
+            // TODO: MapContent should be printing messages
+            _mapService.Start($"{Directory.GetCurrentDirectory()}\\Maps");
         }
-
-        return _scriptService.Start();
+        
+        _logger.LogWarning("Map loading disabled!");
     }
 
-    private bool StartNetwork()
+    private void LoadScripts()
+    {
+        if (!_scriptOptions.SkipLoading)
+        {
+            _scriptService.Start();
+        }
+        
+        _logger.LogWarning("Script loading disabled!");
+    }
+
+    private void StartNetwork()
     {
         ConnectToAuth();
         ConnectToUpload();
@@ -106,16 +100,16 @@ public class GameModule : IGameModule
         while (!_networkService.IsReady())
         {
             if (DateTime.UtcNow < maxTime)
+            {
                 continue;
+            }
 
             _logger.LogError("Network service timed out!");
 
-            return false;
+            return;
         }
 
         ListenForClients();
-
-        return true;
     }
 
     private void ConnectToAuth() // TODO: exceptions need to write the ex message and stack trace
@@ -151,8 +145,7 @@ public class GameModule : IGameModule
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to send Game server info to the Auth Server!");
-
+            _logger.LogError("Failed to send Game server info to the Auth Server! {exception}", ex);
             throw new Exception("Failed sending message to Authservice");
         };
     }
@@ -184,9 +177,8 @@ public class GameModule : IGameModule
         }
         catch (Exception ex)
         {
-            // TODO: fix me!
-            //_notificationSvc.WriteException(ex);
-            throw new Exception();
+            _logger.LogError("Failed to send Game server info to the Upload Server! {exception}", ex);
+            throw new Exception("Failed sending message to Upload Server");
         }
     }
 
@@ -198,14 +190,12 @@ public class GameModule : IGameModule
 
         if (!IPAddress.TryParse(address, out var addr))
         {
-            _logger.LogError("Failed to parse io.ip: {address}", address);
+            _logger.LogError("Failed to parse IP: {address}", address);
             return;
         }
 
         var clientListenerEndPoint = new IPEndPoint(addr, port);
-
         _clientListener = new Socket(clientListenerEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
         _clientListener.Bind(clientListenerEndPoint);
         _clientListener.Listen(backlog);
 
@@ -219,11 +209,11 @@ public class GameModule : IGameModule
         while (true)
         {
             var clientSocket = await _clientListener.AcceptAsync();
+            var client = _networkService.CreateGameClient(clientSocket);
+            
             clientSocket.NoDelay = true;
     
-            var client = _networkService.CreateGameClient(clientSocket);
-    
-            _logger.LogDebug("Gameclient connected {clientTag}", client.ClientTag);
+            _logger.LogDebug("Client connected {clientTag}", client.ClientTag);
         }
     }
 }

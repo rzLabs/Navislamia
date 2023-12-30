@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Navislamia.Game.Network.Packets
+﻿namespace Navislamia.Game.Network.Packets.Interfaces
 {
     public interface IPacket
     {
-        public ushort ID { get; }
+        public ushort Id { get; }
 
         public uint Length { get; }
 
@@ -18,7 +12,7 @@ namespace Navislamia.Game.Network.Packets
 
         public string StructName { get; }
 
-        public S GetDataStruct<S>();
+        public TS GetDataStruct<TS>();
 
         public string DumpStructToString();
 

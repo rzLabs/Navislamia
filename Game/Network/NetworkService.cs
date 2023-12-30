@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
-using Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Game.Network.Entities.Actions;
+using Navislamia.Game.Network.Clients;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
+using Navislamia.Game.Network.Packets.Interfaces;
 using Navislamia.Game.Services;
 
 namespace Navislamia.Game.Network;
@@ -20,7 +20,8 @@ public class NetworkService : INetworkService
     private readonly ILogger<NetworkService> _logger;
     public readonly ICharacterService CharacterService;
     public readonly IBannedWordsRepository BannedWordsRepository;
-    public readonly NetworkOptions Options;
+    public readonly NetworkOptions NetworkOptions;
+    public readonly ServerOptions ServerOptions;
 
     public AuthClient AuthClient { get; set; }
     
@@ -30,12 +31,15 @@ public class NetworkService : INetworkService
 
     public Dictionary<string, GameClient> AuthorizedGameClients { get; set; } = new();
 
-    public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, ICharacterService characterService, IBannedWordsRepository bannedWordsRepository)
+    public NetworkService(ILogger<NetworkService> logger, IOptions<NetworkOptions> networkOptions, 
+        ICharacterService characterService, IBannedWordsRepository bannedWordsRepository,
+        IOptions<ServerOptions> serverOptions)
     {
         _logger = logger;
         CharacterService = characterService;
         BannedWordsRepository = bannedWordsRepository;
-        Options = networkOptions.Value;
+        NetworkOptions = networkOptions.Value;
+        ServerOptions = serverOptions.Value;
     }
 
     public bool IsReady()
