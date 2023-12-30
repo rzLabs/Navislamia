@@ -110,8 +110,8 @@ public class Program
                 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
                 
         services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
@@ -122,8 +122,8 @@ public class Program
 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
         });
     }

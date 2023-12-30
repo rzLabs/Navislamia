@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
+using Navislamia.Game.Extensions;
 using Navislamia.Game.Network.Extensions;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets;
@@ -62,7 +63,7 @@ public class GameActions : IActions
     private async void OnCharacterList(GameClient client, IPacket packet)
     {
         var message = packet.GetDataStruct<TS_CS_CHARACTER_LIST>();
-        var characters = await _characterService.GetCharactersByAccountNameAsync(message.Account, true);
+        var characters = await _characterService.GetCharactersByAccountNameAsync(message.Account);
         var lobbyCharacters = new List<LobbyCharacterInfo>();
 
         foreach (var character in characters)
@@ -90,12 +91,15 @@ public class GameActions : IActions
                 DeleteTime = character.DeletedOn?.ToString("yyyy/MM/dd") ?? "9999/12/01",
             };
 
-            foreach (var item in  character.Items.Where(i => i.WearInfo != ItemWearType.None))
+            if (!character.Items.IsNullOrEmpty())
             {
-                characterLobbyInfo.WearInfo[(int)item.WearInfo] = (int)item.ItemResourceId;
-                characterLobbyInfo.WearItemEnhanceInfo[(int)item.WearInfo] = (int)item.Enhance;
-                characterLobbyInfo.WearItemLevelInfo[(int)item.WearInfo] = (int)item.Level;
-                characterLobbyInfo.WearItemElementalType[(int)item.WearInfo] = (char)item.ElementalEffectType;
+                foreach (var item in character.Items.Where(i => i.WearInfo != ItemWearType.None))
+                {
+                    characterLobbyInfo.WearInfo[(int)item.WearInfo] = (int)item.ItemResourceId;
+                    characterLobbyInfo.WearItemEnhanceInfo[(int)item.WearInfo] = (int)item.Enhance;
+                    characterLobbyInfo.WearItemLevelInfo[(int)item.WearInfo] = (int)item.Level;
+                    characterLobbyInfo.WearItemElementalType[(int)item.WearInfo] = (char)item.ElementalEffectType;
+                }
             }
 
             lobbyCharacters.Add(characterLobbyInfo);
@@ -242,7 +246,7 @@ public class GameActions : IActions
         
         _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
         
-        // Do not call SaveChanges in any of the methods above as if anything failes the changes are not commited
+        // Do not call SaveChanges in any of the methods above as if anything fails the changes are not commited
         // into the database unless SaveChanges has been run. This is a protective messure to not remove too much and 
         // and risk a failure that corrupts the entities
         _characterService.SaveChanges();

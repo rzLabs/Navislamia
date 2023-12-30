@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Navislamia.Game.DataAccess.Entities;
 using Navislamia.Game.DataAccess.Extensions;
 
@@ -63,6 +66,15 @@ public abstract class SoftDeletionContext : DbContext
                         entry.State = EntityState.Modified;
                         entity.DeletedOn = DateTime.UtcNow;
                         break;
+                    
+                    case EntityState.Detached:
+                        break;
+                    
+                    case EntityState.Unchanged:
+                        break;
+                    
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }

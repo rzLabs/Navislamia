@@ -6,7 +6,7 @@ namespace Navislamia.Game.DataAccess.Repositories.Interfaces;
 
 public interface ICharacterRepository
 {
-    Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false);
+    Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName);
 
     Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character);
  

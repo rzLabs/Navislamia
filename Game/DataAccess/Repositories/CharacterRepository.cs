@@ -16,22 +16,14 @@ public class CharacterRepository : ICharacterRepository
         _context = new TelecasterContext(options);
     }
     
-    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
+    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName)
     {
-        var query = _context.Characters.AsNoTracking().Where(c => c.AccountName == accountName);
-
-        if (withItems)
-        {
-            query = query.Include(c => c.Items);
-        }
-        
-        return query;
+        return _context.Characters.Where(c => c.AccountName == accountName);
     }
 
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
-        var result = (await _context.Characters.AddAsync(character)).Entity;
-        return result;
+        return (await _context.Characters.AddAsync(character)).Entity;
     }
 
     public CharacterEntity GetCharacterByName(string characterName)
@@ -41,7 +33,7 @@ public class CharacterRepository : ICharacterRepository
 
     public bool CharacterExists(string characterName)
     {
-        return _context.Characters.AsNoTracking().Any(c => c.CharacterName == characterName);
+        return _context.Characters.Any(c => c.CharacterName == characterName);
     }
     
     public void Delete(CharacterEntity entity)
@@ -51,7 +43,7 @@ public class CharacterRepository : ICharacterRepository
 
     public int CharacterCount(int accountId)
     {
-        return _context.Characters.AsNoTracking().Count(c=>c.AccountId == accountId);
+        return _context.Characters.Count(c => c.AccountId == accountId);
     }
 
     public async Task SaveChangesAsync()
