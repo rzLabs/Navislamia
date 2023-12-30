@@ -44,7 +44,7 @@ public class CharacterRepository : ICharacterRepository
         return _context.Characters.AsNoTracking().Any(c => c.CharacterName == characterName);
     }
     
-    public void DeleteAsync(CharacterEntity entity)
+    public void Delete(CharacterEntity entity)
     {
         _context.Characters.Remove(entity);
     }

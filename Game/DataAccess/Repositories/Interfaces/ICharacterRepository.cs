@@ -16,7 +16,7 @@ public interface ICharacterRepository
 
     int CharacterCount(int accountId);
     
-    void DeleteAsync(CharacterEntity entity);
+    void Delete(CharacterEntity entity);
 
     /// <summary>
     /// Avoid using SaveChanges directly from context as it applies modifications directly to the database.
