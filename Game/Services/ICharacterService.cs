@@ -6,7 +6,7 @@ namespace Navislamia.Game.Services;
 
 public interface ICharacterService
 {
-    Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName);
+    Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false);
 
     Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false);
 

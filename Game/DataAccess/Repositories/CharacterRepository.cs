@@ -16,14 +16,22 @@ public class CharacterRepository : ICharacterRepository
         _context = new TelecasterContext(options);
     }
     
-    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName)
+    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
     {
-        return _context.Characters.Where(c => c.AccountName == accountName);
+        var query = _context.Characters.Where(c => c.AccountName == accountName);
+
+        if (withItems)
+        {
+            query = query.Include(c => c.Items);
+        }
+        
+        return query;
     }
 
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
-        return (await _context.Characters.AddAsync(character)).Entity;
+        var result = (await _context.Characters.AddAsync(character)).Entity;
+        return result;
     }
 
     public CharacterEntity GetCharacterByName(string characterName)

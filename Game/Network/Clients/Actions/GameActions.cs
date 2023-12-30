@@ -63,7 +63,7 @@ public class GameActions : IActions
     private async void OnCharacterList(GameClient client, IPacket packet)
     {
         var message = packet.GetDataStruct<TS_CS_CHARACTER_LIST>();
-        var characters = await _characterService.GetCharactersByAccountNameAsync(message.Account);
+        var characters = await _characterService.GetCharactersByAccountNameAsync(message.Account, true);
         var lobbyCharacters = new List<LobbyCharacterInfo>();
 
         foreach (var character in characters)

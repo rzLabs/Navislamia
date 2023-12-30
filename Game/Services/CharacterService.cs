@@ -22,9 +22,9 @@ public class CharacterService : ICharacterService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName)
+    public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
     {
-        return await _characterRepository.GetCharactersByAccountNameAsync(accountName);
+        return await _characterRepository.GetCharactersByAccountNameAsync(accountName, withItems);
     }
 
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character, bool withStarterItems = false)
