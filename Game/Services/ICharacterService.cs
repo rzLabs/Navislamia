@@ -14,4 +14,8 @@ public interface ICharacterService
 
     int CharacterCount(int accountId);
 
+    CharacterEntity GetCharacterByName(string characterName);
+
+    Task DeleteByCharacterNameAsync(string characterName);
+
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
@@ -8,13 +9,15 @@ namespace Navislamia.Game.Services;
 
 public class CharacterService : ICharacterService
 {
+    private readonly ILogger<CharacterService> _logger;
     private readonly ICharacterRepository _characterRepository;
     private readonly IStarterItemsRepository _starterItemsRepository;
 
-    public CharacterService(IStarterItemsRepository starterItemsRepository, ICharacterRepository characterRepository)
+    public CharacterService(IStarterItemsRepository starterItemsRepository, ICharacterRepository characterRepository, ILogger<CharacterService> logger)
     {
         _starterItemsRepository = starterItemsRepository;
         _characterRepository = characterRepository;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false)
@@ -56,5 +59,23 @@ public class CharacterService : ICharacterService
     public int CharacterCount(int accountId)
     {
         return _characterRepository.CharacterCount(accountId);
+    }
+
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _characterRepository.GetCharacterByName(characterName);
+    }
+
+    public async Task DeleteByCharacterNameAsync(string characterName)
+    {
+        var entity = _characterRepository.GetCharacterByName(characterName);
+        if (entity == null)
+        {
+            _logger.LogWarning("Could not delete Character with name {name}: Not found", characterName);
+            return;
+        }
+        
+        _characterRepository.DeleteAsync(entity);
+        await _characterRepository.SaveChangesAsync();
     }
 }
