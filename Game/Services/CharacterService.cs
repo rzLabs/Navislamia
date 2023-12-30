@@ -4,10 +4,13 @@ using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
 
+using Serilog;
+
 namespace Navislamia.Game.Services;
 
 public class CharacterService : ICharacterService
 {
+    private readonly ILogger _logger = Log.ForContext<CharacterService>();
     private readonly ICharacterRepository _characterRepository;
     private readonly IStarterItemsRepository _starterItemsRepository;
 
@@ -56,5 +59,31 @@ public class CharacterService : ICharacterService
     public int CharacterCount(int accountId)
     {
         return _characterRepository.CharacterCount(accountId);
+    }
+
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _characterRepository.GetCharacterByName(characterName);
+    }
+
+    public async Task DeleteCharacterByNameAsync(string characterName)
+    {
+        var entity = _characterRepository.GetCharacterByName(characterName);
+
+        if (entity is null)
+        {
+            _logger.Warning("Character Delete Failed! Character {name} not found!", characterName);
+
+            return;
+        }
+
+        _characterRepository.Delete(entity);
+
+        await _characterRepository.SaveChangesAsync();
+    }
+
+    public async void SaveChanges()
+    {
+        await _characterRepository.SaveChangesAsync();
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Configuration;
+using Microsoft.VisualBasic;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
@@ -15,6 +16,7 @@ using Serilog;
 using Navislamia.Game.Network.Interfaces;
 using Navislamia.Game.Network.Packets.Game;
 using Navislamia.Game.Network.Extensions;
+using Navislamia.Game.Network.Packets.Enums;
 
 namespace Navislamia.Game.Network.Entities.Actions;
 
@@ -37,6 +39,7 @@ public class GameActions : IActions
         _actions.Add((ushort)GamePackets.TM_CS_REPORT, OnReport);
         _actions.Add((ushort)GamePackets.TM_CS_CHARACTER_LIST, OnCharacterList);
         _actions.Add((ushort)GamePackets.TM_CS_CREATE_CHARACTER, OnCreateCharacter);
+        _actions.Add((ushort)GamePackets.TM_CS_DELETE_CHARACTER, OnDeleteCharacter);
         _actions.Add((ushort)GamePackets.TM_CS_CHECK_CHARACTER_NAME, OnCheckCharacterName);
         _actions.Add((ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH, OnAccountWithAuth);
     }
@@ -99,6 +102,8 @@ public class GameActions : IActions
             }
 
             lobbyCharacters.Add(characterLobbyInfo);
+
+            client.ConnectionInfo.CharacterList.Add(character.CharacterName);
         }
 
         SendCharacterList(client, lobbyCharacters);
@@ -134,7 +139,7 @@ public class GameActions : IActions
 
         if (_characterService.CharacterCount(client.ConnectionInfo.AccountId) >= 6)
         {
-            _logger.Debug("Character create failed! Limit reached! for {accountName}{clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character create failed! Limit reached! for ({accountName}) {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
             client.SendResult(packet.ID, (ushort)ResultCode.LimitMax);
 
@@ -179,6 +184,7 @@ public class GameActions : IActions
             HairColorIndex = createMsg.Info.HairColorIndex,
             TextureId = createMsg.Info.TextureID,
             SkinColor = (int)createMsg.Info.SkinColor,
+
             // Add default gear to the character
             Items = new List<ItemEntity>
             {
@@ -195,13 +201,49 @@ public class GameActions : IActions
         if (createdEntity == null)
         {
             // Should never happen
-            _logger.Error("Character create failed! for {accountName}{clientTag} !!!", character.AccountName, client.ClientTag);
+            _logger.Error("Character create failed! for ({accountName}) {clientTag} !!!", character.AccountName, client.ClientTag);
 
             client.SendResult(packet.ID, (ushort)ResultCode.DBError);
         }
 
-        _logger.Debug("Character {characterName} successfully created for {accountName}{clientTag}", character.CharacterName, client.ConnectionInfo.AccountName, client.ClientTag);
+        _logger.Debug("Character {characterName} successfully created for ({accountName}) {clientTag}", character.CharacterName, client.ConnectionInfo.AccountName, client.ClientTag);
 
+        client.SendResult(packet.ID, (ushort)ResultCode.Success);
+    }
+
+    private void OnDeleteCharacter(GameClient client, IPacket packet)
+    {
+        // Normally a player cannot request a character delete before any have been made, bad actor!
+        if (client.ConnectionInfo.CharacterList.Count == 0)
+        {
+            client.SendDisconnectDesription(DisconnectType.AntiHack);
+
+            client.Dispose();
+
+            return;
+        }
+
+        var deleteMsg = packet.GetDataStruct<TS_CS_DELETE_CHARACTER>();
+
+        // TODO: implement delete security
+
+        // TODO: check if is guild leader (and send result AccessDenied)
+
+        // TODO: get party (if leader, destroy. If member, leave)
+
+        // TODO: remove own friends list entries
+
+        // TODO: remove self from friend list of friends
+
+        // TODO: remove denials (people blocked)
+
+        // TODO: remove self from other players denials
+
+        // TODO: remove self from ranking score
+
+        // TODO: update player name to have @ at the front of it and set DeleteOn date
+        _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
+        
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
 
@@ -213,7 +255,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AccessDenied);
 
-            _logger.Debug("Character Name Check Failed! Empty Name for {accountName} {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Empty Name for ({accountName}) {clientTag} !!!", client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -222,7 +264,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Invalid Name ({name}) for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -231,7 +273,7 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.InvalidText);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) contains banned word! for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
@@ -240,12 +282,12 @@ public class GameActions : IActions
         {
             client.SendResult(packet.ID, (ushort)ResultCode.AlreadyExist);
 
-            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for {accountName} {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
+            _logger.Debug("Character Name Check Failed! Name ({name}) already exists! for ({accountName}) {clientTag} !!!", nameMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
 
             return;
         }
 
-        _logger.Debug("Character Name Check Passed! for {accountName} {clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
+        _logger.Debug("Character Name Check Passed! for ({accountName}) {clientTag}", client.ConnectionInfo.AccountName, client.ClientTag);
 
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }

@@ -53,7 +53,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasKey("Id");
 
-                    b.ToTable("Alliances");
+                    b.ToTable("Alliances", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", b =>
@@ -115,7 +115,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("Auctions");
+                    b.ToTable("Auctions", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.CharacterEntity", b =>
@@ -347,7 +347,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("SubSummonId")
                         .IsUnique();
 
-                    b.ToTable("Characters");
+                    b.ToTable("Characters", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.DungeonEntity", b =>
@@ -389,7 +389,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasIndex("RaidGuildId");
 
-                    b.ToTable("Dungeons");
+                    b.ToTable("Dungeons", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GlobalVariableEntity", b =>
@@ -417,7 +417,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasKey("Id");
 
-                    b.ToTable("GlobalVariables");
+                    b.ToTable("GlobalVariables", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.GuildEntity", b =>
@@ -516,7 +516,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("DungeonId")
                         .IsUnique();
 
-                    b.ToTable("Guilds");
+                    b.ToTable("Guilds", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemEntity", b =>
@@ -609,7 +609,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasIndex("RelatedAuctionId");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.ItemStorageEntity", b =>
@@ -667,7 +667,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("RelatedItemId")
                         .IsUnique();
 
-                    b.ToTable("ItemStorages");
+                    b.ToTable("ItemStorages", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PartyEntity", b =>
@@ -709,7 +709,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("LeaderId")
                         .IsUnique();
 
-                    b.ToTable("Parties");
+                    b.ToTable("Parties", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.PetEntity", b =>
@@ -755,7 +755,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("ItemId")
                         .IsUnique();
 
-                    b.ToTable("Pets");
+                    b.ToTable("Pets", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.StarterItemsEntity", b =>
@@ -795,7 +795,7 @@ namespace Navislamia.Game.Migrations.Telecaster
 
                     b.HasKey("Id");
 
-                    b.ToTable("StarterItems");
+                    b.ToTable("StarterItems", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.SummonEntity", b =>
@@ -876,7 +876,7 @@ namespace Navislamia.Game.Migrations.Telecaster
                     b.HasIndex("CardItemId")
                         .IsUnique();
 
-                    b.ToTable("Summons");
+                    b.ToTable("Summons", (string)null);
                 });
 
             modelBuilder.Entity("Navislamia.Game.DataAccess.Entities.Telecaster.AuctionEntity", b =>
