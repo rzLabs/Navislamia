@@ -11,7 +11,6 @@ namespace Navislamia.Game.DataAccess.Repositories;
 public class CharacterRepository : ICharacterRepository
 {
     private readonly TelecasterContext _context;
-
     public CharacterRepository(DbContextOptions<TelecasterContext> options)
     {
         _context = new TelecasterContext(options);
@@ -36,14 +35,23 @@ public class CharacterRepository : ICharacterRepository
 
     public async Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character)
     {
-        var count = _context.Characters.AsNoTracking().Count(c => c.AccountId == character.AccountId);
         var result = (await _context.Characters.AddAsync(character)).Entity;
         return result;
+    }
+
+    public CharacterEntity GetCharacterByName(string characterName)
+    {
+        return _context.Characters.FirstOrDefault(c => c.CharacterName == characterName);
     }
 
     public bool CharacterExists(string characterName)
     {
         return _context.Characters.AsNoTracking().Any(c => c.CharacterName ==  characterName);
+    }
+    
+    public void DeleteAsync(CharacterEntity entity)
+    {
+        _context.Characters.Remove(entity);
     }
 
     public int CharacterCount(int accountId)

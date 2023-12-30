@@ -11,10 +11,13 @@ public interface ICharacterRepository
     Task<IEnumerable<CharacterEntity>> GetCharactersByAccountNameAsync(string accountName, bool withItems = false);
 
     Task<CharacterEntity> CreateCharacterAsync(CharacterEntity character);
+    CharacterEntity GetCharacterByName(string characterName);
 
     bool CharacterExists(string characterName);
 
     int CharacterCount(int accountId);
+    
+    void DeleteAsync(CharacterEntity entity);
 
     /// <summary>
     /// Avoid using SaveChanges directly from context as it applies modifications directly to the database.
