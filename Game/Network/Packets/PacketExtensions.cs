@@ -29,7 +29,7 @@ public static class PacketExtensions
         var length = Marshal.SizeOf(structure);
         var ptr = Marshal.AllocHGlobal(length);
 
-        byte[] buffer = new byte[length];
+        var buffer = new byte[length];
 
         Marshal.StructureToPtr(structure, ptr, true);
         Marshal.Copy(ptr, buffer, 0, length);

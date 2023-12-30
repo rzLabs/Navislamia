@@ -8,21 +8,20 @@ namespace Navislamia.Scripting.Functions;
 
 public static class MiscFunc
 {
-    public static int SetCurrentLocationID(params object[] args)
+    public static void SetCurrentLocationId(params object[] args)
     {
         // TODO:
         // MapLoader.CurrentLocationID = 0;
 
         if (args.Length == 0)
-            return 0;
+        {
+            return;
+        }
 
-        int n = Convert.ToInt32(args[0]);
+        var n = Convert.ToInt32(args[0]);
 
         // TODO:
         //MapLoader.CurrentLocationID = n;
-
-        return 0;
-
     }
 
     public static int GetEnv(params object[] args)

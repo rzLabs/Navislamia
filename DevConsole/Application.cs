@@ -39,7 +39,7 @@ public class Application : IHostedService
                 throw new InvalidConfigurationException("IP and/or Port is either invalid or missing");
             }
                 
-            _gameModule.Start(ip, port, backlog);
+            _gameModule.Start();
             _logger.LogInformation("Press {combination} to stop", "CTRL + C");
         }
         catch (Exception e)

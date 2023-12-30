@@ -59,7 +59,7 @@ namespace Navislamia.Game.Maps
             _eventAreaInfo = new Dictionary<int, EventAreaInfo>();
         }
 
-        public bool Start(string directory)
+        public void Start(string directory)
         {
             List<Task> tasks = new();
 
@@ -86,10 +86,10 @@ namespace Navislamia.Game.Maps
                 {
                     foreach (var t in tasks.Where(t => t.IsFaulted))
                     {
-                        _logger.LogError(t.Exception.Message); // TODO: should include stack trace
+                        _logger.LogError("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
+                        throw new Exception();
                     }
-
-                    return false;
+                    return;
                 }
 
                 tasks.Clear();
@@ -104,7 +104,7 @@ namespace Navislamia.Game.Maps
                 {
                     for (var x = 0; x < MapCount.CX; ++x)
                     {
-                        _logger.LogDebug($"Loading map: m{x:D3}_{y:D3}...");
+                        _logger.LogDebug("Loading map: m{x}_{y}...", x, y);
 
                         var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
 
@@ -172,22 +172,21 @@ namespace Navislamia.Game.Maps
 
                         foreach (var t in tasks.Where(t => t.IsFaulted))
                         {
-                            _logger.LogError(t.Exception.Message); // TODO: needs to include stack trace
+                            _logger.LogError("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
+                            throw new Exception();
                         }
 
-                        return false;
+                        return;
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed loads maps!"); // TODO: needs to include stack trace
-                return false;
+                _logger.LogError("Failed loads maps! {exception}", ex); // TODO: needs to include stack trace
+                return;
             }
 
             _logger.LogDebug("{mapCount} Maps loaded successfully!", MapCount.CX + MapCount.CY);
-
-            return true;
         }
 
         private void SetDefaultLocation(int x, int y, float mapLength, int locationId)
