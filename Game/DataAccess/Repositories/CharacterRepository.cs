@@ -41,7 +41,7 @@ public class CharacterRepository : ICharacterRepository
 
     public bool CharacterExists(string characterName)
     {
-        return _context.Characters.AsNoTracking().Any(c => c.CharacterName == characterName && c.DeletedOn == null);
+        return _context.Characters.AsNoTracking().Any(c => c.CharacterName == characterName);
     }
     
     public void DeleteAsync(CharacterEntity entity)
