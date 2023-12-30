@@ -59,7 +59,8 @@ public class TelecasterContext : SoftDeletionContext
         modelBuilder.Entity<CharacterEntity>()
             .HasMany(c => c.Items)
             .WithOne(i => i.Character)
-            .HasForeignKey(i => i.CharacterId);
+            .HasForeignKey(i => i.CharacterId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         modelBuilder.Entity<CharacterEntity>()
             .HasOne(c => c.Party)

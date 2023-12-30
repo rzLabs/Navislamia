@@ -78,7 +78,6 @@ public class CharacterService : ICharacterService
         }
 
         _characterRepository.Delete(entity);
-        await _characterRepository.SaveChangesAsync();
     }
 
     public async void SaveChanges()

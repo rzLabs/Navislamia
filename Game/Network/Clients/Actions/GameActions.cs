@@ -239,8 +239,13 @@ public class GameActions : IActions
         // TODO: remove self from ranking score
 
         // TODO: update player name to have @ at the front of it and set DeleteOn date
+        
         _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
         
+        // Do not call SaveChanges in any of the methods above as if anything failes the changes are not commited
+        // into the database unless SaveChanges has been run. This is a protective messure to not remove too much and 
+        // and risk a failure that corrupts the entities
+        _characterService.SaveChanges();
         client.SendResult(packet.Id, (ushort)ResultCode.Success);
     }
 
