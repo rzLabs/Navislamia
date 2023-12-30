@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Configuration;
+using Microsoft.VisualBasic;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
@@ -222,8 +223,6 @@ public class GameActions : IActions
             return;
         }
 
-        var deleteMsg = packet.GetDataStruct<TS_CS_DELETE_CHARACTER>();
-
         // TODO: implement delete security
 
         // TODO: check if is guild leader (and send result AccessDenied)
@@ -241,10 +240,8 @@ public class GameActions : IActions
         // TODO: remove self from ranking score
 
         // TODO: update player name to have @ at the front of it and set DeleteOn date
-        _characterService.DeleteCharacterByNameAsync(deleteMsg.Name);
-
-        _logger.Debug("Character {characterName} successfully deleted for ({accountName}) {clientTag}", deleteMsg.Name, client.ConnectionInfo.AccountName, client.ClientTag);
-
+        // _characterService.DeleteByCharacterNameAsync(char name here)
+        
         client.SendResult(packet.ID, (ushort)ResultCode.Success);
     }
 

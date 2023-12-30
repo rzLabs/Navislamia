@@ -22,6 +22,8 @@ public class TelecasterContext : SoftDeletionContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         ConfigureAuctions(modelBuilder);
         ConfigureCharacters(modelBuilder);
         ConfigureItems(modelBuilder);
