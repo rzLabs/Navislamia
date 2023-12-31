@@ -1,178 +1,164 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
+using Navislamia.Game.Network.Packets.Interfaces;
 
-namespace Navislamia.Network.Packets
+namespace Navislamia.Game.Network.Packets;
+
+public class Packet<T> : IPacket where T : new()
 {
-    public interface IPacket
+    private readonly int _headerLen;
+    private readonly int _dataLen;
+
+    public Header HeaderStruct;
+    public T DataStruct;
+
+    public ushort Id => HeaderStruct.ID;
+
+    public uint Length => HeaderStruct.Length;
+
+    public byte Checksum => HeaderStruct.Checksum;
+
+    public byte[] Data { get; set; }
+
+    public string StructName => typeof(T).Name;
+
+    public Packet(ushort id, T dataStruct, int length = 0)
     {
-        public ushort ID { get; }
+        HeaderStruct = new Header(id);
+        DataStruct = dataStruct;
 
-        public uint Length { get; }
+        _headerLen = 7;
+        _dataLen = Marshal.SizeOf(DataStruct);
 
-        public byte Checksum { get; }
+        Data = new byte[_headerLen + ((length == 0) ?_dataLen : length)];
 
-        public byte[] Data { get; set; }
-
-        public S GetDataStruct<S>();
-
-        public string DumpStructToString();
-
-        public string DumpDataToHexString();
+        Serialize();
     }
 
-    public class Packet<T> : IPacket where T : new()
+    public Packet(byte[] data)
     {
-        public Packet(ushort id, T dataStruct, int length = 0)
+        _headerLen = 7;
+        _dataLen = Marshal.SizeOf(DataStruct);
+
+        HeaderStruct = new Header();
+        DataStruct = new T();
+
+        Data = data;
+
+        Deserialize();
+    }
+
+
+    public TS GetDataStruct<TS>() => (TS)(object)DataStruct;
+
+    private void Serialize()
+    {
+        HeaderStruct.Length = (uint)(Data.Length);
+        HeaderStruct.CalculateChecksum();
+
+        var ptr = Marshal.AllocHGlobal(_headerLen);
+
+        Marshal.StructureToPtr(HeaderStruct, ptr, true);
+        Marshal.Copy(ptr, Data, 0, _headerLen);
+        Marshal.FreeHGlobal(ptr);
+
+        ptr = Marshal.AllocHGlobal(_dataLen);
+
+        Marshal.StructureToPtr(DataStruct, ptr, false);
+        Marshal.Copy(ptr, Data, _headerLen, _dataLen);
+        Marshal.FreeHGlobal(ptr);
+    }
+
+    private void Deserialize()
+    {
+        var ptr = Marshal.AllocHGlobal(_headerLen);
+        Marshal.Copy(Data, 0, ptr, _headerLen);
+
+        HeaderStruct = Marshal.PtrToStructure<Header>(ptr);
+
+        Marshal.FreeHGlobal(ptr);
+
+        ptr = Marshal.AllocHGlobal(_dataLen);
+        Marshal.Copy(Data, 7, ptr, _dataLen);
+
+        DataStruct = Marshal.PtrToStructure<T>(ptr);
+
+        Marshal.FreeHGlobal(ptr);
+    }
+
+    public string DumpStructToString()
+    {
+        var output = $"[orchid]Packet Info:[/]\n\nName: {DataStruct.GetType().Name}\n\nHeader:\n\n- [steelblue3]ID:[/] {Id}\n- [steelblue3]Length:[/] {Length}\n- [steelblue3]Checksum:[/] {Checksum}\n\nProperties:\n\n";
+
+        foreach (var field in DataStruct.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
         {
-            HeaderStruct = new Header(id);
-            DataStruct = dataStruct;
+            var str = $"- [steelblue3]{field.Name}[/] [deeppink4_2]({field.FieldType.Name})[/]: ";
+            var value = field.GetValue(DataStruct);
 
-            _headerLen = 7;
-            _dataLen = Marshal.SizeOf(DataStruct);
+            if (value is byte[])
+                continue;
 
-            Data = new byte[_headerLen + ((length == 0) ?_dataLen : length)];
-
-            serialize();
+            output += $"{str + value}\n";
         }
 
-        public Packet(byte[] data)
+        return output;
+    }
+
+    public string DumpDataToHexString()
+    {
+        Span<byte> buffer = Data;
+
+        var maxWidth = Math.Min(16, buffer.Length);
+        var rowHeader = 0;
+
+        string outStr = null;
+        string curRowStr = null;
+        var curCol = 0;
+
+        for (var i = 0; i < buffer.Length; i++)
         {
-            _headerLen = 7;
-            _dataLen = Marshal.SizeOf(DataStruct);
+            var byteStr = $"{buffer[i]:x2}";
+            curRowStr += $"{byteStr} ";
+            curCol++;
 
-            HeaderStruct = new Header();
-            DataStruct = new T();
-
-            Data = data;
-
-            deserialize();
-        }
-
-        int _headerLen;
-        int _dataLen;
-
-        public Header HeaderStruct;
-        public T DataStruct;
-
-        public ushort ID => HeaderStruct.ID;
-
-        public uint Length => HeaderStruct.Length;
-
-        public byte Checksum => HeaderStruct.Checksum;
-
-        public byte[] Data { get; set; }
-
-        public S GetDataStruct<S>() => (S)(object)DataStruct;
-
-        private void serialize()
-        {
-            HeaderStruct.Length = (uint)(Data.Length);
-            HeaderStruct.CalculateChecksum();
-
-            var ptr = Marshal.AllocHGlobal(_headerLen);
-
-            Marshal.StructureToPtr(HeaderStruct, ptr, true);
-            Marshal.Copy(ptr, Data, 0, _headerLen);
-            Marshal.FreeHGlobal(ptr);
-
-            ptr = Marshal.AllocHGlobal(_dataLen);
-
-            Marshal.StructureToPtr(DataStruct, ptr, false);
-            Marshal.Copy(ptr, Data, _headerLen, _dataLen);
-            Marshal.FreeHGlobal(ptr);
-        }
-
-        private void deserialize()
-        {
-            var ptr = Marshal.AllocHGlobal(_headerLen);
-            Marshal.Copy(Data, 0, ptr, _headerLen);
-
-            HeaderStruct = Marshal.PtrToStructure<Header>(ptr);
-
-            Marshal.FreeHGlobal(ptr);
-
-            ptr = Marshal.AllocHGlobal(_dataLen);
-            Marshal.Copy(Data, 7, ptr, _dataLen);
-
-            DataStruct = Marshal.PtrToStructure<T>(ptr);
-
-            Marshal.FreeHGlobal(ptr);
-        }
-
-        public string DumpStructToString()
-        {
-            string output = $"[orchid]Packet Info:[/]\n\nName: {DataStruct.GetType().Name}\n\nHeader:\n\n- [steelblue3]ID:[/] {ID}\n- [steelblue3]Length:[/] {Length}\n- [steelblue3]Checksum:[/] {Checksum}\n\nProperties:\n\n";
-
-            foreach (var field in DataStruct.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
+            if (curCol != maxWidth)
             {
-                string str = $"- [steelblue3]{field.Name}[/] [deeppink4_2]({field.FieldType.Name})[/]: ";
-                var value = field.GetValue(DataStruct);
+                continue;
+            }
+            
+            rowHeader += 10;
 
-                if (value is byte[])
-                    continue;
+            Span<byte> lineBuffer = buffer.Slice(i + 1 - maxWidth, maxWidth).ToArray();
+            var lineBufferStr = string.Empty;
 
-                output += $"{str += value}\n";
+            foreach (var b in lineBuffer)
+            {
+                if (b == 0)
+                    lineBufferStr += ".";
+                else
+                    lineBufferStr += System.Text.Encoding.Default.GetString(new byte[] { b });
             }
 
-            return output;
-        }
-
-        public string DumpDataToHexString()
-        {
-            Span<byte> buffer = Data;
-
-            int maxWidth = Math.Min(16, buffer.Length);
-            int rowHeader = 0;
-
-            string outStr = null;
-            string curRowStr = null;
-            int curCol = 0;
-
-            for (int i = 0; i < buffer.Length; i++)
+            if (maxWidth < 16) // There was not 16 bytes of data, so we must pad the rest to keep output aligned
             {
-                string byteStr = $"{buffer[i]:x2}";
-                curRowStr += $"{byteStr} ";
-                curCol++;
+                var remainder = 16 - maxWidth;
 
-                if (curCol == maxWidth)
+                for (var j = 0; j < remainder; j++)
                 {
-                    rowHeader += 10;
-
-                    Span<byte> lineBuffer = buffer.Slice(i + 1 - maxWidth, maxWidth).ToArray();
-                    string lineBufferStr = string.Empty;
-
-                    foreach (byte b in lineBuffer)
-                    {
-                        if (b == 0)
-                            lineBufferStr += ".";
-                        else
-                            lineBufferStr += System.Text.Encoding.Default.GetString(new byte[] { b });
-                    }
-
-                    if (maxWidth < 16) // There was not 16 bytes of data, so we must pad the rest to keep output aligned
-                    {
-                        int remainder = 16 - maxWidth;
-
-                        for (int j = 0; j < remainder; j++)
-                        {
-                            curRowStr += "00 ";
-                            lineBufferStr += ".";
-                        }
-                    }
-
-                    outStr += $"{rowHeader.ToString("D8")}: {curRowStr}  {lineBufferStr}\n";
-                    curRowStr = null;
-                    curCol = 0;
-
-                    if (buffer.Length - i < maxWidth)
-                        maxWidth = buffer.Length - (i + 1);
+                    curRowStr += "00 ";
+                    lineBufferStr += ".";
                 }
             }
 
-            return outStr;
+            outStr += $"{rowHeader:D8}: {curRowStr}  {lineBufferStr}\n";
+            curRowStr = null;
+            curCol = 0;
+
+            if (buffer.Length - i < maxWidth)
+                maxWidth = buffer.Length - (i + 1);
         }
+
+        return outStr;
     }
 }

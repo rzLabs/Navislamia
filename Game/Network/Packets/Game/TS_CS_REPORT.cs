@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
-namespace Navislamia.Network.Packets.Game
+namespace Navislamia.Game.Network.Packets.Game;
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct TS_CS_REPORT
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct TS_CS_REPORT
-    {
-        public ushort ReportLen;
+    public ushort ReportLen;
 
-    }
 }

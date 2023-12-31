@@ -1,22 +1,22 @@
 ﻿using System.Threading.Tasks;
-using Configuration;
-using DevConsole.Extensions;
+using DevConsole.Properties;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Navislamia.Command;
 using Navislamia.Configuration.Options;
 using Navislamia.Game;
-using Navislamia.Game.Contexts;
+using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Extensions;
+using Navislamia.Game.DataAccess.Repositories;
+using Navislamia.Game.DataAccess.Repositories.Interfaces;
+using Navislamia.Game.Maps;
 using Navislamia.Game.Network;
-using Navislamia.Game.Network.Entities;
-using Navislamia.Game.Repositories;
+using Navislamia.Game.Network.Interfaces;
+using Navislamia.Game.Scripting;
 using Navislamia.Game.Services;
-using Navislamia.Notification;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Exceptions;
 
 namespace DevConsole;
 
@@ -24,14 +24,11 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Log.Logger = new LoggerConfiguration()
-                            //.MinimumLevel.ControlledBy(LogLevel) // TODO this should be controlled via a configuration setting
-                            .MinimumLevel.Verbose()
-                            .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                            .WriteTo.File(".\\Logs\\Navislamia-Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {Message:lj}{NewLine}{Exception}")
-                            .CreateLogger();
-
         var host = CreateHostBuilder(args).Build();
+
+        Log.Logger.Information($"\n{Resources.arcadia}");
+        Log.Logger.Information("Navislamia starting...");
+
         var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
         using (var scope = scopeFactory.CreateScope())
         {
@@ -40,8 +37,8 @@ public class Program
             await arcadia.Database.MigrateAsync();
             await telecaster.Database.MigrateAsync();
             
-            Log.Logger.Information("Applied Arcadia migrations: {Migrations}", await arcadia.Database.GetAppliedMigrationsAsync());
-            Log.Logger.Information("Applied Telecaster migrations: {Migrations}", await telecaster.Database.GetAppliedMigrationsAsync());
+            Log.Logger.Verbose("Applied Arcadia migrations: {Migrations}\n", await arcadia.Database.GetAppliedMigrationsAsync());
+            Log.Logger.Verbose("Applied Telecaster migrations: {Migrations}\n", await telecaster.Database.GetAppliedMigrationsAsync());
         }
 
         await host.RunAsync();
@@ -60,20 +57,21 @@ public class Program
             })
             .ConfigureServices((context, services) =>
             {
-                services.AddLogging(logging => logging.ClearProviders().AddSerilog());
                 services.AddHostedService<Application>();
-
                 ConfigureOptions(services, context);
                 ConfigureServices(services);
                 ConfigureDataAccess(services);
             })
-            .UseSerilog()
-            .UseConsoleLifetime();
+            .UseSerilog((context, configuration) =>
+            {
+                configuration.ReadFrom.Configuration(context.Configuration)
+                    .Enrich.With(new SourceContextEnricher())
+                    .Enrich.WithExceptionDetails();
+            });
     }
 
     private static void ConfigureOptions(IServiceCollection services, HostBuilderContext context)
     {
-        services.Configure<LogOptions>(context.Configuration.GetSection("Logs"));
         services.Configure<DatabaseOptions>(context.Configuration.GetSection("Database"));
         services.Configure<NetworkOptions>(context.Configuration.GetSection("Network"));
         services.Configure<AuthOptions>(context.Configuration.GetSection("Network:Auth"));
@@ -86,17 +84,22 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<ICommandModule, CommandModule>();
-        services.AddSingleton<INetworkModule, NetworkModule>();
+        // Modules
         services.AddSingleton<IGameModule, GameModule>();
-        services.AddSingleton<INotificationModule, NotificationModule>();
-        services.AddSingleton<IClientService<AuthClientEntity>, ClientService<AuthClientEntity>>();
-        services.AddSingleton<IClientService<UploadClientEntity>, ClientService<UploadClientEntity>>();
+        
+        // Repositories
         services.AddSingleton<IWorldRepository, WorldRepository>();
-        services.AddSingleton<ICharacterService, CharacterService>();
         services.AddSingleton<ICharacterRepository, CharacterRepository>();
+        services.AddSingleton<IStarterItemsRepository, StarterItemsRepository>();
+        
+        // Services
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<IMapService, MapService>();
+        services.AddSingleton<INetworkService, NetworkService>();
+        services.AddSingleton<ICharacterService, CharacterService>();
+        services.AddSingleton<IBannedWordsRepository, BannedWordsRepository>();
     }
-    
+
     private static void ConfigureDataAccess(IServiceCollection services)
     {
         services.AddDbContextPool<ArcadiaContext>((serviceProvider, builder) =>
@@ -107,8 +110,8 @@ public class Program
                 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
                 
         services.AddDbContextPool<TelecasterContext>((serviceProvider, builder) =>
@@ -119,8 +122,8 @@ public class Program
 
             // https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
             builder
-                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure())
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                .UseNpgsql(dbOptions.ConnectionString(), options => options.EnableRetryOnFailure());
+            // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 
         });
     }

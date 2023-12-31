@@ -1,75 +1,59 @@
 using System;
 using System.Threading;
 using Navislamia.Game;
-using Navislamia.Notification;
 using System.Threading.Tasks;
-using Configuration;
 using DevConsole.Exceptions;
-using DevConsole.Properties;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Navislamia.Command;
+using Microsoft.Extensions.Logging;
+using Navislamia.Configuration.Options;
 
-namespace DevConsole
+namespace DevConsole;
+
+public class Application : IHostedService
 {
-    public class Application : IHostedService
+    private readonly IGameModule _gameModule;
+    private readonly NetworkOptions _networkOptions;
+
+    private readonly ILogger<Application> _logger;
+
+    public Application(IGameModule gameModule,
+        IOptions<NetworkOptions> networkOptions, ILogger<Application> logger)
     {
-        private readonly IHostEnvironment _environment;
-        private readonly IGameModule _gameModule;
-        private readonly NetworkOptions _networkOptions;
-        private readonly INotificationModule _notificationModule;
-        private readonly ICommandModule _commandModule;
+        _gameModule = gameModule;
+        _networkOptions = networkOptions.Value;
 
-        public Application(IHostEnvironment environment, IGameModule gameModule,
-            IOptions<NetworkOptions> networkOptions, INotificationModule notificationModule, ICommandModule commandModule)
-        {
-            _environment = environment;
-            _gameModule = gameModule;
-            _notificationModule = notificationModule;
-            _networkOptions = networkOptions.Value;
-            _commandModule = commandModule;
-        }
+        _logger = logger;
+    }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            _notificationModule.WriteString($"\n{Resources.arcadia}");
-            _notificationModule.WriteString("Navislamia starting...\n");
-            _notificationModule.WriteMarkup($"Environment: [bold yellow]{_environment.EnvironmentName}[/]\n");
-
-            var ip = _networkOptions.Game.Ip;
-            var port = _networkOptions.Game.Port;
-            var backlog = _networkOptions.Backlog;
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        var ip = _networkOptions.Game.Ip;
+        var port = _networkOptions.Game.Port;
+        var backlog = _networkOptions.Backlog;
             
-            if (string.IsNullOrWhiteSpace(ip) || port <= 0)
-            {
-                throw new InvalidConfigurationException("IP and/or Port or is either invalid or missing in configuration");
-            }
-            
-            try
-            {
-                _gameModule.Start(ip, port, backlog);
-
-               
-            }
-            catch (Exception e)
-            {
-                _notificationModule.WriteMarkup($"[bold red]Failed to start the game service![/] {e.Message}");
-                StopAsync(cancellationToken);
-            }
-
-            _commandModule.Init();
-
-            while (true)
-                if (_commandModule.Wait() == 0)
-                    break;
-
-            //Console.ReadLine();
-            return null;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
+        try
         {
-            return null;
+            if (string.IsNullOrWhiteSpace(ip))
+            {
+                throw new InvalidConfigurationException("IP and/or Port is either invalid or missing");
+            }
+                
+            _gameModule.Start();
+            _logger.LogInformation("Press {combination} to stop", "CTRL + C");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Failed to start the game service! {exception}", e);
+            await StopAsync(cancellationToken);
         }
     }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        // To stuff here required to gracefully stop the server
+        _logger.LogWarning("Stopping Navislamia");
+        return Task.CompletedTask;
+    }
+
 }

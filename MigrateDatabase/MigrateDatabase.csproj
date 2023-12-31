@@ -22,12 +22,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Include="..\Game\Models\GlobalVariableEntity.cs">
-        <Link>PsqlEntities\GlobalVariableEntity.cs</Link>
-      </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\DevConsole\DevConsole.csproj" />
       <ProjectReference Include="..\Game\Game.csproj" />
     </ItemGroup>

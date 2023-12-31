@@ -1,14 +1,15 @@
 using System.Reflection.Metadata.Ecma335;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MigrateDatabase.MigrationContexts;
 using MigrateDatabase.MssqlEntities.Arcadia;
-using Navislamia.Game.Contexts;
-using Navislamia.Game.Models;
-using Navislamia.Game.Models.Arcadia;
-using Navislamia.Game.Models.Arcadia.Enums;
-using Navislamia.Game.Models.Enums;
-using Navislamia.Game.Models.Telecaster;
+using Navislamia.Configuration.Options;
+using Navislamia.Game.DataAccess.Contexts;
+using Navislamia.Game.DataAccess.Entities;
+using Navislamia.Game.DataAccess.Entities.Arcadia;
+using Navislamia.Game.DataAccess.Entities.Enums;
+using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Serilog;
 
 namespace MigrateDatabase;
@@ -17,13 +18,16 @@ public class Worker : BackgroundService
 {
     private readonly DbContextOptions<MssqlArcadiaContext> _mssqlOptions;
     private readonly DbContextOptions<ArcadiaContext> _psqlArcadiaContext;
+
     private readonly DbContextOptions<TelecasterContext> _psqlTelecasterContext;
     private readonly IMapper _mapper;
     
     private readonly List<string> _finishedTransfers = new();
     private readonly List<string> _finishedSeeds = new();
     
-    public Worker(DbContextOptions<MssqlArcadiaContext> mssqlOptions, DbContextOptions<ArcadiaContext> psqlArcadiaContext, DbContextOptions<TelecasterContext> psqlTelecasterContext, IMapper mapper)
+    public Worker(DbContextOptions<MssqlArcadiaContext> mssqlOptions, 
+        DbContextOptions<ArcadiaContext> psqlArcadiaContext, 
+        DbContextOptions<TelecasterContext> psqlTelecasterContext, IMapper mapper)
     {
         _mssqlOptions = mssqlOptions;
         _psqlArcadiaContext = psqlArcadiaContext;
@@ -78,7 +82,7 @@ public class Worker : BackgroundService
         //                     Log.Logger.Information("13: {type}", "StateResource");
         //                     Console.WriteLine();
         //                     Log.Logger.Warning("Selected: {selection}", selection);
-        //                     Log.Logger.Information("go: {type}", "Start transferring");
+        //                     Log.Logger.Information("go: {type}", "StartClient transferring");
         //                     Log.Logger.Information("stop: {type}", "Abort");
         //
         //                     var selected = Console.ReadLine();
@@ -143,7 +147,7 @@ public class Worker : BackgroundService
         //         break;
         // }
 
-        await TransferArcadia(token, null);
+        // await TransferArcadia(token, null);
         await SeedTelecaster(token);
         
         Log.Logger.Warning("Done. You can now close this window.");
@@ -155,6 +159,7 @@ public class Worker : BackgroundService
         await SeedDungeons(token);
         await SeedCharacters(token);
         await SeedItems(token);
+        await SeedStarterItems(token);
     }
 
     private async Task SeedDungeons(CancellationToken token)
@@ -208,14 +213,101 @@ public class Worker : BackgroundService
         
         _finishedSeeds.Add(nameof(DungeonEntity));
     }
+
+    private async Task SeedStarterItems(CancellationToken token)
+    {
+        var starterItems = new List<StarterItemsEntity>
+        {
+            new() {
+                Race = Race.Asura,
+                ItemId = 230100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+                },
+            new() {
+                Race = Race.Asura,
+                ItemId = 103100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Deva,
+                ItemId = 220100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Deva,
+                ItemId = 106100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Gaia,
+                ItemId = 112100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            },
+            new() {
+                Race = Race.Gaia,
+                ItemId = 240100,
+                Level = 1,
+                Enhancement = 0,
+                Amount = 1,
+                ValidForSeconds = 0
+            }
+        };
+
+        await using var context = new TelecasterContext(_psqlTelecasterContext);
+        
+        Log.Logger.Information("Seeding {type}: {amount}", nameof(StarterItemsEntity), starterItems.Count);
+
+        var processed = 1;
+        foreach (var entity in starterItems)
+        {
+            Log.Information("Processing... {processed}/{amount}", processed, starterItems.Count);
+
+            if (token.IsCancellationRequested)
+            {
+                Log.Logger.Warning("Stopping...");
+                return;
+            }
+            
+            var existingEntity = context.StarterItems.FirstOrDefault(d => d.Id == entity.Id);
+            if (existingEntity != null)
+            {
+                context.StarterItems.Update(entity);
+            }
+            else
+            {
+                context.StarterItems.Add(entity);
+            }
+                
+            await context.SaveChangesAsync(token);
+            
+            processed++;
+            ClearCurrentConsoleLine();
+        }
+        
+        _finishedSeeds.Add(nameof(StarterItemsEntity));
     
+    }
     private async Task SeedCharacters(CancellationToken token)
     {
         var entities = new List<CharacterEntity>
         {
             new()
             {
-                Id = 1,
                 CharacterName = "Aodai",
                 AccountName = "admin",
                 AccountId = 1,
@@ -228,8 +320,8 @@ public class Worker : BackgroundService
                 Hp = 1253,
                 Mp = 1290,
                 Stamina = 5000,
-                CurrentJob = Jobs.Strider,
-                PreviousJobs = new[] { Jobs.Stepper },
+                CurrentJob = Job.Strider,
+                PreviousJobs = new[] { Job.Stepper },
                 Jlv = 50,
                 Jp = 500000,
                 JobLvs = new[] { 10 },
@@ -274,7 +366,6 @@ public class Worker : BackgroundService
             },
             new()
             {
-                Id = 2,
                 CharacterName = "iSmokeDrow",
                 AccountName = "admin",
                 AccountId = 1,
@@ -287,8 +378,8 @@ public class Worker : BackgroundService
                 Hp = 1682,
                 Mp = 2086,
                 Stamina = 5000,
-                CurrentJob = Jobs.Kahuna,
-                PreviousJobs = new[] { Jobs.Rogue },
+                CurrentJob = Job.Kahuna,
+                PreviousJobs = new[] { Job.Rogue },
                 Jlv = 50,
                 Jp = 500000,
                 JobLvs = new[] { 10 },
@@ -334,7 +425,6 @@ public class Worker : BackgroundService
             },
             new()
             {
-                Id = 3,
                 CharacterName = "Nexitis",
                 AccountName = "admin",
                 AccountId = 1,
@@ -347,8 +437,8 @@ public class Worker : BackgroundService
                 Hp = 914,
                 Mp = 992,
                 Stamina = 5000,
-                CurrentJob = Jobs.Tamer,
-                PreviousJobs = new[] { Jobs.Guide },
+                CurrentJob = Job.Tamer,
+                PreviousJobs = new[] { Job.Guide },
                 Jlv = 50,
                 Jp = 500000,
                 JobLvs = new[] { 10 },
@@ -489,8 +579,8 @@ public class Worker : BackgroundService
                 Idx = index[i],
                 ItemResourceId = itemResourceIds[i],
                 Amount = amounts[i],
-                Level = levels[i],
-                Enhance = enhanced[i],
+                Level = (uint)levels[i],
+                Enhance = (uint)enhanced[i],
                 Flag = (ItemFlag)flag[i],
                 GenerateBySource = (ItemGenerateSource)gcode[i],
                 WearInfo = (ItemWearType)wearinfos[i],

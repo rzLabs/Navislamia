@@ -3,9 +3,9 @@ name: Build Status
 on:
   workflow_dispatch: {}
   push:
-    branches: [ Development, stage-1, stage-2, stage-3, stage-4 ]
+    branches: [ master, stage-** ]
   pull_request:
-    branches: [ Development, stage-1, stage-2, stage-3, stage-4 ]
+    branches: [ master, stage-** ]
 
 jobs:
   build:

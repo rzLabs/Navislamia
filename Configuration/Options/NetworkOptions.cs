@@ -1,6 +1,4 @@
-using Navislamia.Configuration.Options;
-
-namespace Configuration;
+namespace Navislamia.Configuration.Options;
 
 public class NetworkOptions
 {
