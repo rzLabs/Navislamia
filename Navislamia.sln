@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{DE85A5AB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MigrateDatabase", "MigrateDatabase\MigrateDatabase.csproj", "{066BFC54-4FB8-42D9-9CC4-1286F646118B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RZQuadTree", "RZQuadTree\RZQuadTree.csproj", "{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,14 @@ Global
 		{066BFC54-4FB8-42D9-9CC4-1286F646118B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{066BFC54-4FB8-42D9-9CC4-1286F646118B}.Release|x64.ActiveCfg = Release|Any CPU
 		{066BFC54-4FB8-42D9-9CC4-1286F646118B}.Release|x64.Build.0 = Release|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Debug|x64.Build.0 = Debug|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Release|x64.ActiveCfg = Release|Any CPU
+		{EB1F7434-9781-4E55-BCA9-6BBA6FFCBEE0}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
