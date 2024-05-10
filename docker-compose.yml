@@ -1,6 +1,17 @@
 version: "3.7"
 
 services:
+  server:
+    build: .
+    volumes:
+      - ./path/to/appsettings.json:/Navislamia/appsettings.json
+    environment:
+      - Database__DataSource=db
+    networks:
+      - navislamia
+    depends_on:
+      db:
+        condition: service_started
   db:
     image: postgres:16.1-alpine
     ports:
@@ -9,6 +20,8 @@ services:
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "N@vislam1a"
+    networks:
+      - navislamia
   pgAdmin:
     image: dpage/pgadmin4
     restart: always
@@ -17,3 +30,7 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "postgres@navislamia.com"
       PGADMIN_DEFAULT_PASSWORD: "N@vislam1a"
+
+networks:
+  navislamia:
+    external: false
