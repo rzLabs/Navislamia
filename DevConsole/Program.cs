@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Navislamia.Configuration.Options;
 using Navislamia.Game;
+using Navislamia.Game.Creature.Interfaces;
+using Navislamia.Game.Creature.Services;
 using Navislamia.Game.DataAccess.Contexts;
 using Navislamia.Game.DataAccess.Extensions;
 using Navislamia.Game.DataAccess.Repositories;
@@ -96,6 +98,7 @@ public class Program
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<INetworkService, NetworkService>();
+        services.AddSingleton<IPlayerService, PlayerService>();
         services.AddSingleton<ICharacterService, CharacterService>();
         services.AddSingleton<IBannedWordsRepository, BannedWordsRepository>();
     }

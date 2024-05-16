@@ -1,12 +1,16 @@
 using System.Collections.Generic;
 
+using Navislamia.Game.Creature;
+
 namespace Navislamia.Game.Network.Clients;
 
 public class ConnectionInfo
 {
     public string AccountName { get; set; }
     public List<string> CharacterList { get; set; } = new();
-    // TODO: StructPlayer Player;
+
+    public Player Player { get; set; } = null;
+
     public int AccountId { get; set; }
     public int Version { get; set; }
     public float LastReadTime { get; set; }

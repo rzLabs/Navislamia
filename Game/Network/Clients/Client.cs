@@ -19,7 +19,7 @@ public class Client : IDisposable
 
     public ClientType Type { get; set; }
 
-    public Connection Connection { get; set; }
+    public IConnection Connection { get; set; }
 
     internal ConnectionInfo ConnectionInfo { get; set; } = new();
 

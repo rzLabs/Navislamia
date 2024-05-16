@@ -27,6 +27,7 @@ public class GameModule : IGameModule
 
     private readonly INetworkService _networkService;
     private readonly IScriptService _scriptService;
+    private readonly GameOptions _gameOptions;
     private readonly IMapService _mapService;
     private readonly ScriptOptions _scriptOptions;
     private readonly MapOptions _mapOptions;
@@ -40,10 +41,11 @@ public class GameModule : IGameModule
     private readonly ILogger<GameModule> _logger;
 
     public GameModule(IOptions<ScriptOptions> scriptOptions, IOptions<MapOptions> mapOptions, 
-        IOptions<ServerOptions> serverOptions, IOptions<NetworkOptions> networkOptions, ILogger<GameModule> logger,
+        IOptions<ServerOptions> serverOptions, IOptions<NetworkOptions> networkOptions, IOptions<GameOptions> gameOptions, ILogger<GameModule> logger,
         INetworkService networkService, IScriptService scriptService, IMapService mapService, 
         IWorldRepository worldRepository, ICharacterService characterService)
     {
+        _gameOptions = gameOptions.Value;
         _scriptOptions = scriptOptions.Value;
         _mapOptions = mapOptions.Value;
         _serverOptions = serverOptions.Value;
@@ -69,10 +71,12 @@ public class GameModule : IGameModule
 
     private void LoadMaps()
     {
-        if (_mapOptions.SkipLoading)
+        if (!_mapOptions.SkipLoading)
         {
             // TODO: MapContent should be printing messages
             _mapService.Start($"{Directory.GetCurrentDirectory()}\\Maps");
+
+            return;
         }
         
         _logger.LogWarning("Map loading disabled!");
@@ -83,6 +87,8 @@ public class GameModule : IGameModule
         if (!_scriptOptions.SkipLoading)
         {
             _scriptService.Start();
+
+            return;
         }
         
         _logger.LogWarning("Script loading disabled!");
@@ -209,7 +215,7 @@ public class GameModule : IGameModule
         while (true)
         {
             var clientSocket = await _clientListener.AcceptAsync();
-            var client = _networkService.CreateGameClient(clientSocket);
+            var client = _networkService.CreateGameClient(clientSocket, _gameOptions);
             
             clientSocket.NoDelay = true;
     

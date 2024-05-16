@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Navislamia.Game.Creature.Interfaces;
 using Navislamia.Game.DataAccess.Entities.Enums;
 using Navislamia.Game.DataAccess.Entities.Telecaster;
 using Navislamia.Game.DataAccess.Repositories.Interfaces;
@@ -21,6 +22,7 @@ namespace Navislamia.Game.Network.Clients.Actions;
 public class GameActions : IActions
 {
     private readonly ILogger _logger = Log.ForContext<GameActions>();
+    private readonly IPlayerService _playerService;
     private readonly ICharacterService _characterService;
     private readonly IBannedWordsRepository _bannedWordsRepository;
     private readonly NetworkService _networkService;
@@ -31,8 +33,10 @@ public class GameActions : IActions
     {
         _networkService = networkService;
         _bannedWordsRepository = networkService.BannedWordsRepository;
+        _playerService = networkService.PlayerService;
         _characterService = networkService.CharacterService;
 
+        _actions.Add((ushort)GamePackets.TM_CS_LOGIN, OnLogin);
         _actions.Add((ushort)GamePackets.TM_CS_VERSION, OnVersion);
         _actions.Add((ushort)GamePackets.TM_CS_REPORT, OnReport);
         _actions.Add((ushort)GamePackets.TM_CS_CHARACTER_LIST, OnCharacterList);
@@ -49,7 +53,48 @@ public class GameActions : IActions
             action?.Invoke(client as GameClient, packet);
         }
     }
-    
+
+    private void OnLogin(GameClient client, IPacket packet)
+    {
+        var message = packet.GetDataStruct<TS_LOGIN>();
+
+        if (client.Options.UseLoginLogoutDebug)
+        {
+            _logger.Debug("On Login: {characterName}@{accountName}", message.Name, client.ConnectionInfo.AccountName);
+        }
+
+        if (!client.ConnectionInfo.CharacterList.Contains(message.Name))
+        {
+            _logger.Error("Failed login attempt, account {accountName} does not contain character {characterName}", client.ConnectionInfo.AccountName, message.Name);
+
+            client.Connection.Disconnect();
+
+            return;
+        }
+
+        if (_playerService.GetPlayerHandle(message.Name) >= 0) 
+        {
+            _logger.Error("Duplicate login attempt, account {accountName}@{characterName}", client.ConnectionInfo.AccountName, message.Name);
+
+            // TODO: Save, if login then logout 
+
+            client.SendDisconnectDescription(DisconnectType.DuplicatedLogin);
+
+            client.Connection.Disconnect();
+        }
+
+        client.ConnectionInfo.Player = _playerService.CreatePlayer();
+        client.ConnectionInfo.Player.Connection = client.Connection;
+        client.ConnectionInfo.StorageSecurityCheck = false;
+
+        // TODO: Send urlist
+        // TODO: execute DB_Login
+
+        _logger.Fatal("On Login Not Implemented!");
+
+        return;
+    }
+
     private void OnVersion(GameClient client, IPacket packet)
     {
         // TODO: properly implement this action
@@ -217,7 +262,7 @@ public class GameActions : IActions
         // Normally a player cannot request a character delete before any have been made, bad actor!
         if (client.ConnectionInfo.CharacterList.Count == 0)
         {
-            client.SendDisconnectDesription(DisconnectType.AntiHack);
+            client.SendDisconnectDescription(DisconnectType.AntiHack);
 
             client.Dispose();
 
@@ -303,7 +348,7 @@ public class GameActions : IActions
     {
         _logger.Debug("{clientTag} verifying with Auth Server", client.ClientTag);
 
-        var msg = packet.GetDataStruct<TM_CS_ACCOUNT_WITH_AUTH>();
+        var msg = packet.GetDataStruct<TS_CS_ACCOUNT_WITH_AUTH>();
         var loginInfo = new Packet<TS_GA_CLIENT_LOGIN>((ushort)AuthPackets.TS_GA_CLIENT_LOGIN,
             new TS_GA_CLIENT_LOGIN(msg.Account, msg.OneTimePassword));
 

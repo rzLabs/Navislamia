@@ -4,6 +4,8 @@ public enum GamePackets : ushort
 {
     TM_SC_RESULT = 0,
 
+    TM_CS_LOGIN = 1,
+
     TM_SC_DISCONNECT_DESC = 28,
 
     TM_CS_VERSION = 50,

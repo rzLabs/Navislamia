@@ -16,7 +16,8 @@ using Navislamia.Game.Scripting;
 using Navislamia.Game.Filer;
 
 using static Navislamia.Game.Maps.Entities.ScriptDefine;
-using Microsoft.Extensions.Logging;
+
+using Serilog;
 
 namespace Navislamia.Game.Maps
 {
@@ -43,14 +44,12 @@ namespace Navislamia.Game.Maps
         private static readonly List<ScriptRegion> RegionList = new();
         private static readonly List<ScriptRegionInfo> ScriptEvents = new();
 
-        private readonly ILogger<MapService> _logger;
+        private readonly ILogger _logger = Log.ForContext<MapService>();
 
-        public MapService(IOptions<MapOptions> mapOptions, ILogger<MapService> logger, IScriptService scriptContent)
+        public MapService(IOptions<MapOptions> mapOptions, IScriptService scriptContent)
         {
             _mapOptions = mapOptions.Value;
             _scriptService = scriptContent;
-
-            _logger = logger;
 
             _qtLocationInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
             _qtBlockInfo = new QuadTree(0, 0, _mapOptions.Width, _mapOptions.Height);
@@ -68,13 +67,13 @@ namespace Navislamia.Game.Maps
             tasks.Add(Task.Run(() =>
             {
                 SeamlessWorldInfo.Initialize($"{directory}\\TerrainSeamlessWorld.cfg");
-                _logger.LogDebug("TerrainSeamlessWorld.cfg loaded!");
+                _logger.Debug("{fileName} loaded!", "TerrainSeamlessWorld.cfg");
             }));
 
             tasks.Add(Task.Run(() =>
             {
                 PropInfo.Initialize($"{directory}\\TerrainPropInfo.cfg");
-                _logger.LogDebug("TerrainPropInfo.cfg loaded!");
+                _logger.Debug("{fileName} loaded!", "TerrainPropInfo.cfg");
             }));
 
             try
@@ -86,7 +85,7 @@ namespace Navislamia.Game.Maps
                 {
                     foreach (var t in tasks.Where(t => t.IsFaulted))
                     {
-                        _logger.LogError("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
+                        _logger.Error("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
                         throw new Exception();
                     }
                     return;
@@ -104,7 +103,7 @@ namespace Navislamia.Game.Maps
                 {
                     for (var x = 0; x < MapCount.CX; ++x)
                     {
-                        _logger.LogDebug("Loading map: m{x}_{y}...", x, y);
+                        _logger.Debug("Loading map: m{x}_{y}...", x.ToString("D3"), y.ToString("D3"));
 
                         var locationFileName = SeamlessWorldInfo.GetLocationFileName(x, y);
 
@@ -172,7 +171,7 @@ namespace Navislamia.Game.Maps
 
                         foreach (var t in tasks.Where(t => t.IsFaulted))
                         {
-                            _logger.LogError("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
+                            _logger.Error("A task has failed {exception}", t.Exception?.Message); // TODO: should include stack trace
                             throw new Exception();
                         }
 
@@ -182,11 +181,11 @@ namespace Navislamia.Game.Maps
             }
             catch (Exception ex)
             {
-                _logger.LogError("Failed loads maps! {exception}", ex); // TODO: needs to include stack trace
+                _logger.Error("Failed to load maps! {exception}", ex); // TODO: needs to include stack trace
                 return;
             }
 
-            _logger.LogDebug("{mapCount} Maps loaded successfully!", MapCount.CX + MapCount.CY);
+            _logger.Debug("{mapCount} Maps loaded successfully!", MapCount.CX + MapCount.CY);
         }
 
         private void SetDefaultLocation(int x, int y, float mapLength, int locationId)
@@ -398,13 +397,13 @@ namespace Navislamia.Game.Maps
 
             if (header.Sign != ScriptDefineConstants.NFSFILE_SIGN)
             {
-                _logger.LogError("\t- Invalid script header!\n"); // TODO: may need more info
+                _logger.Error("\t- Invalid script header!\n"); // TODO: may need more info
                 return;
             }
 
             if (header.Version != ScriptDefineConstants.NFSCurrentVer)
             {
-                _logger.LogError("\t- Invalid script version!\n"); // TODO: may need more info
+                _logger.Error("\t- Invalid script version!\n"); // TODO: may need more info
                 return;
             }
 
@@ -569,7 +568,7 @@ namespace Navislamia.Game.Maps
         {
             if (_propScriptInfo.ContainsKey(propId))
             {
-                _logger.LogWarning("Duplicate prop index: {propId}", propId);
+                _logger.Warning("Duplicate prop index: {propId}", propId);
                 return;
             }
 

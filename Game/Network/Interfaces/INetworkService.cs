@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Game.Network.Clients;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Interfaces;
@@ -14,7 +16,7 @@ public interface INetworkService
     
     void CreateAuthClient();
     void CreateUploadClient();
-    GameClient CreateGameClient(Socket socket);
+    GameClient CreateGameClient(Socket socket, GameOptions gameOptions);
 
     void SendMessageToAuth(IPacket packet);
 

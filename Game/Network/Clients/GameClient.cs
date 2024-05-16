@@ -1,6 +1,8 @@
 using System;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Options;
+using Navislamia.Configuration.Options;
 using Navislamia.Game.Network.Packets;
 using Navislamia.Game.Network.Packets.Enums;
 using Navislamia.Game.Network.Packets.Game;
@@ -12,8 +14,13 @@ namespace Navislamia.Game.Network.Clients;
 public class GameClient : Client
 {
     private readonly ILogger _logger = Log.ForContext<GameClient>();
-    public GameClient(Socket socket, NetworkService networkService) : base(networkService, ClientType.Game)
+
+    public readonly GameOptions Options;
+
+    public GameClient(Socket socket, GameOptions gameOptions, NetworkService networkService) : base(networkService, ClientType.Game)
     {
+        Options = gameOptions;
+
         Connection = new CipherConnection(socket, networkService.NetworkOptions.CipherKey);
     }
     
@@ -38,7 +45,7 @@ public class GameClient : Client
         SendMessage(message);
     }
 
-    public void SendDisconnectDesription(DisconnectType type)
+    public void SendDisconnectDescription(DisconnectType type)
     {
         var message = new Packet<TS_SC_DISCONNECT_DESC>((ushort)GamePackets.TM_SC_DISCONNECT_DESC, new TS_SC_DISCONNECT_DESC(type));
         SendMessage(message);
@@ -76,7 +83,7 @@ public class GameClient : Client
             // Check for packets that haven't been defined yet (development)
             if (!Enum.IsDefined(typeof(GamePackets), header.ID))
             {
-                _logger.Debug("Undefined packet ID: {id} Length: {length}) received from {clientTag}", header.ID, header.Length, ClientTag);
+                _logger.Debug("Undefined packet ({id}) Length: {length} received from {clientTag}", header.ID, header.Length, ClientTag);
                 continue;
             }
 
@@ -90,12 +97,13 @@ public class GameClient : Client
             IPacket msg = header.ID switch
             {
                 //(ushort)GamePackets.TM_NONE => null,
-                (ushort)GamePackets.TM_CS_VERSION => new Packet<TM_CS_VERSION>(msgBuffer),
+                (ushort)GamePackets.TM_CS_LOGIN => new Packet<TS_LOGIN>(msgBuffer),
+                (ushort)GamePackets.TM_CS_VERSION => new Packet<TS_CS_VERSION>(msgBuffer),
                 (ushort)GamePackets.TM_CS_CHARACTER_LIST => new Packet<TS_CS_CHARACTER_LIST>(msgBuffer),
                 (ushort)GamePackets.TM_CS_CREATE_CHARACTER => new Packet<TS_CS_CREATE_CHARACTER>(msgBuffer),
                 (ushort)GamePackets.TM_CS_DELETE_CHARACTER => new Packet<TS_CS_DELETE_CHARACTER>(msgBuffer),
                 (ushort)GamePackets.TM_CS_CHECK_CHARACTER_NAME => new Packet<TS_CS_CHECK_CHARACTER_NAME>(msgBuffer),
-                (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TM_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
+                (ushort)GamePackets.TM_CS_ACCOUNT_WITH_AUTH => new Packet<TS_CS_ACCOUNT_WITH_AUTH>(msgBuffer),
                 (ushort)GamePackets.TM_CS_REPORT => new Packet<TS_CS_REPORT>(msgBuffer),
 
                 _ => throw new Exception("Unknown Packet Type")
